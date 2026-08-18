@@ -1400,6 +1400,45 @@
     }catch(e){return null;}
   }
 
+  // Sorgere/tramonto di un corpo (SearchRiseSet di Astronomy Engine).
+  // Memoizza per osservatore + minuto, così re-render (resize/toggle) non ricalcolano.
+  let _riseSetCache={key:null,data:{}};
+  function solarRiseSet(key,date,observer){
+    const A=window.Astronomy; if(!A)return {rise:null,set:null};
+    const ck=`${observer.latitude.toFixed(3)},${observer.longitude.toFixed(3)},${Math.floor(date.getTime()/60000)}`;
+    if(_riseSetCache.key!==ck)_riseSetCache={key:ck,data:{}};
+    if(_riseSetCache.data[key])return _riseSetCache.data[key];
+    let rise=null,set=null;
+    try{
+      const body=A.Body[key];
+      const r=A.SearchRiseSet(body,observer,+1,date,2); // prossimo sorgere entro 2 giorni
+      const s=A.SearchRiseSet(body,observer,-1,date,2); // prossimo tramonto
+      rise=r?r.date:null; set=s?s.date:null;
+    }catch(e){}
+    _riseSetCache.data[key]={rise,set};
+    return _riseSetCache.data[key];
+  }
+
+  // SVG della fase lunare corrente (cerchio scuro + area illuminata).
+  // k = frazione illuminata 0..1; waxing = true se crescente (MoonPhase 0..180).
+  function moonPhaseSvg(k,waxing){
+    const cx=9,cy=9,r=8,rx=Math.abs(1-2*k)*r;
+    let d;
+    if(waxing){
+      d = k<=0.5
+        ? `M ${cx} ${cy-r} A ${r} ${r} 0 0 1 ${cx} ${cy+r} A ${rx} ${r} 0 0 0 ${cx} ${cy-r} Z`
+        : `M ${cx} ${cy-r} A ${r} ${r} 0 0 1 ${cx} ${cy+r} A ${rx} ${r} 0 0 1 ${cx} ${cy-r} Z`;
+    }else{
+      d = k<=0.5
+        ? `M ${cx} ${cy-r} A ${r} ${r} 0 0 0 ${cx} ${cy+r} A ${rx} ${r} 0 0 1 ${cx} ${cy-r} Z`
+        : `M ${cx} ${cy-r} A ${r} ${r} 0 0 0 ${cx} ${cy+r} A ${rx} ${r} 0 0 0 ${cx} ${cy-r} Z`;
+    }
+    return `<svg viewBox="0 0 18 18" width="18" height="18" style="vertical-align:middle" aria-hidden="true">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="#1a1d28" stroke="#2b3040" stroke-width="0.8"/>
+      <path d="${d}" fill="#e8e8f0"/>
+    </svg>`;
+  }
+
   const deg=Math.PI/180;
   function equatorialToHorizontal(raH,decDeg,latDeg,lstDeg){
     const ha=((lstDeg-raH*15)+540)%360-180;
@@ -1580,10 +1619,14 @@
     const obsLon=(typeof lon==='number')?lon:12.5;
     const date=skyState.datetime||new Date();
     const observer=new Astronomy.Observer(obsLat,obsLon,0);
+    // Fase lunare (waxing se MoonPhase 0..180) per l'SVG grafico.
+    let moonWaxing=true;
+    try{moonWaxing=Astronomy.MoonPhase(date)<180;}catch(e){}
     const rows=SOLAR_BODIES.map(b=>{
       const h=solarHorizontal(b.key,date,observer);
       if(!h)return null;
-      return {...b,...h};
+      const rs=solarRiseSet(b.key,date,observer);
+      return {...b,...h,rise:rs.rise,set:rs.set};
     }).filter(Boolean);
     const visible=rows.filter(r=>r.alt>0).sort((a,b)=>b.alt-a.alt);
     if(sub){
@@ -1596,14 +1639,18 @@
     }
     const azIdx=a=>Math.round(((a+22.5)%360)/45)%8;
     const azLabel=['N','NE','E','SE','S','SW','W','NW'];
+    const hm=d=>d?d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}):'—';
     ul.innerHTML=visible.map(r=>{
       const az=azLabel[azIdx(r.az)];
       const magTxt=r.mag!=null?` · mag ${r.mag.toFixed(1)}`:'';
       const moonTxt=r.key==='Moon'&&r.illum!=null?` · ${(r.illum*100).toFixed(0)}% illuminata`:'';
+      const sym=r.key==='Moon'&&r.illum!=null?moonPhaseSvg(r.illum,moonWaxing):`<span style="color:${r.color};font-weight:600;font-size:15px">${r.sym}</span>`;
+      const riseTxt=(r.rise||r.set)?` · sorge ${hm(r.rise)} · tramonta ${hm(r.set)}`:' · sempre sopra/sotto l\'orizzonte';
       return `<li>
-        <span style="color:${r.color};font-weight:600;font-size:15px">${r.sym}</span> <b style="color:#f4f5f8">${r.name}</b>
+        ${sym} <b style="color:#f4f5f8">${r.name}</b>
         <small style="color:#aeb5c4;display:block;margin-top:2px">alt ${Math.round(r.alt)}° ${az} (az ${Math.round(r.az)}°)${magTxt}${moonTxt}</small>
         <small style="color:#7a8294;display:block;margin-top:2px;font-size:11px">${r.note}</small>
+        <small style="color:#7a8294;display:block;margin-top:2px;font-size:11px">🕒${riseTxt}</small>
       </li>`;
     }).join('');
   }
