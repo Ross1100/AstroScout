@@ -23,21 +23,13 @@
     .topbar-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
     button,.btn-ghost{ touch-action:manipulation; -webkit-tap-highlight-color:transparent; cursor:pointer }
     .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s ease}
-    .btn-ghost:hover{border-color:var(--gold);background:rgba(255,215,123,.08)}.lead{margin:0 0 14px;color:var(--muted)}.night-bar{display:flex;animation:fadeIn .5s ease .1s both;align-items:baseline;gap:10px;flex-wrap:wrap;padding:10px 14px;background:linear-gradient(90deg,#0c0f15 0,#131927 100%);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;margin-bottom:14px;font-size:13px;color:var(--muted)}.night-bar strong{color:var(--ink);font-size:15px;font-weight:600}.night-bar-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--gold);font-weight:600}.layout{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.panel{border:1px solid var(--line);background:#0c0f15;padding:16px}h2{font-size:15px;margin:0 0 13px;color:var(--gold)}label{display:block;font-size:11px;color:var(--muted);margin:0 0 5px}select,button{font:inherit}select{width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}button{border:1px solid #607294;background:#18243a;color:white;padding:9px 12px;border-radius:4px;cursor:pointer}button.primary{background:#d7ac52;color:#1b1405;border-color:#f6d37e}.setup{margin-top:15px;border-left:3px solid var(--gold);padding:9px 11px;background:#15130d;font-size:13px;line-height:1.45}.setup b{color:var(--gold)}.status{font-size:12px;color:var(--muted);margin:11px 0 0}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.card{border:1px solid var(--line);padding:11px;background:var(--panel)}.card span{font-size:11px;color:var(--muted)}.card strong{display:block;font-size:20px;margin-top:4px}.card.weather{padding:13px;background:linear-gradient(135deg,#0c0f15 0,#11151f 100%);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}.card.weather:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 8px 20px rgba(0,0,0,.35)}.card.weather strong{font-size:22px;color:var(--ink)}.card .card-meta{font-size:10px;color:var(--muted);margin-top:4px;display:block;font-weight:normal}.ok{color:var(--good)}#map{height:380px;border:1px solid var(--line);z-index:0;background:#000810 radial-gradient(ellipse at center,#0a1f3a 0%,#000510 70%)}#skymap{height:420px;border:1px solid var(--line);z-index:0;background:#000510 radial-gradient(ellipse at center,#1a1538 0%,#000308 70%);margin-bottom:14px}
+    .btn-ghost:hover{border-color:var(--gold);background:rgba(255,215,123,.08)}.lead{margin:0 0 14px;color:var(--muted)}.night-bar{display:flex;animation:fadeIn .5s ease .1s both;align-items:baseline;gap:10px;flex-wrap:wrap;padding:10px 14px;background:linear-gradient(90deg,#0c0f15 0,#131927 100%);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;margin-bottom:14px;font-size:13px;color:var(--muted)}.night-bar strong{color:var(--ink);font-size:15px;font-weight:600}.night-bar-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--gold);font-weight:600}.layout{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.panel{border:1px solid var(--line);background:#0c0f15;padding:16px}h2{font-size:15px;margin:0 0 13px;color:var(--gold)}label{display:block;font-size:11px;color:var(--muted);margin:0 0 5px}select,button{font:inherit}select{width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0}.fields>div{min-width:0}.actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}button{border:1px solid #607294;background:#18243a;color:white;padding:9px 12px;border-radius:4px;cursor:pointer}button.primary{background:#d7ac52;color:#1b1405;border-color:#f6d37e}.setup{margin-top:15px;border-left:3px solid var(--gold);padding:9px 11px;background:#15130d;font-size:13px;line-height:1.45}.setup b{color:var(--gold)}.status{font-size:12px;color:var(--muted);margin:11px 0 0}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.card{border:1px solid var(--line);padding:11px;background:var(--panel)}.card span{font-size:11px;color:var(--muted)}.card strong{display:block;font-size:20px;margin-top:4px}.card.weather{padding:13px;background:linear-gradient(135deg,#0c0f15 0,#11151f 100%);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}.card.weather:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 8px 20px rgba(0,0,0,.35)}.card.weather strong{font-size:22px;color:var(--ink)}.card .card-meta{font-size:10px;color:var(--muted);margin-top:4px;display:block;font-weight:normal}.ok{color:var(--good)}#map{height:380px;border:1px solid var(--line);z-index:0;background:#000810 radial-gradient(ellipse at center,#0a1f3a 0%,#000510 70%)}#skymap{height:420px;border:1px solid var(--line);z-index:0;background:#000510 radial-gradient(ellipse at center,#1a1538 0%,#000308 70%);margin-bottom:14px}
 #celestialMap{height:420px;border:2px solid var(--gold);background:radial-gradient(circle at 50% 30%,#0a1232 0,#02040a 70%);border-radius:6px;margin-bottom:14px;overflow:hidden;position:relative}.celestial-empty{display:flex;align-items:center;justify-content:center;height:100%;text-align:center;color:#aeb5c4;font-size:13px;padding:20px;flex-direction:column;gap:8px}.celestial-empty .em{font-size:36px}.sky-svg{display:block;width:100%;height:100%}.dso-marker{filter:drop-shadow(0 0 6px currentColor)}.places{margin:0;padding:0;list-style:none}.places li{padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.places small{color:var(--muted);display:block;margin-top:3px;font-size:11px}.places a{color:var(--blue)}.foot{margin-top:18px;font-size:11px;color:var(--muted);line-height:1.4}
     .section-divider{margin:32px 0 20px;padding-bottom:8px;border-bottom:1px dashed var(--line);display:flex;align-items:center;gap:10px}
     .section-divider .icon{font-size:22px}
     .section-divider .label{font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-weight:600}
     .section-divider .desc{font-size:11px;color:var(--muted);font-weight:normal;text-transform:none;letter-spacing:0}
-    .events-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
-    .event-card{display:flex;gap:10px;padding:12px;background:linear-gradient(135deg,#0a0d18 0,#11161f 100%);border:1px solid var(--line);border-radius:6px;transition:all .25s ease}
-    .event-card:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 6px 16px rgba(0,0,0,.3)}
-    .event-icon{font-size:26px;flex-shrink:0}
-    .event-body{flex:1;min-width:0}
-    .event-title{color:var(--gold);font-size:12px;font-weight:600;margin-bottom:3px}
-    .event-sub{color:var(--ink);font-size:13px;font-weight:500;margin-bottom:5px;line-height:1.3}
-    .event-meta{color:var(--muted);font-size:10px;line-height:1.4}
-    @media(max-width:720px){.events-grid{grid-template-columns:1fr}}.foot a{color:var(--blue)}
+    .foot a{color:var(--blue)}
     .storage-warning{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:#3a2f12;border:1px solid #f6d37e;color:#f6d37e;padding:10px 16px;border-radius:6px;font-size:13px;z-index:9999;opacity:0;transition:all .4s ease;box-shadow:0 8px 22px rgba(0,0,0,.4);max-width:90%}
     .storage-warning.visible{opacity:1;transform:translateX(-50%) translateY(0)}@media(max-width:720px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}h1{font-size:22px}.topbar{grid-template-columns:1fr;text-align:center;gap:12px}.topbar-actions{justify-content:center}.logo-slot{margin:0 auto}}
     .leaflet-container{background:#000810 !important;font-family:inherit}
@@ -519,6 +511,7 @@
           <label class="chip"><input type="checkbox" id="layerEcliptic"> Eclittica</label>
           <label class="chip"><input type="checkbox" id="layerGrid"> Griglia equatoriale</label>
           <label class="chip"><input type="checkbox" id="layerMilkyWay"> Via Lattea</label>
+          <label class="chip"><input type="checkbox" id="layerSolar" checked> ☉ Pianeti e Sole/Luna</label>
           <label class="chip"><input type="checkbox" id="celestialToggle"> Vista semplificata</label>
           <label class="chip"><input type="checkbox" id="dsoToggle" checked> Mostra target</label>
         </div>
@@ -527,6 +520,9 @@
     <div id="celestialMap" aria-label="Sfera celeste reale"></div>
     <div id="skymap" aria-label="Vista semplificata target celesti" style="display:none"></div>
     <ul class="places" id="sky" style="margin-top:14px"><li>Calcolo target in corso…</li></ul>
+    <h2 style="margin-top:18px">🪐 Pianeti e Luna <span class="card-meta" id="solarSub" style="font-weight:normal">—</span></h2>
+    <p class="status">Posizioni reali calcolate con Astronomy Engine per la data/ora scelta. La Luna mostra anche la frazione illuminata.</p>
+    <ul class="places" id="solarList"><li>Calcolo corpi del Sistema Solare in corso…</li></ul>
   </section>
   <section class="panel" style="margin-top:18px">
     <h2>Posti da cui scattare nelle vicinanze</h2>
@@ -535,39 +531,6 @@
   </section>
   <p class="foot">La posizione viene richiesta solo dal tuo browser e non viene salvata da questa pagina. Meteo: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open‑Meteo</a>; punti panoramici: OpenStreetMap/Overpass. Verifica sempre accessi, parcheggi, proprietà private e regolamenti locali prima di uscire.</p>
 
-
-  <section class="panel" style="margin-top:18px">
-    <h2>☄️ Eventi astronomici</h2>
-    <p class="status">Prossimi eventi visibili dalla tua posizione: passaggi ISS, sciami meteorici, fasi lunari salienti.</p>
-    <div class="events-grid">
-      <div class="event-card">
-        <div class="event-icon">🛰️</div>
-        <div class="event-body">
-          <div class="event-title">Passaggi ISS</div>
-          <div class="event-sub" id="issNext">Calcolo in corso…</div>
-          <div class="event-meta">Stazione Spaziale Internazionale, visibile a occhio nudo come una stella mobile brillante.</div>
-        </div>
-      </div>
-      <div class="event-card">
-        <div class="event-icon">☄️</div>
-        <div class="event-body">
-          <div class="event-title">Sciami meteorici attivi</div>
-          <div class="event-sub" id="meteorNext">Calcolo in corso…</div>
-          <div class="event-meta">Piogge di meteore stagionali. Per fotografarle serve un treppiede e una posa di 15-30 secondi.</div>
-        </div>
-      </div>
-      <div class="event-card">
-        <div class="event-icon">🌑</div>
-        <div class="event-body">
-          <div class="event-title">Prossima luna nuova</div>
-          <div class="event-sub" id="newMoon">Calcolo in corso…</div>
-          <div class="event-meta">Cielo più buio, ideale per deep sky. Pianifica la sessione con anticipo.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <div class="section-divider"><span class="icon">📖</span><span class="label">Riferimento</span><span class="desc">· glossario e crediti</span></div>
 
   <!-- Glossario -->
   <section class="panel" style="margin-top:18px">
@@ -628,6 +591,7 @@
 </main>
 <script src="data/gear.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="astronomy.engine.js"></script>
 <script>
 (() => {
   let lat=null, lon=null;
@@ -1090,102 +1054,6 @@
     {name:'M20 Trifida',type:'nebulosa',mag:6.3,ra:18.04,dec:-23.03,size:'28′',desc:'Nebulosa con tre bande di polvere, colori contrastanti.'}
   ];
 
-  // Converte RA (h) + Dec (°) in coordinate equatoriali, poi approssima altitudine massima stasera
-  // Per semplicità: altitudine approssimata in base alla declinazione e latitudine osservatore
-  function skyAlt(obj,observerLat){
-    // altitudine massima ≈ 90° - |lat - dec|
-    return 90-Math.abs(observerLat-obj.dec);
-  }
-  // Filtra e ordina oggetti visibili stasera (altitudine > 20°)
-  function loadSky(observerLat){
-    return SKY_CATALOG.map(o=>({...o,alt:skyAlt(o,observerLat)})).filter(o=>o.alt>20).sort((a,b)=>b.alt-a.alt).slice(0,8);
-  }
-
-  // Sciami meteorici principali (date di picco approssimate)
-const METEOR_SHOWERS=[
-  {name:'Quadrantidi',peak:'01-03',active:'12-28 → 01-12',rate:120},
-  {name:'Liridi',peak:'04-22',active:'04-16 → 04-25',rate:18},
-  {name:'Eta Aquaridi',peak:'05-06',active:'04-19 → 05-28',rate:50},
-  {name:'Perseidi',peak:'08-12',active:'07-17 → 08-24',rate:100},
-  {name:'Orionidi',peak:'10-21',active:'10-02 → 11-07',rate:20},
-  {name:'Leonidi',peak:'11-17',active:'11-06 → 11-30',rate:15},
-  {name:'Geminidi',peak:'12-14',active:'12-04 → 12-20',rate:150},
-  {name:'Ursidi',peak:'12-22',active:'12-17 → 12-26',rate:10}
-];
-
-// Luna nuova: calcolo approssimato (algoritmo semplificato)
-function nextNewMoon(date){
-  // Ciclo metonico: 29.5305882 giorni
-  const lp=2551443,newMoon=new Date(1970,0,7,20,35,0).getTime()/1000;
-  const now=date.getTime()/1000;
-  const cycles=Math.ceil((now-newMoon)/lp);
-  const next=(newMoon+cycles*lp)*1000;
-  return new Date(next);
-}
-
-// Sciami attivi oggi
-function activeShowers(date){
-  const m=String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
-  return METEOR_SHOWERS.filter(s=>{
-    const [sm,sd]=s.peak.split('-');
-    const peakMonth=Number(sm),peakDay=Number(sd);
-    const [asm,asd]=s.active.split(' → ')[1].split('-');
-    // Semplificato: controlla solo mese/giorno
-    const curMonth=date.getMonth()+1,curDay=date.getDate();
-    const peak=peakMonth*100+peakDay;
-    const end=Number(asm)*100+Number(asd);
-    const cur=curMonth*100+curDay;
-    return cur<=end&&cur>=peak-15;
-  });
-}
-
-// ISS: calcolo molto approssimativo basato su orbita nota
-// Per un calcolo reale serve TLE aggiornati. Mostro info generale + link.
-function issInfo(){
-  return 'La ISS orbita a 400 km di quota, compie un giro ogni 90 minuti. Per i passaggi precisi sulla tua posizione usa <a href="https://heavens-above.com/" target="_blank" rel="noreferrer">Heavens-Above</a> o <a href="https://spotthestation.nasa.gov/" target="_blank" rel="noreferrer">Spot The Station</a>.';
-}
-
-function renderEvents(){
-  const now=new Date();
-  // Luna nuova
-  const nm=nextNewMoon(now);
-  const giorniNm=Math.ceil((nm-now)/(86400*1000));
-  $('newMoon').textContent=`${nm.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})} (tra ${giorniNm} giorni)`;
-  // Sciami attivi
-  const active=activeShowers(now);
-  if(active.length){
-    const top=active.sort((a,b)=>b.rate-a.rate)[0];
-    $('meteorNext').innerHTML=`<b>${top.name}</b> attivo · rate ${top.rate}/h · picco ${top.peak}`;
-  }else{
-    $('meteorNext').textContent='Nessuno sciame principale attivo oggi. Consulta il calendario annuale.';
-  }
-  // ISS
-  $('issNext').innerHTML=issInfo();
-}
-
-function renderSky(){
-    if(lat===null){$('sky').innerHTML='<li>Scegli una posizione per vedere i target celesti visibili stasera.</li>';return}
-    const list=loadSky(lat);
-    if(!list.length){
-      $('sky').innerHTML='<li>Nessun target raggiunge un\'altitudine utile stasera dalla tua posizione. Prova a spostarti più a sud (emisfero nord) o aspetta il cambio di stagione.</li>';
-      return;
-    }
-    const cards=list.map(o=>{
-      const typeIcon={galassia:'🌀',nebulosa:'☁️','ammasso aperto':'✨','ammasso globulare':'🌟','nebulosa planetaria':'🔵'}[o.type]||'⭐';
-      return`<div class="sky-card">
-        <div class="name">${o.name} <span class="badge">${o.type}</span></div>
-        <div class="desc">${o.desc}</div>
-        <div class="meta">
-          <span>${typeIcon} ${o.type}</span>
-          <span>📐 ${o.size}</span>
-          <span>🔆 mag <b>${o.mag}</b></span>
-          <span>⬆️ max <b>${o.alt.toFixed(0)}°</b></span>
-        </div>
-      </div>`;
-    }).join('');
-    $('sky').innerHTML=`<div class="sky-grid">${cards}</div>`;
-  }
-  function update(){
     // Stato di caricamento per il verdict
     const v=$('verdict'),d=$('verdictDot'),t=$('verdictTitle'),m=$('verdictMsg');
     v.className='verdict';d.classList.add('loading');
@@ -1197,20 +1065,16 @@ function renderSky(){
       d.textContent='📍';
       $('forecast').textContent='In attesa della tua posizione…';
       $('placesStatus').textContent='Scegli una posizione per cercare belvederi nelle vicinanze.';
-      renderSky();
       renderSkyMap();
       renderSkyList();
-      renderEvents();
       return;
     }
     t.textContent='Sto valutando le condizioni…';
     m.textContent='Calcolo nuvole, vento e fase lunare per la tua posizione.';
     weather().finally(()=>d.classList.remove('loading'));
     places();
-    renderSky();
     renderSkyMap();
     renderSkyList();
-    renderEvents();
   }
   // Inizializzazione mappa Leaflet
   // Forza il calcolo dell'altezza della mappa (fix "mappa nera" quando contenitore ha display:none iniziale o CSS non caricato)
