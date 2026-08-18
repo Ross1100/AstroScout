@@ -715,6 +715,9 @@
     return d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
   }
   // ========= POPOLA SELECT FOTOCAMERE + OBIETTIVI DA data/gear.js =========
+  // NB: <optgroup> non può contenere altri <optgroup> (specifica HTML).
+  // Per raggruppare per tipologia + brand usiamo <option disabled> come header visivo
+  // e le option vere con il brand prefissato nel testo.
   function populateCameraSelect(){
     const sel=document.getElementById('camera');
     if(!sel||!window.CAMERAS)return;
@@ -724,12 +727,16 @@
       if(!groups[key])groups[key]=[];
       groups[key].push(c);
     });
-    // Ordine: Mirrorless, Reflex, Smartphone, Astro CCD
     const order=['Mirrorless','Reflex','Smartphone','Astro CCD'];
+    let firstReal=null;
     order.forEach(gName=>{
       if(!groups[gName])return;
-      const og=document.createElement('optgroup');
-      og.label='— '+gName+' —';
+      // Header categoria (non selezionabile)
+      const header=document.createElement('option');
+      header.disabled=true;
+      header.textContent='— '+gName+' —';
+      header.style.fontWeight='700';
+      sel.appendChild(header);
       // Sotto-sezioni per brand
       const byBrand={};
       groups[gName].forEach(c=>{
@@ -737,29 +744,36 @@
         byBrand[c.b].push(c);
       });
       Object.keys(byBrand).sort().forEach(brand=>{
-        const sub=document.createElement('optgroup');
-        sub.label='   '+brand;
+        const subHeader=document.createElement('option');
+        subHeader.disabled=true;
+        subHeader.textContent='   '+brand;
+        sel.appendChild(subHeader);
         byBrand[brand].forEach(c=>{
           const opt=document.createElement('option');
           opt.value=c.c;
-          opt.textContent=`${c.m} · ${c.f}`;
-          sub.appendChild(opt);
+          opt.textContent=`     ${c.m} · ${c.f}`;
+          sel.appendChild(opt);
+          if(!firstReal)firstReal=opt;
         });
-        og.appendChild(sub);
       });
-      sel.appendChild(og);
     });
+    if(firstReal)firstReal.selected=true;
   }
   function populateLensSelect(){
     const sel=document.getElementById('lens');
     if(!sel||!window.LENSES)return;
     const groups={wide:'— Grandangolari (stelle, via lattea) —',standard:'— Standard (stelle + paesaggio) —',tele:'— Teleobiettivi (luna, pianeti) —',zoom:'— Zoom versatili —'};
     const order=['wide','standard','tele','zoom'];
+    let firstReal=null;
     order.forEach(k=>{
       const arr=window.LENSES.filter(l=>l.k===k);
       if(!arr.length)return;
-      const og=document.createElement('optgroup');
-      og.label=groups[k];
+      // Header categoria (non selezionabile)
+      const header=document.createElement('option');
+      header.disabled=true;
+      header.textContent=groups[k];
+      header.style.fontWeight='700';
+      sel.appendChild(header);
       // Sotto-sezioni per brand
       const byBrand={};
       arr.forEach(l=>{
@@ -767,19 +781,22 @@
         byBrand[l.b].push(l);
       });
       Object.keys(byBrand).sort().forEach(brand=>{
-        const sub=document.createElement('optgroup');
-        sub.label='   '+brand;
+        const subHeader=document.createElement('option');
+        subHeader.disabled=true;
+        subHeader.textContent='   '+brand;
+        sel.appendChild(subHeader);
         byBrand[brand].forEach(l=>{
           const opt=document.createElement('option');
           opt.value=`${l.f},${l.a}`;
           const fast=(k==='wide'&&l.a<=2.8)||(k!=='wide'&&l.a<=1.8);
-          opt.textContent=`${l.m} · ${l.a===Math.floor(l.a)?'f/'+l.a:'f/'+l.a.toFixed(2)}${fast?' ⭐':''}`;
-          sub.appendChild(opt);
+          const apStr=l.a===Math.floor(l.a)?'f/'+l.a:'f/'+l.a.toFixed(2);
+          opt.textContent=`     ${l.m} · ${apStr}${fast?' ⭐':''}`;
+          sel.appendChild(opt);
+          if(!firstReal)firstReal=opt;
         });
-        og.appendChild(sub);
       });
-      sel.appendChild(og);
     });
+    if(firstReal)firstReal.selected=true;
   }
   populateCameraSelect();
   populateLensSelect();
