@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Astro Scout</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <style>
+    :root{color-scheme:dark;--bg:#050609;--panel:#10131a;--line:#2b3040;--ink:#f4f5f8;--muted:#aeb5c4;--gold:#ffd77b;--blue:#8cc5ff;--good:#9ae6b4}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% 0,#18253c 0,transparent 36%),var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1000px;margin:auto;padding:26px 18px 48px}h1{font-size:30px;margin:0 0 5px;letter-spacing:-.8px}.lead{margin:0 0 24px;color:var(--muted)}.layout{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.panel{border:1px solid var(--line);background:#0c0f15;padding:16px}h2{font-size:15px;margin:0 0 13px;color:var(--gold)}label{display:block;font-size:11px;color:var(--muted);margin:0 0 5px}select,button{font:inherit}select{width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}button{border:1px solid #607294;background:#18243a;color:white;padding:9px 12px;border-radius:4px;cursor:pointer}button.primary{background:#d7ac52;color:#1b1405;border-color:#f6d37e}.setup{margin-top:15px;border-left:3px solid var(--gold);padding:9px 11px;background:#15130d;font-size:13px;line-height:1.45}.setup b{color:var(--gold)}.status{font-size:12px;color:var(--muted);margin:11px 0 0}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.card{border:1px solid var(--line);padding:11px;background:var(--panel)}.card span{font-size:11px;color:var(--muted)}.card strong{display:block;font-size:20px;margin-top:4px}.ok{color:var(--good)}#map{height:380px;border:1px solid var(--line);z-index:0;background:#000810 radial-gradient(ellipse at center,#0a1f3a 0%,#000510 70%)}.places{margin:0;padding:0;list-style:none}.places li{padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.places small{color:var(--muted);display:block;margin-top:3px;font-size:11px}.places a{color:var(--blue)}.foot{margin-top:18px;font-size:11px;color:var(--muted);line-height:1.4}.foot a{color:var(--blue)}@media(max-width:720px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}h1{font-size:25px}}
+    .leaflet-container{background:#000810 !important;font-family:inherit}
+    .leaflet-tile-pane{filter:saturate(.9) brightness(1.05)}
+    .leaflet-popup-content-wrapper{background:#0c1220;border:1px solid var(--gold);color:var(--ink);border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.7)}
+    .leaflet-popup-tip{background:#0c1220}
+    .leaflet-popup-content{margin:10px 12px;font-size:12px;line-height:1.4}
+    .leaflet-popup-content b{color:var(--gold)}
+    .leaflet-control-zoom a{background:#0c1220 !important;color:var(--gold) !important;border:1px solid var(--line) !important}
+    .leaflet-control-zoom a:hover{background:#18253c !important;border-color:var(--gold) !important}
+    .leaflet-control-attribution{background:rgba(12,18,32,.85) !important;color:var(--muted) !important;font-size:10px}
+    .leaflet-control-attribution a{color:var(--blue) !important}
+    .leaflet-interactive{filter:drop-shadow(0 0 4px rgba(140,197,255,.6))}
+    .user-star path{animation:starPulse 3s ease-in-out infinite}
+    @keyframes starPulse{0%,100%{filter:drop-shadow(0 0 6px #ffd77b) drop-shadow(0 0 10px rgba(255,215,123,.6))}50%{filter:drop-shadow(0 0 10px #fff5cc) drop-shadow(0 0 18px rgba(255,215,123,.9))}}
+    /* Stelle di sfondo nel contenitore mappa (effetto spaziale) */
+    #map::before{content:'';position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(1px 1px at 13% 18%,#fff,transparent 50%),radial-gradient(1px 1px at 27% 67%,#fff,transparent 50%),radial-gradient(1px 1px at 41% 34%,#fff,transparent 50%),radial-gradient(1px 1px at 58% 78%,#fff,transparent 50%),radial-gradient(1px 1px at 72% 22%,#fff,transparent 50%),radial-gradient(1px 1px at 84% 56%,#fff,transparent 50%),radial-gradient(1.5px 1.5px at 8% 89%,#ffe8a8,transparent 50%),radial-gradient(1.5px 1.5px at 35% 12%,#ffe8a8,transparent 50%),radial-gradient(1.5px 1.5px at 66% 45%,#a8c8ff,transparent 50%);opacity:.4;z-index:1}
+    .map-toolbar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+    .map-toolbar label{display:flex;align-items:center;gap:6px;margin:0;font-size:12px;color:var(--muted);cursor:pointer;padding:6px 10px;border:1px solid var(--line);border-radius:4px;transition:all .2s ease;background:var(--panel)}
+    .map-toolbar label:hover{border-color:var(--gold);color:var(--ink)}
+    .map-toolbar input{accent-color:var(--gold);margin:0}
+    .lp-legend{margin-top:10px;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:4px;font-size:11px;color:var(--muted);display:none}
+    .lp-legend.on{display:block;animation:fadeUp .4s ease both}
+    .lp-legend .scale{display:flex;height:8px;border-radius:2px;margin:6px 0 4px;background:linear-gradient(to right,#1a3a23 0%,#2d5a2f 20%,#5a7a3a 40%,#a87a3a 60%,#c87850 80%,#8b3030 100%)}
+    .lp-legend .labels{display:flex;justify-content:space-between;font-size:10px}
+    .verdict{border:1px solid var(--line);padding:18px;background:linear-gradient(180deg,#0c0f15 0,#0a0d12 100%);margin-bottom:18px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+    .verdict .dot{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid var(--line)}
+    .verdict.good .dot{background:#1a3a23;border-color:var(--good);color:var(--good)}
+    .verdict.ok .dot{background:#3a2f12;border-color:#f6d37e;color:#f6d37e}
+    .verdict.bad .dot{background:#3a1818;border-color:#e57373;color:#e57373}
+    .verdict h2{margin:0 0 4px;font-size:17px}
+    .verdict p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+    .verdict .meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted)}
+    .verdict .meta span{display:flex;gap:5px;align-items:center}
+    .moon{display:inline-block;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff 30%,#d8d8d8 100%);box-shadow:inset -3px -2px 0 rgba(0,0,0,.4);vertical-align:middle}
+    .moon.waxing{box-shadow:inset 3px -2px 0 rgba(0,0,0,.4)}
+    .moon.waning{box-shadow:inset -3px -2px 0 rgba(0,0,0,.5)}
+    .moon.full{box-shadow:none;background:#fff}
+    /* Animazioni */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes scaleIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+    @keyframes pulseDot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:.8}}
+    @keyframes glowPulse{0%,100%{box-shadow:0 0 0 0 rgba(154,230,180,0)}50%{box-shadow:0 0 28px 6px rgba(154,230,180,.35)}}
+    @keyframes glowPulseAmber{0%,100%{box-shadow:0 0 0 0 rgba(246,211,126,0)}50%{box-shadow:0 0 28px 6px rgba(246,211,126,.4)}}
+    @keyframes glowPulseRed{0%,100%{box-shadow:0 0 0 0 rgba(229,115,115,0)}50%{box-shadow:0 0 28px 6px rgba(229,115,115,.4)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+    @keyframes countUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+    .verdict{animation:fadeUp .8s cubic-bezier(.2,.7,.3,1) .05s both}
+    .layout{animation:fadeUp .8s cubic-bezier(.2,.7,.3,1) .25s both}
+    .verdict+.layout+section{animation:fadeUp .8s cubic-bezier(.2,.7,.3,1) .4s both}
+    main>section.panel{animation:fadeUp .8s cubic-bezier(.2,.7,.3,1) .55s both}
+    .panel h2,.verdict h2{animation:fadeIn .6s ease .8s both}
+
+    .verdict .dot{transition:transform .4s ease,background .5s ease,border-color .5s ease}
+    .verdict .dot.loading{animation:pulseDot 1.2s ease-in-out infinite}
+    .verdict .dot.loading::before{content:'';width:22px;height:22px;border:3px solid var(--muted);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;display:block}
+    .verdict .dot.loading{font-size:0;color:transparent}
+
+    .verdict.good .dot{animation:scaleIn .6s cubic-bezier(.2,.8,.3,1.4) .9s both,glowPulse 2.4s ease-in-out 1.6s infinite}
+    .verdict.ok .dot{animation:scaleIn .6s cubic-bezier(.2,.8,.3,1.4) .9s both,glowPulseAmber 2.4s ease-in-out 1.6s infinite}
+    .verdict.bad .dot{animation:scaleIn .6s cubic-bezier(.2,.8,.3,1.4) .9s both,glowPulseRed 2.4s ease-in-out 1.6s infinite}
+    .verdict h2,.verdict p,.verdict .meta{animation:fadeUp .6s ease 1s both}
+    .verdict .meta{animation-delay:1.2s}
+    .verdict.good h2,.verdict.ok h2,.verdict.bad h2{color:var(--ink)}
+
+    .verdict .meta span{transition:color .25s ease,transform .25s ease;display:inline-flex}
+    .verdict .meta span:hover{color:var(--ink);transform:translateY(-1px)}
+
+    button{transition:transform .2s ease,background-color .3s ease,border-color .3s ease,box-shadow .3s ease}
+    button:hover{transform:translateY(-3px);border-color:var(--gold);box-shadow:0 8px 22px rgba(215,172,82,.25)}
+    button:active{transform:translateY(-1px);box-shadow:0 3px 10px rgba(215,172,82,.2)}
+    button.primary:hover{box-shadow:0 10px 28px rgba(215,172,82,.5);background:#e8b85e}
+
+    select{transition:border-color .25s ease,box-shadow .25s ease,transform .2s ease}
+    select:hover,select:focus{border-color:var(--blue);outline:none;box-shadow:0 0 0 4px rgba(140,197,255,.18);transform:translateY(-1px)}
+
+    .card{transition:transform .3s cubic-bezier(.2,.8,.3,1),border-color .3s ease,background .3s ease,box-shadow .3s ease;animation:scaleIn .5s cubic-bezier(.2,.8,.3,1) both}
+    .card:nth-child(1){animation-delay:1.3s}
+    .card:nth-child(2){animation-delay:1.45s}
+    .card:nth-child(3){animation-delay:1.6s}
+    .card:hover{transform:translateY(-4px) scale(1.02);border-color:var(--gold);background:#131722;box-shadow:0 12px 28px rgba(0,0,0,.4)}
+    .card strong{transition:color .3s ease;display:inline-block}
+    .card:hover strong{animation:countUp .4s ease}
+
+    .places li{transition:padding-left .25s ease,color .25s ease,background .25s ease;border-radius:4px;padding-left:4px;margin-left:-4px}
+    .places li:hover{padding-left:14px;background:rgba(255,215,123,.06)}
+    .places li:hover a{color:var(--gold)}
+
+    .setup{transition:background .35s ease,border-color .35s ease,transform .25s ease}
+    .setup:hover{background:#1c1810;border-color:var(--gold);transform:translateX(4px)}
+
+    .status{transition:color .3s ease}
+
+    #map{transition:filter .5s ease,box-shadow .4s ease}
+    #map:hover{filter:brightness(1.12) saturate(1.05);box-shadow:0 8px 24px rgba(0,0,0,.5)}
+
+    h1{animation:fadeUp 1s cubic-bezier(.2,.7,.3,1) both}
+    .lead{animation:fadeIn 1s ease .3s both}
+
+    /* Glossario tooltip */
+    .g{position:relative;cursor:help;border-bottom:1px dotted var(--gold);color:var(--ink);transition:color .2s ease}
+    .g:hover{color:var(--gold)}
+    .g::before,.g::after{position:absolute;left:50%;opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:50}
+    .g::before{content:'?';width:18px;height:18px;background:var(--gold);color:#1b1405;border-radius:50%;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;top:-22px;transform:translateX(-50%) scale(.6)}
+    .g::after{content:attr(data-tip);width:max-content;max-width:260px;background:#1a1f2c;color:var(--ink);border:1px solid var(--gold);padding:8px 11px;border-radius:6px;font-size:12px;line-height:1.4;font-weight:normal;text-align:left;top:-8px;left:0;transform:translate(-10%,-100%) translateY(8px);box-shadow:0 8px 22px rgba(0,0,0,.5);white-space:normal}
+    .g:hover::before,.g:hover::after{opacity:1;transform:translateX(-50%) scale(1)}
+    .g:hover::after{transform:translate(0,-100%) translateY(-2px);left:50%}
+
+    /* Setup box ricco */
+    .setup{margin-top:15px;border-left:3px solid var(--gold);padding:0;background:transparent;font-size:13px;line-height:1.5}
+    .setup .head{padding:12px 14px;background:#15130d;font-weight:bold;color:var(--gold);font-size:14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,215,123,.15)}
+    .setup .params{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,215,123,.1)}
+    .setup .param{background:#15130d;padding:10px 12px;text-align:center}
+    .setup .param .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+    .setup .param .val{font-size:17px;color:var(--ink);font-weight:600}
+    .setup .why{padding:11px 14px;background:#15130d;font-size:12px;color:var(--muted);line-height:1.55;border-top:1px solid rgba(255,215,123,.1)}
+    .setup .why b{color:var(--gold);font-weight:600}
+    .setup .checklist{padding:11px 14px;background:#15130d;font-size:12px;border-top:1px solid rgba(255,215,123,.1)}
+    .setup .checklist li{margin:4px 0;color:var(--muted);list-style:none;padding-left:18px;position:relative}
+    .setup .checklist li::before{content:'✓';position:absolute;left:0;color:var(--good);font-weight:bold}
+
+    @media(prefers-reduced-motion:reduce){
+      *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Astro Scout</h1>
+  <p class="lead">Configurazione di scatto, condizioni del cielo e punti panoramici vicino a te.</p>
+
+  <!-- STEP 1: Stasera è buono? -->
+  <section class="verdict" id="verdict">
+    <div class="dot" id="verdictDot">…</div>
+    <div>
+      <h2 id="verdictTitle">Sto valutando le condizioni…</h2>
+      <p id="verdictMsg">Calcolo nuvole, vento e fase lunare per la tua posizione.</p>
+      <div class="meta" id="verdictMeta">
+        <span>🌙 <span id="moonInfo">luna —</span></span>
+        <span>🌅 <span id="sunInfo">tramonto —</span></span>
+        <span>🌌 <span id="astroInfo">buio astronomico —</span></span>
+      </div>
+    </div>
+  </section>
+
+  <div class="layout">
+    <section class="panel">
+      <h2>La tua attrezzatura</h2>
+      <div class="fields">
+        <div><label for="camera">Fotocamera</label><select id="camera">
+          <optgroup label="— Canon —">
+            <option value="1">Canon EOS R5 / R6 / R · Full frame</option>
+            <option value="1">Canon EOS 5D / 6D · Full frame</option>
+            <option value="1.6">Canon EOS R7 / R10 / R50 · APS-C</option>
+            <option value="1.6">Canon EOS 80D / 90D · APS-C</option>
+          </optgroup>
+          <optgroup label="— Nikon —">
+            <option value="1">Nikon Z6 / Z7 / Z9 · Full frame</option>
+            <option value="1">Nikon D750 / D850 · Full frame</option>
+            <option value="1.5">Nikon Z50 / Z fc · APS-C (DX)</option>
+            <option value="1.5">Nikon D7500 / D500 · APS-C (DX)</option>
+          </optgroup>
+          <optgroup label="— Sony —">
+            <option value="1">Sony α7 / α9 · Full frame</option>
+            <option value="1.5">Sony α6100 / α6400 / α6700 · APS-C</option>
+          </optgroup>
+          <optgroup label="— Fujifilm —">
+            <option value="1">Fuji X-H2 / X-T5 · APS-C</option>
+            <option value="1.5">Fuji X-T30 / X-S10 · APS-C</option>
+            <option value="1">Fuji GFX (medio formato, crop 0.79)</option>
+          </optgroup>
+          <optgroup label="— Pentax / Olympus / Panasonic —">
+            <option value="1">Pentax K-3 / K-1 · APS-C / FF</option>
+            <option value="2">Olympus OM-D / Pen · Micro 4/3</option>
+            <option value="2">Panasonic GH / G9 · Micro 4/3</option>
+          </optgroup>
+          <optgroup label="— Smartphone —">
+            <option value="1">iPhone / Pixel / Galaxy · (eq. FF)</option>
+          </optgroup>
+        </select></div>
+        <div><label for="lens">Obiettivo</label><select id="lens">
+          <optgroup label="— Grandangolari (stelle e via lattea) —">
+            <option value="14,2.8">14 mm f/2.8 (vari)</option>
+            <option value="16,2.8">16 mm f/2.8 (Sony E / Fuji X)</option>
+            <option value="20,1.8">20 mm f/1.8 (Sigma / Canon RF)</option>
+            <option value="24,1.4">24 mm f/1.4 (profi)</option>
+            <option value="24,1.8">24 mm f/1.8 (Sony / Sigma)</option>
+          </optgroup>
+          <optgroup label="— Standard (stelle e paesaggio) —">
+            <option value="35,1.4">35 mm f/1.4 (profi)</option>
+            <option value="35,1.8">35 mm f/1.8 (tutti i brand)</option>
+            <option value="50,1.4">50 mm f/1.4 (profi)</option>
+            <option value="50,1.8">50 mm f/1.8 (tutti i brand)</option>
+          </optgroup>
+          <optgroup label="— Teleobiettivi (luna e pianeti) —">
+            <option value="85,1.8">85 mm f/1.8</option>
+            <option value="135,1.8">135 mm f/1.8 (Sigma Art)</option>
+            <option value="200,2.8">200 mm f/2.8 (profi)</option>
+            <option value="200,5.6">200 mm f/5.6 (kit)</option>
+            <option value="300,4">300 mm f/4 (sport)</option>
+          </optgroup>
+          <optgroup label="— Zoom —">
+            <option value="16,3.5">16–50 mm f/3.5–5.6 (kit APS-C)</option>
+            <option value="24,2.8">24–70 mm f/2.8 (profi)</option>
+            <option value="24,4">24–105 mm f/4 (tuttofare)</option>
+            <option value="70,2.8">70–200 mm f/2.8 (profi)</option>
+          </optgroup>
+          <optgroup label="— Manuali / Vintage (spesso molto luminosi) —">
+            <option value="28,1.8">28 mm f/1.8 (Samyang / Rokinon)</option>
+            <option value="35,1.4">35 mm f/1.4 (Samyang manuale)</option>
+            <option value="50,0.95">50 mm f/0.95 (Mitakon / Voigtländer)</option>
+            <option value="85,1.2">85 mm f/1.2 (Samyang / Canon)</option>
+          </optgroup>
+        </select></div>
+      </div>
+      <div class="setup" id="setup"></div>
+      <div class="actions"><button class="primary" id="locate">Usa la mia posizione</button><button id="refresh">Aggiorna cielo</button></div>
+      <p class="status" id="place">Posizione iniziale: Barcellona Pozzo di Gotto</p>
+    </section>
+    <section class="panel">
+      <h2>Condizioni notturne</h2>
+      <div class="cards"><div class="card"><span>Nuvole</span><strong id="cloud">—</strong></div><div class="card"><span>Vento</span><strong id="wind">—</strong></div><div class="card"><span><span class="g" data-tip="Quanto è limpido il cielo: più alta è, più stelle deboli si vedono. Dipende da umidità, polvere e aerosol in atmosfera.">Trasparenza</span></span><strong id="rating">—</strong></div></div>
+      <p class="status" id="forecast">Carico le condizioni previste per la prima ora notturna disponibile…</p>
+    </section>
+  </div>
+  <section class="panel" style="margin-top:18px">
+    <h2>Mappa live</h2>
+    <div class="map-toolbar">
+      <label><input type="checkbox" id="lpToggle"> �️ Inquinamento luminoso</label>
+    </div>
+    <div id="map" aria-label="Mappa interattiva con posizione e punti panoramici"></div>
+    <div class="lp-legend" id="lpLegend">
+      <strong style="color:var(--gold)">Scala di Bortle approssimata</strong>
+      <div class="scale"></div>
+      <div class="labels"><span>Cielo buio (B1)</span><span>Suburbano (B5)</span><span>Centro città (B9)</span></div>
+    </div>
+    <p class="status">Tocca la mappa per spostare la ricerca in un altro punto.</p>
+  </section>
+  <section class="panel" style="margin-top:18px">
+    <h2>Posti da cui scattare nelle vicinanze</h2>
+    <p class="status" id="placesStatus">Ricerca di belvederi e punti panoramici entro 35 km.</p>
+    <ul class="places" id="places"><li>Caricamento…</li></ul>
+  </section>
+  <p class="foot">La posizione viene richiesta solo dal tuo browser e non viene salvata da questa pagina. Meteo: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open‑Meteo</a>; punti panoramici: OpenStreetMap/Overpass. Verifica sempre accessi, parcheggi, proprietà private e regolamenti locali prima di uscire.</p>
+
+  <!-- Mini glossario -->
+  <section class="panel" style="margin-top:18px">
+    <h2>📖 Mini glossario</h2>
+    <p class="status">Passa il mouse sui termini <span class="g" data-tip="Esempio! Questo è un tooltip dimostrativo.">sottolineati</span> per la spiegazione. Ecco i concetti chiave per iniziare:</p>
+    <div class="cards" style="grid-template-columns:repeat(2,1fr)">
+      <div class="card"><span><span class="g" data-tip="La focale 'reale' rapportata a un sensore full-frame (35mm). Esempio: 16mm su APS-C (crop 1.5×) equivale a 24mm full-frame.">Focale equivalente</span></span><strong>24 mm</strong></div>
+      <div class="card"><span><span class="g" data-tip="Quanto è ferma l'atmosfera. Seeing scarso = stelle 'tremolanti', seeing buono = stelle ferme e nitide.">Seeing</span></span><strong>buono ≈ fermo</strong></div>
+      <div class="card"><span><span class="g" data-tip="Scala di inquinamento luminoso da 1 (cielo perfetto) a 9 (centro città). Più basso è, meglio è.">Scala di Bortle</span></span><strong>1 → 9</strong></div>
+      <div class="card"><span><span class="g" data-tip="Fase in cui il sole è più di 18° sotto l'orizzonte: cielo davvero buio, ideale per deep sky.">Crepuscolo astronomico</span></span><strong>~2h dopo il tramonto</strong></div>
+    </div>
+  </section>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+(() => {
+  let lat=38.147, lon=15.224;
+  const $=id=>document.getElementById(id);
+  console.log('🚀 Astro Scout init');
+
+  // Calcolo fase lunare (algoritmo semplificato, no dipendenze)
+  function moonPhase(date){
+    const lp=2551443, now=new Date(date.getFullYear(),date.getMonth(),date.getDate(),20,35,0), newMoon=new Date(1970,0,7,20,35,0);
+    const phase=((now.getTime()-newMoon.getTime())/1000)%lp, days=phase/(24*3600), phaseNum=Math.floor((days/29.5305882)*8+0.5)%8;
+    const illum=Math.round((1-Math.cos(2*Math.PI*days/29.5305882))*50);
+    const names=['Nuova','Crescente','Crescente','Primo quarto','Crescente','Crescente','Piena','Calante'];
+    const classes=['moon','moon waxing','moon waxing','moon waxing','moon waxing','moon waxing','moon full','moon waning'];
+    return{name:names[phaseNum],cls:classes[phaseNum],illum};
+  }
+
+  // Valuta qualità serata in base a nuvole, vento, luna
+  function judgeSky(cloud,wind,moonIllum){
+    let score=100;
+    if(cloud>60)score-=60; else if(cloud>30)score-=30; else if(cloud>15)score-=15;
+    if(wind>25)score-=30; else if(wind>15)score-=15;
+    if(moonIllum>70)score-=25; else if(moonIllum>40)score-=10;
+    if(score>=70)return{good:true,cls:'good',emoji:'✓',label:'Ottima',msg:'Cielo sereno, vento calmo e luna ridotta: serata perfetta per il deep sky.'};
+    if(score>=40)return{good:false,cls:'ok',emoji:'~',label:'Discreta',msg:'Condizioni accettabili. Pianifica soggetti luminosi o paesaggi con luna.'};
+    return{good:false,cls:'bad',emoji:'✕',label:'Sconsigliata',msg:'Cielo coperto, vento forte o luna piena: meglio un\'altra serata.'};
+  }
+
+  function fmtTime(iso){
+    if(!iso)return'—';
+    const d=new Date(iso);
+    return d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  }
+  function setup(){
+    const [f,ap]=$('lens').value.split(',').map(Number),
+          crop=Number($('camera').value),
+          eq=f*crop;
+    const sec=Math.max(2,Math.min(20,Math.floor(250/eq)));
+    const stars=f<35;
+    const tip=(term,def)=>`<span class="g" data-tip="${def}">${term}</span>`;
+    if(stars){
+      $('setup').innerHTML=`
+        <div class="head">📸 Stelle e paesaggio</div>
+        <div class="params">
+          <div class="param"><div class="lbl">${tip('Apertura','Diaframma aperto per raccogliere più luce possibile.')}</div><div class="val">f/${ap}</div></div>
+          <div class="param"><div class="lbl">${tip('Tempo','La regola 250/focale evita stelle a strisciotto.')}</div><div class="val">${sec}s</div></div>
+          <div class="param"><div class="lbl">${tip('ISO','Buon compromesso segnale-rumore sui sensori moderni.')}</div><div class="val">1600</div></div>
+        </div>
+        <div class="why"><b>Perché questi valori?</b> Con ${f}mm (${eq.toFixed(0)} mm equivalenti) stai inquadrando un'ampia porzione di cielo: serve raccogliere più luce possibile senza far "strisciare" le stelle. f/${ap} è il massimo del tuo obiettivo, ${sec}s è il tempo limite prima del mosso, ISO 1600 bilancia luce e rumore.</div>
+        <ul class="checklist">
+          <li>${tip('Treppiede','Per esposizioni lunghe è obbligatorio.')} ${tip('stabile','Anche solo appoggiato su un muretto: l\'importante è che non vibri.')}</li>
+          <li>${tip('RAW','Formato non compresso: più margine per il ritocco.')}</li>
+          <li>${tip('Messa a fuoco manuale','L\'autofocus di notte non funziona.')} su una stella luminosa, con ingrandimento live view</li>
+          <li>${tip('Autoscatto 2s','Timer per evitare vibrazioni alla pressione del pulsante.')}</li>
+        </ul>`;
+    } else {
+      $('setup').innerHTML=`
+        <div class="head">🌙 Luna e pianeti</div>
+        <div class="params">
+          <div class="param"><div class="lbl">${tip('ISO','Sensibilità bassa: meno rumore su superfici uniformi.')}</div><div class="val">100</div></div>
+          <div class="param"><div class="lbl">${tip('Apertura','Chiusa per non sovraesporre il soggetto luminoso.')}</div><div class="val">f/8</div></div>
+          <div class="param"><div class="lbl">${tip('Tempo','Velocissimo: la luna è un faro, non serve esporre a lungo.')}</div><div class="val">1/125s</div></div>
+        </div>
+        <div class="why"><b>Perché questi valori?</b> La luna e i pianeti sono oggetti luminosissimi. Con ${f}mm (${eq.toFixed(0)} mm equivalenti) non ti serve catturare più luce: ti serve "fermare" il soggetto e ridurre il rumore. ISO basso, diaframma chiuso per nitidezza, tempo veloce.</div>
+        <ul class="checklist">
+          <li>${tip('Treppiede','Sempre consigliato, anche per tempi veloci.')}</li>
+          <li>${tip('Esponi sul soggetto','Evita di inquadrare zone buie: manderebbero la luna in sovraesposizione.')}</li>
+          <li>Scatta una piccola raffica: scegli poi lo scatto migliore</li>
+        </ul>`;
+    }
+  }
+  async function weather(){
+    console.log('☁️ weather() chiamata, lat='+lat+' lon='+lon);
+    $('forecast').textContent='Aggiornamento dal servizio meteo…';
+    try{
+      const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=cloud_cover,wind_speed_10m&timezone=auto&forecast_days=3&daily=sunrise,sunset`;
+      const j=await fetch(url).then(r=>r.json());
+      const now=new Date();
+      let i=j.hourly.time.findIndex(t=>{const d=new Date(t);return d>now&&d.getHours()>=21});
+      if(i<0)i=0;
+      const c=Math.round(j.hourly.cloud_cover[i]),
+            w=Math.round(j.hourly.wind_speed_10m[i]);
+      $('cloud').textContent=c+'%';
+      $('wind').textContent=w+' km/h';
+      $('rating').textContent=c<20&&w<18?'Buona':c<45&&w<28?'Discreta':'Debole';
+      $('rating').className=c<20&&w<18?'ok':'';
+      $('forecast').textContent=`Riferimento: ${j.hourly.time[i].replace('T',' ')} · condizioni indicative, non un bollettino di sicurezza.`;
+
+      // Aggiorna verdict "Stasera è buono?"
+      const moon=moonPhase(now);
+      const verdict=judgeSky(c,w,moon.illum);
+      $('verdict').className='verdict '+verdict.cls;
+      $('verdictDot').textContent=verdict.emoji;
+      $('verdictTitle').textContent=`Stasera è ${verdict.label.toLowerCase()}`;
+      $('verdictMsg').textContent=verdict.msg;
+      $('moonInfo').innerHTML=`<span class="${moon.cls}"></span> ${moon.name} (${moon.illum}%)`;
+      $('sunInfo').textContent='tramonto '+fmtTime(j.daily?.sunset?.[0]);
+      $('astroInfo').textContent='crepuscolo astronomico ~2h dopo il tramonto';
+    }catch(e){
+      $('forecast').textContent='Non riesco a raggiungere il servizio meteo. Riprova con connessione attiva.';
+      $('verdictTitle').textContent='Dati meteo non disponibili';
+      $('verdictMsg').textContent='Verifica la connessione e riprova: non posso valutare la serata.';
+    }
+  }
+  // [Spostato più sotto: placeMarkers dipende da 'map' che viene creato dopo l'init Leaflet]
+
+  // Calcola distanza Haversine (km) tra due punti
+  function distKm(lat1,lon1,lat2,lon2){
+    const R=6371,toRad=x=>x*Math.PI/180;
+    const dLat=toRad(lat2-lat1),dLon=toRad(lon2-lon1);
+    const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  }
+  // Calcola bearing (direzione bussola) da punto 1 a punto 2
+  function bearing(lat1,lon1,lat2,lon2){
+    const toRad=x=>x*Math.PI/180,toDeg=x=>x*180/Math.PI;
+    const dLon=toRad(lon2-lon1),y=Math.sin(dLon)*Math.cos(toRad(lat2)),x=Math.cos(toRad(lat1))*Math.sin(toRad(lat2))-Math.sin(toRad(lat1))*Math.cos(toRad(lat2))*Math.cos(dLon);
+    return(toDeg(Math.atan2(y,x))+360)%360;
+  }
+  function compass(deg){
+    const dirs=['N','NE','E','SE','S','SO','O','NO'];
+    return dirs[Math.round(deg/45)%8];
+  }
+
+  async function places(){
+    console.log('📍 places() chiamata, lat='+lat+' lon='+lon);
+    $('placesStatus').textContent='Cerco punti panoramici entro 50 km…';
+    clearPlaceMarkers();
+    try{
+      const q=`[out:json][timeout:20];(node["tourism"="viewpoint"](around:50000,${lat},${lon});way["tourism"="viewpoint"](around:50000,${lat},${lon});node["natural"="peak"](around:50000,${lat},${lon});way["natural"="peak"](around:50000,${lat},${lon}););out center 12;`;
+      const j=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:q}).then(r=>r.json());
+      const items=j.elements.slice(0,10).map(x=>{
+        const a=x.lat??x.center.lat,b=x.lon??x.center.lon;
+        const t=x.tags||{};
+        return{
+          lat:a,lon:b,
+          name:t.name||(t.tourism==='viewpoint'?'Belvedere':'Punto panoramico'),
+          type:t.tourism==='viewpoint'?'viewpoint':t.natural==='peak'?'peak':'viewpoint',
+          ele:t.ele?Number(t.ele):null
+        };
+      }).sort((p,q)=>distKm(lat,lon,p.lat,p.lon)-distKm(lat,lon,q.lat,q.lon));
+      if(!items.length){
+        $('places').innerHTML='<li>Nessun belvedere o altura mappata nelle vicinanze. Prova a spostare la mappa o consulta direttamente OpenStreetMap.</li>';
+        $('placesStatus').textContent='Nessun risultato entro 50 km dalla posizione attuale.';
+        return;
+      }
+      $('places').innerHTML=items.map(p=>{
+        const d=distKm(lat,lon,p.lat,p.lon);
+        const deg=bearing(lat,lon,p.lat,p.lon);
+        const dir=compass(deg);
+        const alt=p.ele?` · ⛰️ ${p.ele} m`:'';
+        const icon=p.type==='peak'?'🗻':'🌄';
+        const osm=`https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lon}#map=15/${p.lat}/${p.lon}`;
+        return`<li><a target="_blank" rel="noreferrer" href="${osm}">${icon} ${p.name}</a><small>📏 ${d.toFixed(1)} km · 🧭 ${dir} (${deg.toFixed(0)}°)${alt}</small></li>`;
+      }).join('');
+      items.forEach(p=>{
+        const m=L.circleMarker([p.lat,p.lon],{radius:6,color:'#8cc5ff',fillColor:'#8cc5ff',fillOpacity:.7,weight:1.5}).bindPopup(`<b>${p.name}</b><br>${distKm(lat,lon,p.lat,p.lon).toFixed(1)} km ${compass(bearing(lat,lon,p.lat,p.lon))}${p.ele?`<br>${p.ele} m s.l.m.`:''}`);
+        m.addTo(placeMarkers);
+      });
+      $('placesStatus').textContent=`Trovati ${items.length} punti panoramici entro 50 km. Marker blu aggiunti sulla mappa.`;
+    }catch(e){
+      $('places').innerHTML='<li>La ricerca dei luoghi non è disponibile al momento. Riprova più tardi.</li>';
+      $('placesStatus').textContent='Servizio cartografico momentaneamente non raggiungibile.';
+    }
+  }
+  function update(){
+    // Stato di caricamento per il verdict
+    const v=$('verdict'),d=$('verdictDot'),t=$('verdictTitle'),m=$('verdictMsg');
+    v.className='verdict';d.classList.add('loading');
+    t.textContent='Sto valutando le condizioni…';
+    m.textContent='Calcolo nuvole, vento e fase lunare per la tua posizione.';
+    weather().finally(()=>d.classList.remove('loading'));
+    places();
+  }
+  // Inizializzazione mappa Leaflet
+  // Forza il calcolo dell'altezza della mappa (fix "mappa nera" quando contenitore ha display:none iniziale o CSS non caricato)
+  const mapEl=$('map');
+  if(!mapEl.style.height)mapEl.style.height='380px';
+
+  const map=L.map('map',{zoomControl:true,worldCopyJump:true}).setView([lat,lon],9);
+
+  // Tema scuro "spaziale" — CARTO Dark Matter (gratuito, no API key, perfetto per night-mode)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+    maxZoom:19,
+    subdomains:'abcd',
+    attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> · © <a href="https://carto.com/attributions">CARTO</a>'
+  }).addTo(map);
+
+  // Filtro CSS per dare un tocco "spaziale" (leggero blu + luminosità controllata)
+  mapEl.style.filter='hue-rotate(195deg) invert(.92) brightness(1.05) contrast(1.1)';
+
+  // Marker utente: oro con alone luminoso (stile "stella")
+  const userMarker=L.circleMarker([lat,lon],{
+    radius:9,color:'#fff5cc',fillColor:'#ffd77b',fillOpacity:1,weight:3,
+    className:'user-star'
+  }).addTo(map);
+  userMarker.bindPopup('La tua posizione attuale');
+
+  // Layer marker belvederi (resettato a ogni ricerca) — creato DOPO l'init della mappa
+  let placeMarkers=L.layerGroup().addTo(map);
+  function clearPlaceMarkers(){placeMarkers.clearLayers()}
+
+  // Layer inquinamento luminoso (tile overlay da lightpollutionmap.info)
+  const lpLayer=L.tileLayer('https://djlorenz.github.io/astronomy/lp2022/overlay/tiles/{z}/{x}/{y}.png',{maxZoom:8,opacity:.55,attribution:'Light pollution: D. Lorenz et al. (2022)'});
+  $('lpToggle').addEventListener('change',e=>{
+    if(e.target.checked){lpLayer.addTo(map);$('lpLegend').classList.add('on')}else{map.removeLayer(lpLayer);$('lpLegend').classList.remove('on')}
+  });
+
+  // Click sulla mappa per riposizionare
+  map.on('click',e=>{lat=e.latlng.lat;lon=e.latlng.lng;userMarker.setLatLng(e.latlng);userMarker.bindPopup(`Posizione scelta: ${lat.toFixed(4)}, ${lon.toFixed(4)}`).openPopup();update()});
+
+  function setUserMarker(lat,lon){
+    if(userMarker){userMarker.setLatLng([lat,lon])}
+    map.setView([lat,lon],map.getZoom()||9);
+  }
+
+  // Persistenza preferenze utente (camera, obiettivo, toggle LP)
+  const STORE_KEY='astroScoutPrefs';
+  function savePrefs(){
+    try{localStorage.setItem(STORE_KEY,JSON.stringify({camera:$('camera').value,lens:$('lens').value,lp:$('lpToggle').checked}))}catch(_){}
+  }
+  function loadPrefs(){
+    try{
+      const s=JSON.parse(localStorage.getItem(STORE_KEY)||'{}');
+      if(s.camera&&$('camera').querySelector(`option[value="${s.camera}"]`))$('camera').value=s.camera;
+      if(s.lens&&$('lens').querySelector(`option[value="${s.lens}"]`))$('lens').value=s.lens;
+      if(typeof s.lp==='boolean'){$('lpToggle').checked=s.lp;if(s.lp){lpLayer.addTo(map);$('lpLegend').classList.add('on')}}
+    }catch(_){}
+  }
+
+  $('lens').addEventListener('change',()=>{setup();savePrefs()});
+  $('camera').addEventListener('change',()=>{setup();savePrefs()});
+  $('lpToggle').addEventListener('change',e=>{if(e.target.checked){lpLayer.addTo(map);$('lpLegend').classList.add('on')}else{map.removeLayer(lpLayer);$('lpLegend').classList.remove('on')}savePrefs()});
+  $('refresh').addEventListener('click',update);
+  $('locate').addEventListener('click',()=>{if(!navigator.geolocation){$('place').textContent='La geolocalizzazione non è supportata dal browser.';return} $('place').textContent='Richiesta posizione…';navigator.geolocation.getCurrentPosition(p=>{lat=p.coords.latitude;lon=p.coords.longitude;$('place').textContent=`Posizione attiva: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;setUserMarker(lat,lon);update()},()=>{$('place').textContent='Posizione non disponibile: uso Barcellona Pozzo di Gotto.'},{enableHighAccuracy:false,timeout:10000})});
+
+  loadPrefs();
+  console.log('✅ loadPrefs ok');
+  setup();
+  console.log('✅ setup ok');
+  update();
+  console.log('✅ update chiamato');
+})();
+console.log('🌟 Script fine');
+</script>
+</body>
+</html>
