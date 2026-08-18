@@ -364,7 +364,7 @@
       </div>
       <div class="setup" id="setup"></div>
       <div class="actions"><button class="primary" id="locate">Usa la mia posizione</button><button id="refresh">Aggiorna cielo</button></div>
-      <p class="status" id="place">Posizione iniziale: Barcellona Pozzo di Gotto</p>
+      <p class="status" id="place">📍 Posizione non ancora scelta — clicca <b>📍 Posizione</b> in alto per iniziare.</p>
     </section>
     <section class="panel">
       <h2>🌤️ Condizioni del cielo stasera</h2>
@@ -510,7 +510,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 (() => {
-  let lat=38.147, lon=15.224;
+  let lat=null, lon=null;
   const $=id=>document.getElementById(id);
   console.log('🚀 Astro Scout init');
 
@@ -899,6 +899,7 @@ function renderEvents(){
 }
 
 function renderSky(){
+    if(lat===null){$('sky').innerHTML='<li>Scegli una posizione per vedere i target celesti visibili stasera.</li>';return}
     const list=loadSky(lat);
     if(!list.length){
       $('sky').innerHTML='<li>Nessun target raggiunge un\'altitudine utile stasera dalla tua posizione. Prova a spostarti più a sud (emisfero nord) o aspetta il cambio di stagione.</li>';
@@ -923,6 +924,18 @@ function renderSky(){
     // Stato di caricamento per il verdict
     const v=$('verdict'),d=$('verdictDot'),t=$('verdictTitle'),m=$('verdictMsg');
     v.className='verdict';d.classList.add('loading');
+    if(lat===null||lon===null){
+      v.classList.remove('good','ok','bad');
+      d.classList.remove('loading');
+      t.textContent='Scegli la tua posizione';
+      m.textContent='Clicca 📍 Posizione nell\'header per consentire la geolocalizzazione, oppure sposta la mappa e tocca un punto.';
+      d.textContent='📍';
+      $('forecast').textContent='In attesa della tua posizione…';
+      $('placesStatus').textContent='Scegli una posizione per cercare belvederi nelle vicinanze.';
+      renderSky();
+      renderEvents();
+      return;
+    }
     t.textContent='Sto valutando le condizioni…';
     m.textContent='Calcolo nuvole, vento e fase lunare per la tua posizione.';
     weather().finally(()=>d.classList.remove('loading'));
@@ -935,7 +948,7 @@ function renderSky(){
   const mapEl=$('map');
   if(!mapEl.style.height)mapEl.style.height='380px';
 
-  const map=L.map('map',{zoomControl:true,worldCopyJump:true}).setView([lat,lon],9);
+  const map=L.map('map',{zoomControl:true,worldCopyJump:true}).setView([42.5,12.5],4);
 
   // Tema scuro "spaziale" — CARTO Dark Matter (gratuito, no API key, perfetto per night-mode)
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
@@ -947,12 +960,19 @@ function renderSky(){
   // Filtro CSS: palette blu con regioni in giallo (più chiaro e leggibile)
   mapEl.style.filter='hue-rotate(180deg) saturate(1.2) brightness(1.15) contrast(1.05) sepia(.08)';
 
-  // Marker utente: oro con alone luminoso (stile "stella")
-  const userMarker=L.circleMarker([lat,lon],{
-    radius:9,color:'#fff5cc',fillColor:'#ffd77b',fillOpacity:1,weight:3,
-    className:'user-star'
-  }).addTo(map);
-  userMarker.bindPopup('La tua posizione attuale');
+  // Marker utente: oro con alone luminoso (stile "stella") — creato solo dopo la prima geolocalizzazione
+  let userMarker=null;
+  function ensureUserMarker(la,lo){
+    if(!userMarker){
+      userMarker=L.circleMarker([la,lo],{
+        radius:9,color:'#fff5cc',fillColor:'#ffd77b',fillOpacity:1,weight:3,
+        className:'user-star'
+      }).addTo(map);
+      userMarker.bindPopup('La tua posizione attuale');
+    }else{
+      userMarker.setLatLng([la,lo]);
+    }
+  }
 
   // Layer marker belvederi (resettato a ogni ricerca) — creato DOPO l'init della mappa
   let placeMarkers=L.layerGroup().addTo(map);
@@ -965,11 +985,11 @@ function renderSky(){
   });
 
   // Click sulla mappa per riposizionare
-  map.on('click',e=>{lat=e.latlng.lat;lon=e.latlng.lng;userMarker.setLatLng(e.latlng);userMarker.bindPopup(`Posizione scelta: ${lat.toFixed(4)}, ${lon.toFixed(4)}`).openPopup();update()});
+  map.on('click',e=>{lat=e.latlng.lat;lon=e.latlng.lng;ensureUserMarker(lat,lon);if(userMarker)userMarker.bindPopup(`Posizione scelta: ${lat.toFixed(4)}, ${lon.toFixed(4)}`).openPopup();update()});
 
-  function setUserMarker(lat,lon){
-    if(userMarker){userMarker.setLatLng([lat,lon])}
-    map.setView([lat,lon],map.getZoom()||9);
+  function setUserMarker(la,lo){
+    ensureUserMarker(la,lo);
+    map.setView([la,lo],map.getZoom()<9?9:map.getZoom());
   }
 
   // Persistenza preferenze utente (camera, obiettivo, toggle LP, toggle DSO)
