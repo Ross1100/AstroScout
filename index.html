@@ -523,10 +523,13 @@
           <label class="chip"><input type="checkbox" id="layerEcliptic"> Eclittica</label>
           <label class="chip"><input type="checkbox" id="layerGrid"> Griglia equatoriale</label>
           <label class="chip"><input type="checkbox" id="layerMilkyWay"> Via Lattea</label>
+          <label class="chip"><input type="checkbox" id="celestialToggle"> Vista semplificata</label>
+          <label class="chip"><input type="checkbox" id="dsoToggle" checked> Mostra target</label>
         </div>
       </div>
     </div>
     <div id="celestialMap" aria-label="Sfera celeste reale"></div>
+    <div id="skymap" aria-label="Vista semplificata target celesti" style="display:none"></div>
     <ul class="places" id="sky" style="margin-top:14px"><li>Calcolo target in corso…</li></ul>
   </section>
   <section class="panel" style="margin-top:18px">
@@ -1332,69 +1335,83 @@ function renderSky(){
     if(celestialMapEl&&!celestialMapEl.dataset.ready)applyCelestialConfig();
   }
 
-  // Vista semplificata Leaflet (RA→lat, Dec→lon) — per chi vuole bassa banda
+  // Vista semplificata Leaflet (RA→lat, Dec→lon) — inizializzata on-demand per evitare
+  // "Map container not found" quando il container è display:none.
   const skyMapEl=document.getElementById('skymap');
-  if(skyMapEl&&!skyMapEl.style.height)skyMapEl.style.height='420px';
+  if(skyMapEl)skyMapEl.style.height='420px';
 
-  const skyMap=L.map('skymap',{zoomControl:true,minZoom:1,maxZoom:4,worldCopyJump:true}).setView([30,0],1);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',{
-    maxZoom:4,
-    subdomains:'abcd',
-    attribution:'Target celesti: catalogo Messier + NGC'
-  }).addTo(skyMap);
+  let skyMap=null,dsoLayer=null,skyMapReady=false;
+  function initSkyMap(){
+    if(skyMapReady||!skyMapEl)return;
+    try{
+      skyMap=L.map('skymap',{zoomControl:true,minZoom:1,maxZoom:4,worldCopyJump:true}).setView([30,0],1);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',{
+        maxZoom:4,
+        subdomains:'abcd',
+        attribution:'Target celesti: catalogo Messier + NGC'
+      }).addTo(skyMap);
 
-  // Colori per tipo di oggetto
-  const dsoColors={
-    'galassia':'#ff6b9d',
-    'nebulosa':'#a8c8ff',
-    'ammasso aperto':'#ffd77b',
-    'ammasso globulare':'#fff5cc',
-    'nebulosa planetaria':'#9ae6b4'
-  };
+      // Colori per tipo di oggetto
+      const dsoColors={
+        'galassia':'#ff6b9d',
+        'nebulosa':'#a8c8ff',
+        'ammasso aperto':'#ffd77b',
+        'ammasso globulare':'#fff5cc',
+        'nebulosa planetaria':'#9ae6b4'
+      };
 
-  const dsoLayer=L.layerGroup().addTo(skyMap);
-
-  function renderSkyMap(){
-    dsoLayer.clearLayers();
-    SKY_CATALOG.forEach(o=>{
-      const lat=o.dec;
-      const lon=(o.ra*15)-180;
-      const color=dsoColors[o.type]||'#ffd77b';
-      const marker=L.circleMarker([lat,lon],{
-        radius:o.mag<5?9:o.mag<7?7:5,
-        color:'#fff',
-        fillColor:color,
-        fillOpacity:.85,
-        weight:1.5,
-        className:'dso-marker'
-      }).bindPopup(`
-        <b>${o.name}</b><br>
-        <small style="color:#a8c8ff">${o.type}</small><br>
-        <span style="opacity:.7">📐 ${o.size} · 🔆 mag ${o.mag}</span><br>
-        <p style="margin:6px 0 0;font-size:11px;color:#aeb5c4">${o.desc}</p>
-      `);
-      marker.addTo(dsoLayer);
-    });
+      dsoLayer=L.layerGroup().addTo(skyMap);
+      SKY_CATALOG.forEach(o=>{
+        const lat=o.dec;
+        const lon=(o.ra*15)-180;
+        const color=dsoColors[o.type]||'#ffd77b';
+        const marker=L.circleMarker([lat,lon],{
+          radius:o.mag<5?9:o.mag<7?7:5,
+          color:'#fff',
+          fillColor:color,
+          fillOpacity:.85,
+          weight:1.5,
+          className:'dso-marker'
+        }).bindPopup(`
+          <b>${o.name}</b><br>
+          <small style="color:#a8c8ff">${o.type}</small><br>
+          <span style="opacity:.7">📐 ${o.size} · 🔆 mag ${o.mag}</span><br>
+          <p style="margin:6px 0 0;font-size:11px;color:#aeb5c4">${o.desc}</p>
+        `);
+        marker.addTo(dsoLayer);
+      });
+      skyMapReady=true;
+    }catch(err){
+      console.warn('�️ Vista semplificata non inizializzata:',err.message);
+    }
   }
-  renderSkyMap();
 
   // Toggle: vista semplificata (off = default = d3-celestial)
-  $('celestialToggle').addEventListener('change',e=>{
-    if(e.target.checked){
-      // passa a vista semplificata
-      const celDiv=document.getElementById('celestialMap');
-      if(celDiv)celDiv.style.display='none';
-      const skymapEl=document.getElementById('skymap');
-      if(skymapEl)skymapEl.style.display='block';
-    }else{
-      showCelestialMap();
-    }
-  });
+  const celestialTgl=$('celestialToggle');
+  if(celestialTgl){
+    celestialTgl.addEventListener('change',e=>{
+      if(e.target.checked){
+        if(celestialMapEl)celestialMapEl.style.display='none';
+        if(skyMapEl)skyMapEl.style.display='block';
+        initSkyMap();
+        if(skyMap)setTimeout(()=>skyMap.invalidateSize(),200);
+      }else{
+        showCelestialMap();
+      }
+    });
+  }
 
   // Toggle mostra/nascondi tutti i target
-  $('dsoToggle').addEventListener('change',e=>{
-    if(e.target.checked){skyMap.addLayer(dsoLayer)}else{skyMap.removeLayer(dsoLayer)}
-  });
+  const dsoTgl=$('dsoToggle');
+  if(dsoTgl){
+    dsoTgl.addEventListener('change',e=>{
+      initSkyMap();
+      if(skyMap&&dsoLayer){
+        if(e.target.checked)skyMap.addLayer(dsoLayer);
+        else skyMap.removeLayer(dsoLayer);
+      }
+    });
+  }
 
   // Avvia con d3-celestial di default
   showCelestialMap();
