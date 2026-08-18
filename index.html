@@ -5,10 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Astro Scout</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@master/celestial.css">
-  <script src="https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@master/lib/d3.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@master/lib/d3.geo.projection.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@master/celestial.min.js"></script>
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#ffd77b">
   <style>
@@ -1311,7 +1307,7 @@ function renderSky(){
   $('lens').addEventListener('change',()=>{setup();savePrefs()});
   $('camera').addEventListener('change',()=>{setup();savePrefs()});
   $('lpToggle').addEventListener('change',e=>{if(e.target.checked){lpLayer.addTo(map);$('lpLegend').classList.add('on')}else{map.removeLayer(lpLayer);$('lpLegend').classList.remove('on')}savePrefs()});
-  $('dsoToggle')?.addEventListener('change',e=>{if(e.target.checked){skyMap.addLayer(dsoLayer)}else{skyMap.removeLayer(dsoLayer)}savePrefs()});
+  $('dsoToggle')?.addEventListener('change',e=>{skyState.dso=e.target.checked;renderSkyMap();savePrefs()});
   $('refresh').addEventListener('click',update);
   $('locate').addEventListener('click',()=>{if(!navigator.geolocation){$('place').textContent='La geolocalizzazione non è supportata dal browser.';return} $('place').textContent='Richiesta posizione…';navigator.geolocation.getCurrentPosition(p=>{lat=p.coords.latitude;lon=p.coords.longitude;$('place').textContent=`Posizione attiva: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;setUserMarker(lat,lon);update()},()=>{$('place').textContent='Posizione non disponibile: uso Barcellona Pozzo di Gotto.'},{enableHighAccuracy:false,timeout:10000})});
 
@@ -1365,149 +1361,202 @@ function renderSky(){
     return (gmst+lon)%360;
   }
 
-  // Inizializza d3-celestial come default — con retry se il container non ha ancora width
-  function renderCelestial(){ applyCelestialConfig(); }
-  function showCelestialMap(){
-    const skymapEl=document.getElementById('skymap');
-    if(skymapEl)skymapEl.style.display='none';
-    if(celestialMapEl)celestialMapEl.style.display='block';
-    if(celestialMapEl&&!celestialMapEl.dataset.ready)applyCelestialConfig();
-  }
-
-  // Vista semplificata Leaflet (RA→lat, Dec→lon) — inizializzata on-demand per evitare
-  // "Map container not found" quando il container è display:none.
-  const skyMapEl=document.getElementById('skymap');
-  if(skyMapEl)skyMapEl.style.height='420px';
-
-  let skyMap=null,dsoLayer=null,skyMapReady=false;
-  function initSkyMap(){
-    if(skyMapReady||!skyMapEl)return;
-    try{
-      skyMap=L.map('skymap',{zoomControl:true,minZoom:1,maxZoom:4,worldCopyJump:true}).setView([30,0],1);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',{
-        maxZoom:4,
-        subdomains:'abcd',
-        attribution:'Target celesti: catalogo Messier + NGC'
-      }).addTo(skyMap);
-
-      // Colori per tipo di oggetto
-      const dsoColors={
-        'galassia':'#ff6b9d',
-        'nebulosa':'#a8c8ff',
-        'ammasso aperto':'#ffd77b',
-        'ammasso globulare':'#fff5cc',
-        'nebulosa planetaria':'#9ae6b4'
-      };
-
-      dsoLayer=L.layerGroup().addTo(skyMap);
-      SKY_CATALOG.forEach(o=>{
-        const lat=o.dec;
-        const lon=(o.ra*15)-180;
-        const color=dsoColors[o.type]||'#ffd77b';
-        const marker=L.circleMarker([lat,lon],{
-          radius:o.mag<5?9:o.mag<7?7:5,
-          color:'#fff',
-          fillColor:color,
-          fillOpacity:.85,
-          weight:1.5,
-          className:'dso-marker'
-        }).bindPopup(`
-          <b>${o.name}</b><br>
-          <small style="color:#a8c8ff">${o.type}</small><br>
-          <span style="opacity:.7">📐 ${o.size} · 🔆 mag ${o.mag}</span><br>
-          <p style="margin:6px 0 0;font-size:11px;color:#aeb5c4">${o.desc}</p>
-        `);
-        marker.addTo(dsoLayer);
-      });
-      skyMapReady=true;
-    }catch(err){
-      console.warn('�️ Vista semplificata non inizializzata:',err.message);
-    }
-  }
-
-  // Toggle: vista semplificata (off = default = d3-celestial)
-  const celestialTgl=$('celestialToggle');
-  if(celestialTgl){
-    celestialTgl.addEventListener('change',e=>{
-      if(e.target.checked){
-        if(celestialMapEl)celestialMapEl.style.display='none';
-        if(skyMapEl)skyMapEl.style.display='block';
-        initSkyMap();
-        if(skyMap)setTimeout(()=>skyMap.invalidateSize(),200);
-      }else{
-        showCelestialMap();
-      }
-    });
-  }
-
-  // Toggle mostra/nascondi tutti i target
+  // Toggle mostra/nascondi tutti i target (ri-renderizza la mappa)
   const dsoTgl=$('dsoToggle');
   if(dsoTgl){
     dsoTgl.addEventListener('change',e=>{
-      initSkyMap();
-      if(skyMap&&dsoLayer){
-        if(e.target.checked)skyMap.addLayer(dsoLayer);
-        else skyMap.removeLayer(dsoLayer);
-      }
+      skyState.dso=e.target.checked;
+      renderSkyMap();
     });
   }
 
-  // Avvia con d3-celestial di default
-  showCelestialMap();
   // Re-render su resize (mobile rotation, split-view desktop)
   let _resizeTimer=null;
   window.addEventListener('resize',()=>{
     if(_resizeTimer)clearTimeout(_resizeTimer);
-    _resizeTimer=setTimeout(()=>{
-      if(celestialMapEl){
-        celestialMapEl.dataset.ready='';
-        if(celestialMapEl.style.display!=='none')applyCelestialConfig();
-      }
-    },300);
+    _resizeTimer=setTimeout(()=>renderSkyMap(),300);
   });
 
   // ========= Sky controls: datetime + layer chips =========
   // (skyState e siderealTimeLocal sono dichiarati più in alto, prima di showCelestialMap)
 
-  function applyCelestialConfig(){
-    if(!celestialMapEl)return;
-    if(!window.Celestial){celestialMapEl.innerHTML='<p style="color:#aeb5c4;text-align:center;padding:40px 20px">⚠️ d3-celestial non disponibile. Attiva la connessione o usa la vista semplificata.</p>';return}
-    const w=celestialMapEl.clientWidth;
-    const h=celestialMapEl.clientHeight||420;
-    if(w<50)return;
-    let date=skyState.datetime||new Date();
-    // Calcola RA centro dalla LST (per centrare il cielo sulla tua longitudine)
-    const obsLon=(lon===null)?0:lon;
-    const lst=siderealTimeLocal(date,obsLon);
-    const raCenter=lst/15; // ore
-    try{
-      Celestial.display({
-        datapath:'https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@master/data/',
-        width:w,height:h,
-        controls:false,
-        projection:'stereographic',
-        transform:'equatorial',
-        center:[raCenter,90,0],
-        date:date,
-        background:{fill:'#000',stroke:'#000'},
-        stars:{show:skyState.stars,limit:6,style:{fill:'#ffd77b',opacity:1},colors:false,size:4,exponent:0.5},
-        dsos:{show:skyState.dso,limit:6,style:{fill:'#a8c8ff',stroke:'#a8c8ff',width:1,opacity:1},size:8},
-        constellations:{
-          show:skyState.constLines||skyState.constNames,
-          lines:skyState.constLines,lineStyle:{stroke:'#8cc5ff',width:0.5,opacity:.6},
-          labels:skyState.constNames,labelStyle:{fill:'#a8c8ff',font:'11px sans-serif'}
-        },
-        mw:{show:skyState.milkyWay,style:{fill:'#fff',opacity:0.08}},
-        planets:{show:false},
-        horizon:{show:false},
-        galaxies:{show:false},
-        ecliptic:{show:skyState.ecliptic,style:{stroke:'#ffd77b',width:0.6,opacity:.4,fill:'#ffd77b',fillOpacity:.02}},
-        graticule:{show:skyState.grid,stroke:'#a8c8ff',opacity:.15,fill:'none'}
-      });
-    }catch(err){
-      console.warn('⚠️ d3-celestial errore:',err.message);
-    }
+  // ========= MAPPA DEL CIELO: COMPONENTE SVG PURO (no d3-celestial) =========
+  // Stelle: catalogo compatto (mag ≤ 4.5). DSO: SKY_CATALOG con alt/az reali.
+  // Proiezione stereografica: zenith al centro, orizzonte sul bordo.
+
+  // Stelle luminose
+  const BRIGHT_STARS=[
+    ['Sirius',6.752,-16.716,-1.46],['Canopus',6.399,-52.696,-0.74],['Arcturus',14.261,19.182,-0.05],
+    ['Vega',18.616,38.784,0.03],['Capella',5.278,45.998,0.08],['Rigel',5.242,-8.202,0.13],
+    ['Procyon',7.655,5.225,0.34],['Achernar',1.629,-57.236,0.46],['Betelgeuse',5.919,7.407,0.50],
+    ['Hadar',14.064,-60.373,0.61],['Altair',19.846,8.868,0.77],['Acrux',12.443,-63.099,0.77],
+    ['Aldebaran',4.598,16.509,0.85],['Antares',16.490,-26.432,1.06],['Spica',13.420,-11.161,1.04],
+    ['Pollux',7.755,28.026,1.14],['Fomalhaut',22.961,-29.622,1.16],['Deneb',20.690,45.280,1.25],
+    ['Mimosa',12.795,-59.689,1.25],['Regulus',10.139,11.967,1.35],['Adhara',6.977,-28.972,1.50],
+    ['Shaula',17.560,-37.104,1.62],['Castor',7.577,31.888,1.58],['Gacrux',12.519,-57.113,1.59],
+    ['Bellatrix',5.418,6.350,1.64],['Elnath',5.438,28.608,1.65],['Miaplacidus',9.220,-69.717,1.69],
+    ['Alnilam',5.604,-1.202,1.69],['Alnair',22.137,-46.961,1.74],['Alnitak',5.679,-1.943,1.74],
+    ['Alioth',12.900,55.960,1.76],['Dubhe',11.062,61.751,1.79],['Mirfak',3.405,49.861,1.79],
+    ['Wezen',7.140,-26.393,1.83],['Sargas',17.622,-42.998,1.87],['Kaus Australis',18.403,-34.385,1.85],
+    ['Avior',8.376,-59.510,1.86],['Alkaid',13.792,49.313,1.86],['Menkalinan',5.992,44.947,1.90],
+    ['Atria',16.811,-69.028,1.91],['Alhena',6.629,16.399,1.93],['Peacock',20.427,-56.735,1.94],
+    ['Polaris',2.530,89.264,1.97],['Mirzam',6.378,-17.956,1.98],['Alphard',9.459,-8.659,1.98],
+    ['Algieba',10.333,19.842,2.08],['Hamal',2.119,23.462,2.00],['Diphda',0.726,-17.987,2.04],
+    ['Nunki',18.921,-26.297,2.05],['Menkent',14.111,-36.370,2.06],['Mirach',1.162,35.621,2.07],
+    ['Alpheratz',0.140,29.090,2.06],['Rasalhague',17.582,12.560,2.08],['Kochab',14.845,74.156,2.07],
+    ['Saiph',5.796,-9.670,2.09],['Denebola',11.818,14.572,2.14],['Algol',3.136,40.956,2.12],
+    ['Tiaki',3.487,-21.024,2.07],['Aspidiske',9.285,-59.275,2.21],['Alphecca',15.578,26.716,2.23],
+    ['Sadr',20.370,40.257,2.23],['Schedar',0.675,56.537,2.24],['Eltanin',17.943,51.489,2.23],
+    ['Naos',8.059,-40.003,2.25],['Mintaka',5.533,-0.299,2.23],['Caph',0.153,59.150,2.27],
+    ['Merak',11.031,56.382,2.37],['Izar',14.749,27.074,2.37],['Enif',21.736,9.875,2.39],
+    ['Phecda',11.897,53.695,2.44],['Tarazed',19.771,10.613,2.72],['Etamin',17.563,55.183,2.24],
+    ['Alderamin',21.310,62.586,2.45],['Markab',23.079,15.205,2.49],['Markeb',22.711,-26.815,2.49],
+    ['Aljanah',21.466,23.747,2.49],['Megrez',12.257,57.033,3.32],['Phegda',11.531,53.395,3.31],
+    ['Acrab',16.090,-19.806,2.62],['Dschubba',16.005,-22.622,2.29],['Alya',18.984,-4.000,2.77],
+    ['Zubenelgenubi',14.849,-16.042,2.75],['Zubeneschamali',15.284,-16.126,2.61],
+    ['Unukalhai',17.193,14.390,2.65],['Cebalrai',17.725,4.567,2.76]
+  ];
+
+  const deg=Math.PI/180;
+  function equatorialToHorizontal(raH,decDeg,latDeg,lstDeg){
+    const ha=((lstDeg-raH*15)+540)%360-180;
+    const haR=ha*deg,decR=decDeg*deg,latR=latDeg*deg;
+    const sinAlt=Math.sin(decR)*Math.sin(latR)+Math.cos(decR)*Math.cos(latR)*Math.cos(haR);
+    const alt=Math.asin(sinAlt);
+    const cosAz=(Math.sin(decR)-Math.sin(alt)*Math.sin(latR))/(Math.cos(alt)*Math.cos(latR));
+    let az=Math.acos(Math.max(-1,Math.min(1,cosAz)));
+    if(Math.sin(haR)>0)az=2*Math.PI-az;
+    return {alt:alt/deg,az:az/deg};
   }
+  function projectAltAz(alt,az,size){
+    if(alt<0)return null;
+    const r=(90-alt)/90*(size/2-4);
+    const a=az*deg;
+    return [size/2+r*Math.sin(a),size/2-r*Math.cos(a)];
+  }
+
+  function renderSkyMap(){
+    if(!celestialMapEl)return;
+    const w=celestialMapEl.clientWidth||420;
+    const size=Math.max(280,Math.min(w,420));
+    const obsLat=(typeof lat==='number')?lat:41.5;
+    const obsLon=(typeof lon==='number')?lon:12.5;
+    const date=skyState.datetime||new Date();
+    const lst=lstFromDate(date,obsLon);
+
+    const parts=[];
+    parts.push(`<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" class="sky-svg">`);
+    parts.push(`<defs>
+      <radialGradient id="skyBg" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#0a1232"/>
+        <stop offset="100%" stop-color="#02040a"/>
+      </radialGradient>
+      <clipPath id="skyClip"><circle cx="${size/2}" cy="${size/2}" r="${size/2-2}"/></clipPath>
+    </defs>`);
+    parts.push(`<circle cx="${size/2}" cy="${size/2}" r="${size/2-2}" fill="url(#skyBg)" stroke="#ffd77b" stroke-width="1" opacity="0.7"/>`);
+    parts.push(`<g clip-path="url(#skyClip)">`);
+
+    if(skyState.grid){
+      const radii=[0,22.5,45,67.5];
+      radii.forEach(r=>{
+        const rr=(90-r)/90*(size/2-4);
+        if(rr>0&&rr<size/2-2)parts.push(`<circle cx="${size/2}" cy="${size/2}" r="${rr}" fill="none" stroke="#8cc5ff" stroke-width="0.4" opacity="0.3" stroke-dasharray="2 3"/>`);
+      });
+      for(let a=0;a<360;a+=30){
+        const rad=a*deg;
+        const x1=size/2+Math.sin(rad)*(size/2-4);
+        const y1=size/2-Math.cos(rad)*(size/2-4);
+        parts.push(`<line x1="${size/2}" y1="${size/2}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="#8cc5ff" stroke-width="0.3" opacity="0.25"/>`);
+      }
+      [[0,'N'],[90,'E'],[180,'S'],[270,'W']].forEach(([az,label])=>{
+        const rr=size/2-10;
+        const rad=az*deg;
+        const x=size/2+Math.sin(rad)*rr;
+        const y=size/2-Math.cos(rad)*rr;
+        parts.push(`<text x="${x.toFixed(1)}" y="${(y+3).toFixed(1)}" text-anchor="middle" font-size="10" fill="#aeb5c4" opacity="0.6" font-weight="700">${label}</text>`);
+      });
+    }
+
+    if(skyState.ecliptic){
+      const pts=[];
+      for(let ra=0;ra<24;ra+=0.5){
+        const dec=23.4*Math.sin(ra*15*deg)/deg;
+        const {alt,az}=equatorialToHorizontal(ra,dec,obsLat,lst);
+        const p=projectAltAz(alt,az,size);
+        if(p)pts.push(p);
+      }
+      if(pts.length>1){
+        const poly=pts.map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' ');
+        parts.push(`<polyline points="${poly}" fill="none" stroke="#ffd77b" stroke-width="0.8" opacity="0.55" stroke-dasharray="3 3"/>`);
+      }
+    }
+
+    if(skyState.stars){
+      BRIGHT_STARS.forEach(([n,ra,dec,m])=>{
+        const {alt,az}=equatorialToHorizontal(ra,dec,obsLat,lst);
+        const p=projectAltAz(alt,az,size);
+        if(!p)return;
+        const radius=Math.max(0.8,(5-m)*0.7);
+        const opacity=0.4+Math.min(0.6,(6-m)/8);
+        parts.push(`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${radius.toFixed(2)}" fill="#fff5cc" opacity="${opacity.toFixed(2)}"><title>${n} (mag ${m.toFixed(1)})</title></circle>`);
+      });
+    }
+
+    if(skyState.dso){
+      const dsoColors={'galassia':'#ff6b9d','nebulosa':'#8cc5ff','ammasso aperto':'#ffd77b','ammasso globulare':'#fff5cc','nebulosa planetaria':'#9ae6b4'};
+      SKY_CATALOG.forEach(o=>{
+        const {alt,az}=equatorialToHorizontal(o.ra,o.dec,obsLat,lst);
+        const p=projectAltAz(Math.max(0,alt),az,size);
+        if(!p)return;
+        const color=dsoColors[o.type]||'#ffd77b';
+        const visible=alt>10;
+        const r=o.mag<5?5:o.mag<7?4:3;
+        const op=visible?0.95:0.3;
+        const halo=visible?0.25:0.08;
+        const shortName=o.name.replace(/^M\d+ |^NGC \d+ /,'');
+        parts.push(`<g class="sky-dso" data-name="${o.name}">
+          <circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${r+3}" fill="${color}" opacity="${halo}"/>
+          <circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${r}" fill="${color}" stroke="#fff" stroke-width="0.8" opacity="${op}"/>
+          <text x="${(p[0]+r+3).toFixed(1)}" y="${(p[1]+3).toFixed(1)}" font-size="9" fill="${color}" opacity="${op}" font-weight="700">${shortName}</text>
+        </g>`);
+      });
+    }
+
+    parts.push(`</g>`);
+    parts.push(`<text x="${size/2}" y="16" text-anchor="middle" font-size="10" fill="#aeb5c4" opacity="0.7" letter-spacing="1.5" font-weight="600">ZENIT</text>`);
+    parts.push(`<text x="${size/2}" y="${size-6}" text-anchor="middle" font-size="9" fill="#aeb5c4" opacity="0.6">${date.toLocaleString('it-IT',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})} · LST ${(lst/15).toFixed(1)}h</text>`);
+    parts.push(`</svg>`);
+    celestialMapEl.innerHTML=parts.join('');
+    celestialMapEl.dataset.ready='1';
+  }
+
+  function renderSkyList(){
+    const obsLat=(typeof lat==='number')?lat:41.5;
+    const date=skyState.datetime||new Date();
+    const lst=lstFromDate(date,(typeof lon==='number')?lon:12.5);
+    const items=SKY_CATALOG.map(o=>{
+      const {alt,az}=equatorialToHorizontal(o.ra,o.dec,obsLat,lst);
+      return {...o,alt,az};
+    }).filter(o=>o.alt>15).sort((a,b)=>b.alt-a.alt);
+    const ul=$('sky');
+    if(!ul)return;
+    if(!items.length){
+      ul.innerHTML='<li style="color:#aeb5c4">Nessun target sopra i 15° di altitudine in questo momento. Prova un altro orario.</li>';
+      return;
+    }
+    ul.innerHTML=items.slice(0,8).map(o=>{
+      const colors={'galassia':'#ff6b9d','nebulosa':'#8cc5ff','ammasso aperto':'#ffd77b','ammasso globulare':'#fff5cc','nebulosa planetaria':'#9ae6b4'};
+      const c=colors[o.type]||'#ffd77b';
+      const azIdx=Math.round(((o.az+22.5)%360)/45)%8;
+      const azLabel=['N','NE','E','SE','S','SW','W','NW'][azIdx];
+      return `<li>
+        <span style="color:${c};font-weight:600">●</span> <b style="color:#f4f5f8">${o.name}</b>
+        <small style="color:#aeb5c4;display:block;margin-top:2px">${o.type} · mag ${o.mag} · ${o.size} · alt ${Math.round(o.alt)}° ${azLabel}</small>
+        <small style="color:#7a8294;display:block;margin-top:2px;font-size:11px">${o.desc}</small>
+      </li>`;
+    }).join('');
+  }
+
 
   // Inizializza il datetime picker al prossimo buio astronomico (o "ora" se già notte)
   function initSkyDateTime(){
@@ -1525,9 +1574,9 @@ function renderSky(){
 
   $('skyDateTime').addEventListener('change',e=>{
     const v=e.target.value;
-    if(!v){skyState.datetime=null;applyCelestialConfig();return}
+    if(!v){skyState.datetime=null;renderSkyMap();renderSkyList();return}
     const d=new Date(v);
-    if(!isNaN(d.getTime())){skyState.datetime=d;applyCelestialConfig();highlightPreset();}
+    if(!isNaN(d.getTime())){skyState.datetime=d;renderSkyMap();renderSkyList();highlightPreset();}
   });
 
   // Preset buttons
@@ -1535,8 +1584,13 @@ function renderSky(){
     btn.addEventListener('click',()=>{
       const p=btn.dataset.preset;
       const now=new Date();
-      if(p==='now'){skyState.datetime=null;autoHighlightPreset()}
-      else if(p==='astro'){skyState.datetime=null;astroHighlightPreset();return}
+      if(p==='now'){skyState.datetime=null;}
+      else if(p==='astro'){
+        const d=new Date(now);
+        d.setHours(22,30,0,0);
+        if(d<now)d.setDate(d.getDate()+1);
+        skyState.datetime=d;
+      }
       else{
         const h=Number(p);
         const d=new Date(now);
@@ -1545,7 +1599,8 @@ function renderSky(){
         skyState.datetime=d;
       }
       $('skyDateTime').value=skyState.datetime?toLocalISO(skyState.datetime):toLocalISO(now);
-      applyCelestialConfig();
+      renderSkyMap();
+      renderSkyList();
       highlightPreset();
     });
   });
@@ -1563,7 +1618,7 @@ function renderSky(){
     if(el)el.classList.add('active');
   }
   function autoHighlightPreset(){
-    applyCelestialConfig();
+    renderSkyMap();
     highlightPreset();
   }
   function astroHighlightPreset(){
@@ -1572,7 +1627,7 @@ function renderSky(){
     d.setHours(22,30,0,0); // fallback
     skyState.datetime=d;
     $('skyDateTime').value=toLocalISO(d);
-    applyCelestialConfig();
+    renderSkyMap();
     document.querySelectorAll('[data-preset]').forEach(b=>b.classList.remove('active'));
     const el=document.querySelector('[data-preset="astro"]');
     if(el)el.classList.add('active');
@@ -1593,7 +1648,7 @@ function renderSky(){
     if(!el)return;
     el.addEventListener('change',e=>{
       skyState[layerMap[id]]=e.target.checked;
-      applyCelestialConfig();
+      renderSkyMap();
     });
   });
 
@@ -1601,7 +1656,8 @@ function renderSky(){
   initSkyDateTime();
   highlightPreset();
   // Prima render con config completa
-  applyCelestialConfig();
+  renderSkyMap();
+  renderSkyList();
   celestialMapEl.dataset.ready='1';
 
   loadPrefs();
