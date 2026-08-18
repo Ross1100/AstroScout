@@ -197,6 +197,24 @@
     /* Place inline label */
     .place-inline{display:inline-block;font-size:11px;color:var(--blue);font-weight:normal;margin-left:6px;letter-spacing:0;cursor:help}
 
+    /* Sky controls (Heavens-Above style) */
+    .sky-controls{display:flex;flex-direction:column;gap:12px;margin:10px 0 12px;padding:12px 14px;background:linear-gradient(135deg,#0a0d18 0,#11151f 100%);border:1px solid var(--line);border-radius:6px}
+    .sky-controls label{font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin:0 0 6px}
+    .sky-time-presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+    .btn-mini{background:transparent;border:1px solid var(--line);color:var(--ink);padding:5px 9px;border-radius:4px;font-size:11px;cursor:pointer;transition:all .2s ease}
+    .btn-mini:hover{border-color:var(--gold);background:rgba(255,215,123,.08);color:var(--gold)}
+    .btn-mini.active{border-color:var(--gold);background:rgba(255,215,123,.15);color:var(--gold)}
+    .btn-mini-primary{border-color:var(--blue);color:var(--blue)}
+    .btn-mini-primary:hover,.btn-mini-primary.active{background:rgba(140,197,255,.15);border-color:var(--blue);color:var(--blue)}
+    .layer-chips{display:flex;flex-wrap:wrap;gap:6px}
+    .chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--line);border-radius:20px;background:transparent;font-size:11px;color:var(--muted);cursor:pointer;transition:all .2s ease;margin:0}
+    .chip:hover{border-color:var(--gold);color:var(--ink)}
+    .chip:has(input:checked){border-color:var(--gold);background:rgba(255,215,123,.12);color:var(--gold)}
+    .chip input{accent-color:var(--gold);margin:0;cursor:pointer}
+    input[type="datetime-local"]{width:100%;padding:9px 10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px;font:inherit;font-size:13px;color-scheme:dark}
+    input[type="datetime-local"]:hover,input[type="datetime-local"]:focus{border-color:var(--blue);outline:none;box-shadow:0 0 0 3px rgba(140,197,255,.15)}
+    @media(max-width:720px){.sky-controls{padding:10px}.btn-mini{font-size:10px;padding:5px 7px}.chip{font-size:10px;padding:4px 8px}}
+
     /* ========= MOBILE UX ========= */
     @media(max-width:720px){
       /* Tipografia più leggibile */
@@ -402,14 +420,36 @@
 
   <!-- STEP 8: Cielo stellato -->
   <section class="panel" style="margin-top:18px">
-    <h2>🌌 Cielo stellato — Target del mese</h2>
-    <p class="status">Sfera celeste reale con stelle, costellazioni e oggetti Messier/NGC. Trascina per ruotare, scrolla per zoomare. Sotto, gli 8 target più alti stasera dalla tua posizione.</p>
-    <div class="map-toolbar">
-      <label><input type="checkbox" id="dsoToggle" checked> ✨ Mostra tutti i target</label>
-      <label><input type="checkbox" id="celestialToggle"> 🗺️ Vista semplificata (bassa banda)</label>
+    <h2>🌌 Cielo stellato</h2>
+    <p class="status">Sfera celeste reale. Trascina per ruotare, scrolla per zoomare. Scegli data/ora e quali layer mostrare. Sotto, gli 8 target più alti dalla tua posizione.</p>
+    <div class="sky-controls">
+      <div class="sky-time">
+        <label for="skyDateTime">📅 Quando (data e ora)</label>
+        <input type="datetime-local" id="skyDateTime">
+        <div class="sky-time-presets">
+          <button type="button" data-preset="now" class="btn-mini">Ora</button>
+          <button type="button" data-preset="22" class="btn-mini">22:00</button>
+          <button type="button" data-preset="23" class="btn-mini">23:00</button>
+          <button type="button" data-preset="00" class="btn-mini">00:00</button>
+          <button type="button" data-preset="01" class="btn-mini">01:00</button>
+          <button type="button" data-preset="02" class="btn-mini">02:00</button>
+          <button type="button" data-preset="astro" class="btn-mini btn-mini-primary">🌌 Buio astronomico</button>
+        </div>
+      </div>
+      <div class="sky-layers">
+        <label>🔭 Layer</label>
+        <div class="layer-chips">
+          <label class="chip"><input type="checkbox" id="layerStars" checked> Stelle</label>
+          <label class="chip"><input type="checkbox" id="layerConstLines" checked> Linee costellazioni</label>
+          <label class="chip"><input type="checkbox" id="layerConstNames" checked> Nomi costellazioni</label>
+          <label class="chip"><input type="checkbox" id="layerDSO" checked> Oggetti deep-sky</label>
+          <label class="chip"><input type="checkbox" id="layerEcliptic"> Eclittica</label>
+          <label class="chip"><input type="checkbox" id="layerGrid"> Griglia equatoriale</label>
+          <label class="chip"><input type="checkbox" id="layerMilkyWay"> Via Lattea</label>
+        </div>
+      </div>
     </div>
     <div id="celestialMap" aria-label="Sfera celeste reale"></div>
-    <div id="skymap" aria-label="Mappa semplificata dei target celesti" style="display:none"></div>
     <ul class="places" id="sky" style="margin-top:14px"><li>Calcolo target in corso…</li></ul>
   </section>
   <section class="panel" style="margin-top:18px">
@@ -1120,42 +1160,12 @@ function renderSky(){
   }
 
   // Inizializza d3-celestial come default — con retry se il container non ha ancora width
-  function renderCelestial(){
-    if(!celestialMapEl)return;
-    const w=celestialMapEl.clientWidth;
-    if(w<50){
-      console.warn('⏳ d3-celestial: container non ancora pronto, riprovo');
-      setTimeout(renderCelestial,200);
-      return;
-    }
-    try{
-      Celestial.display({
-        datapath:'https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@master/data/',
-        width:w,
-        height:420,
-        controls:false,
-        projection:'stereographic',
-        transform:'equatorial',
-        center:[0,90,0], // polo nord celeste: stelle sempre visibili dall'emisfero boreale
-        background:{fill:'#000',stroke:'#000'},
-        stars:{limit:6,style:{fill:'#ffd77b',opacity:1},colors:false,size:4,exponent:0.5},
-        dsos:{limit:6,style:{fill:'#a8c8ff',stroke:'#a8c8ff',width:1,opacity:1},size:8},
-        constellations:{lines:true,lineStyle:{stroke:'#8cc5ff',width:0.5,opacity:.6},labels:true,labelStyle:{fill:'#a8c8ff',font:'11px sans-serif'}},
-        mw:{show:false},
-        galaxies:{show:false},
-        horizon:{show:false},
-        planets:{show:false}
-      });
-      celestialMapEl.dataset.ready='1';
-    }catch(err){
-      console.warn('⚠️ d3-celestial errore:',err.message);
-    }
-  }
+  function renderCelestial(){ applyCelestialConfig(); }
   function showCelestialMap(){
     const skymapEl=document.getElementById('skymap');
     if(skymapEl)skymapEl.style.display='none';
     if(celestialMapEl)celestialMapEl.style.display='block';
-    if(celestialMapEl&&!celestialMapEl.dataset.ready)renderCelestial();
+    if(celestialMapEl&&!celestialMapEl.dataset.ready)applyCelestialConfig();
   }
 
   // Vista semplificata Leaflet (RA→lat, Dec→lon) — per chi vuole bassa banda
@@ -1231,10 +1241,171 @@ function renderSky(){
     _resizeTimer=setTimeout(()=>{
       if(celestialMapEl){
         celestialMapEl.dataset.ready='';
-        if(celestialMapEl.style.display!=='none')renderCelestial();
+        if(celestialMapEl.style.display!=='none')applyCelestialConfig();
       }
     },300);
   });
+
+  // ========= Sky controls: datetime + layer chips =========
+  // Stato corrente dei layer
+  const skyState={
+    datetime:null, // null = "adesso"
+    stars:true,
+    constLines:true,
+    constNames:true,
+    dso:true,
+    ecliptic:false,
+    grid:false,
+    milkyWay:false
+  };
+
+  // Helper: converte Date in coordinate equatoriali approssimate per il center di d3-celestial
+  function siderealTimeLocal(d,lon){
+    // Semplificato: 1 giorno siderale = 23h56m. UTC time + longitudinal offset.
+    const utc=d.getTime()/1000;
+    const jd=utc/86400+2440587.5;
+    const T=(jd-2451545)/36525;
+    let gmst=280.46061837+360.98564736629*(jd-2451545)+0.000387933*T*T-T*T*T/38710000;
+    gmst=((gmst%360)+360)%360;
+    // Aggiusta per longitudine (positiva est)
+    const lst=(gmst+lon)%360;
+    return lst;
+  }
+
+  function applyCelestialConfig(){
+    if(!celestialMapEl)return;
+    if(!window.Celestial){celestialMapEl.innerHTML='<p style="color:#aeb5c4;text-align:center;padding:40px 20px">⚠️ d3-celestial non disponibile. Attiva la connessione o usa la vista semplificata.</p>';return}
+    const w=celestialMapEl.clientWidth;
+    const h=celestialMapEl.clientHeight||420;
+    if(w<50)return;
+    let date=skyState.datetime||new Date();
+    // Calcola RA centro dalla LST (per centrare il cielo sulla tua longitudine)
+    const obsLon=(lon===null)?0:lon;
+    const lst=siderealTimeLocal(date,obsLon);
+    const raCenter=lst/15; // ore
+    try{
+      Celestial.display({
+        datapath:'https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@master/data/',
+        width:w,height:h,
+        controls:false,
+        projection:'stereographic',
+        transform:'equatorial',
+        center:[raCenter,90,0],
+        date:date,
+        background:{fill:'#000',stroke:'#000'},
+        stars:{show:skyState.stars,limit:6,style:{fill:'#ffd77b',opacity:1},colors:false,size:4,exponent:0.5},
+        dsos:{show:skyState.dso,limit:6,style:{fill:'#a8c8ff',stroke:'#a8c8ff',width:1,opacity:1},size:8},
+        constellations:{
+          show:skyState.constLines||skyState.constNames,
+          lines:skyState.constLines,lineStyle:{stroke:'#8cc5ff',width:0.5,opacity:.6},
+          labels:skyState.constNames,labelStyle:{fill:'#a8c8ff',font:'11px sans-serif'}
+        },
+        mw:{show:skyState.milkyWay,style:{fill:'#fff',opacity:0.08}},
+        planets:{show:false},
+        horizon:{show:false},
+        galaxies:{show:false},
+        ecliptic:{show:skyState.ecliptic,style:{stroke:'#ffd77b',width:0.6,opacity:.4,fill:'#ffd77b',fillOpacity:.02}},
+        graticule:{show:skyState.grid,stroke:'#a8c8ff',opacity:.15,fill:'none'}
+      });
+    }catch(err){
+      console.warn('⚠️ d3-celestial errore:',err.message);
+    }
+  }
+
+  // Inizializza il datetime picker al prossimo buio astronomico (o "ora" se già notte)
+  function initSkyDateTime(){
+    const tomorrow=new Date();
+    tomorrow.setDate(tomorrow.getDate()+1);
+    tomorrow.setHours(22,0,0,0);
+    const dt=new Date();
+    if(dt.getHours()>=22)dt.setMinutes(0,0,0); // stasera
+    $('skyDateTime').value=toLocalISO(dt);
+  }
+  function toLocalISO(d){
+    const pad=n=>String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  $('skyDateTime').addEventListener('change',e=>{
+    const v=e.target.value;
+    if(!v){skyState.datetime=null;applyCelestialConfig();return}
+    const d=new Date(v);
+    if(!isNaN(d.getTime())){skyState.datetime=d;applyCelestialConfig();highlightPreset();}
+  });
+
+  // Preset buttons
+  document.querySelectorAll('[data-preset]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const p=btn.dataset.preset;
+      const now=new Date();
+      if(p==='now'){skyState.datetime=null;autoHighlightPreset()}
+      else if(p==='astro'){skyState.datetime=null;astroHighlightPreset();return}
+      else{
+        const h=Number(p);
+        const d=new Date(now);
+        d.setHours(h,0,0,0);
+        if(h<=now.getHours()&&now.getHours()<22)d.setDate(d.getDate()+1); // notte successiva
+        skyState.datetime=d;
+      }
+      $('skyDateTime').value=skyState.datetime?toLocalISO(skyState.datetime):toLocalISO(now);
+      applyCelestialConfig();
+      highlightPreset();
+    });
+  });
+
+  function highlightPreset(){
+    const now=new Date();
+    const h=skyState.datetime?skyState.datetime.getHours():now.getHours();
+    document.querySelectorAll('[data-preset]').forEach(b=>b.classList.remove('active'));
+    if(!skyState.datetime){
+      const el=document.querySelector('[data-preset="now"]');
+      if(el)el.classList.add('active');
+      return;
+    }
+    const el=document.querySelector(`[data-preset="${String(h).padStart(2,'0')}"]`);
+    if(el)el.classList.add('active');
+  }
+  function autoHighlightPreset(){
+    applyCelestialConfig();
+    highlightPreset();
+  }
+  function astroHighlightPreset(){
+    // Stima semplice: buio astronomico ~ 1h30 dopo il tramonto locale
+    const d=new Date();
+    d.setHours(22,30,0,0); // fallback
+    skyState.datetime=d;
+    $('skyDateTime').value=toLocalISO(d);
+    applyCelestialConfig();
+    document.querySelectorAll('[data-preset]').forEach(b=>b.classList.remove('active'));
+    const el=document.querySelector('[data-preset="astro"]');
+    if(el)el.classList.add('active');
+  }
+
+  // Layer chips
+  const layerMap={
+    layerStars:'stars',
+    layerConstLines:'constLines',
+    layerConstNames:'constNames',
+    layerDSO:'dso',
+    layerEcliptic:'ecliptic',
+    layerGrid:'grid',
+    layerMilkyWay:'milkyWay'
+  };
+  Object.keys(layerMap).forEach(id=>{
+    const el=$(id);
+    if(!el)return;
+    el.addEventListener('change',e=>{
+      skyState[layerMap[id]]=e.target.checked;
+      applyCelestialConfig();
+    });
+  });
+
+  // Avvia
+  initSkyDateTime();
+  highlightPreset();
+  // Prima render con config completa
+  applyCelestialConfig();
+  celestialMapEl.dataset.ready='1';
 
   loadPrefs();
   console.log('✅ loadPrefs ok');

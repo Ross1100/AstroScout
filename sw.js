@@ -1,5 +1,5 @@
 // Service Worker per Astro Scout — Cache-first per offline
-const CACHE='astro-scout-v8';
+const CACHE='astro-scout-v9';
 const ASSETS=[
   './',
   './index.html',
