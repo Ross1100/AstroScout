@@ -1343,6 +1343,28 @@ function renderSky(){
     celestialMapEl.style.width='100%';
   }
 
+  // Stato dei layer (dichiarato PRIMA delle funzioni che lo usano)
+  const skyState={
+    datetime:null, // null = "adesso"
+    stars:true,
+    constLines:true,
+    constNames:true,
+    dso:true,
+    ecliptic:false,
+    grid:false,
+    milkyWay:false
+  };
+
+  // Helper: converte Date in coordinate equatoriali approssimate per il center di d3-celestial
+  function siderealTimeLocal(d,lon){
+    const utc=d.getTime()/1000;
+    const jd=utc/86400+2440587.5;
+    const T=(jd-2451545)/36525;
+    let gmst=280.46061837+360.98564736629*(jd-2451545)+0.000387933*T*T-T*T*T/38710000;
+    gmst=((gmst%360)+360)%360;
+    return (gmst+lon)%360;
+  }
+
   // Inizializza d3-celestial come default — con retry se il container non ha ancora width
   function renderCelestial(){ applyCelestialConfig(); }
   function showCelestialMap(){
@@ -1445,30 +1467,7 @@ function renderSky(){
   });
 
   // ========= Sky controls: datetime + layer chips =========
-  // Stato corrente dei layer
-  const skyState={
-    datetime:null, // null = "adesso"
-    stars:true,
-    constLines:true,
-    constNames:true,
-    dso:true,
-    ecliptic:false,
-    grid:false,
-    milkyWay:false
-  };
-
-  // Helper: converte Date in coordinate equatoriali approssimate per il center di d3-celestial
-  function siderealTimeLocal(d,lon){
-    // Semplificato: 1 giorno siderale = 23h56m. UTC time + longitudinal offset.
-    const utc=d.getTime()/1000;
-    const jd=utc/86400+2440587.5;
-    const T=(jd-2451545)/36525;
-    let gmst=280.46061837+360.98564736629*(jd-2451545)+0.000387933*T*T-T*T*T/38710000;
-    gmst=((gmst%360)+360)%360;
-    // Aggiusta per longitudine (positiva est)
-    const lst=(gmst+lon)%360;
-    return lst;
-  }
+  // (skyState e siderealTimeLocal sono dichiarati più in alto, prima di showCelestialMap)
 
   function applyCelestialConfig(){
     if(!celestialMapEl)return;
