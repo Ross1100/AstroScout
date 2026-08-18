@@ -30,6 +30,38 @@
     .section-divider .label{font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-weight:600}
     .section-divider .desc{font-size:11px;color:var(--muted);font-weight:normal;text-transform:none;letter-spacing:0}
     .foot a{color:var(--blue)}
+    /* Tab switcher */
+    .tab-bar{display:flex;gap:6px;margin:0 0 16px;padding:6px;background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:8px;width:fit-content}
+    .tab{background:transparent;border:1px solid transparent;color:var(--muted);padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s ease}
+    .tab:hover{color:var(--ink);background:rgba(255,255,255,.04)}
+    .tab.active{background:linear-gradient(135deg,#d7ac52 0,#ffd77b 100%);color:#1b1405;border-color:#f6d37e;font-weight:600}
+    .tab-pane{display:none;animation:fadeIn .3s ease}
+    .tab-pane.active{display:block}
+    /* History tab */
+    .history-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+    .history-card{border:1px solid var(--line);background:linear-gradient(135deg,#0a1228 0,#10142b 100%);padding:14px;border-radius:6px;text-align:center}
+    .history-card .hc-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px}
+    .history-card .hc-value{font-size:24px;font-weight:700;color:var(--gold);margin-bottom:4px}
+    .history-card .hc-meta{font-size:10px;color:var(--muted)}
+    .history-calendar{display:flex;gap:4px;margin-top:8px;align-items:flex-end;height:140px;padding:8px;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:6px}
+    .cal-month{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:default}
+    .cal-bar{width:100%;background:linear-gradient(180deg,#9ae6b4 0,#ffd77b 100%);border-radius:3px;transition:all .3s ease;position:relative;min-height:4px}
+    .cal-bar:hover{filter:brightness(1.2);transform:scaleY(1.04)}
+    .cal-bar-label{font-size:9px;color:var(--muted);margin-top:2px}
+    .cal-bar-pct{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;color:var(--ink);white-space:nowrap}
+    @media(max-width:720px){.history-grid{grid-template-columns:1fr}}
+    .feasibility-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+    .feas-item{display:grid;grid-template-columns:1fr auto 70px;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);background:var(--panel);border-radius:6px}
+    .feas-name{color:var(--gold);font-weight:600;font-size:13px}
+    .feas-sub{font-size:11px;color:var(--muted);margin-top:2px}
+    .feas-bar-wrap{width:100%;height:8px;background:rgba(255,255,255,.05);border-radius:4px;overflow:hidden}
+    .feas-bar{height:100%;background:linear-gradient(90deg,#ff6b6b 0,#ffd77b 50%,#9ae6b4 100%);border-radius:4px;transition:width .5s ease}
+    .feas-score{font-size:16px;font-weight:700;color:var(--gold);text-align:right}
+    .astro-now-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:8px}
+    .astro-now-card{padding:12px;background:var(--panel);border:1px solid var(--line);border-radius:6px;text-align:center}
+    .astro-now-card .an-icon{font-size:24px;margin-bottom:4px}
+    .astro-now-card .an-label{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:3px}
+    .astro-now-card .an-value{font-size:14px;font-weight:600;color:var(--ink)}
     .storage-warning{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:#3a2f12;border:1px solid #f6d37e;color:#f6d37e;padding:10px 16px;border-radius:6px;font-size:13px;z-index:9999;opacity:0;transition:all .4s ease;box-shadow:0 8px 22px rgba(0,0,0,.4);max-width:90%}
     .storage-warning.visible{opacity:1;transform:translateX(-50%) translateY(0)}@media(max-width:720px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}h1{font-size:22px}.topbar{grid-template-columns:1fr;text-align:center;gap:12px}.topbar-actions{justify-content:center}.logo-slot{margin:0 auto}}
     .leaflet-container{background:#000810 !important;font-family:inherit}
@@ -292,6 +324,13 @@
     <span class="night-bar-sub" id="nightTime">Orario di riferimento: caricamento…</span>
   </div>
 
+  <nav class="tab-bar" role="tablist">
+    <button class="tab active" data-tab="today" role="tab">🌙 Stasera</button>
+    <button class="tab" data-tab="history" role="tab">📊 Storico & probabilità</button>
+  </nav>
+
+  <div class="tab-pane active" data-pane="today">
+
   <!-- STEP 1: Stasera è buono? -->
   <section class="verdict" id="verdict">
     <div class="dot" id="verdictDot">…</div>
@@ -529,7 +568,47 @@
     <p class="status" id="placesStatus">Ricerca di belvederi e punti panoramici entro 35 km.</p>
     <ul class="places" id="places"><li>Caricamento…</li></ul>
   </section>
-  <p class="foot">La posizione viene richiesta solo dal tuo browser e non viene salvata da questa pagina. Meteo: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open‑Meteo</a>; punti panoramici: OpenStreetMap/Overpass. Verifica sempre accessi, parcheggi, proprietà private e regolamenti locali prima di uscire.</p>
+  </div><!-- /tab-pane today -->
+
+  <div class="tab-pane" data-pane="history">
+    <section class="panel" style="margin-top:18px">
+      <h2>📊 Probabilità di cielo fotogenico</h2>
+      <p class="status" id="historyStatus">Serve la tua posizione. Premi 📍 in alto per iniziare.</p>
+
+      <div id="historyContent" style="display:none">
+        <div class="history-grid">
+          <div class="history-card">
+            <div class="hc-label">Probabilità cielo sereno</div>
+            <div class="hc-value" id="hcClearPct">—</div>
+            <div class="hc-meta" id="hcClearMeta">Storico 5 anni · notti 22-03</div>
+          </div>
+          <div class="history-card">
+            <div class="hc-label">Miglior mese</div>
+            <div class="hc-value" id="hcBestMonth">—</div>
+            <div class="hc-meta" id="hcBestMonthMeta">Per cielo sereno</div>
+          </div>
+          <div class="history-card">
+            <div class="hc-label">Peggior mese</div>
+            <div class="hc-value" id="hcWorstMonth">—</div>
+            <div class="hc-meta" id="hcWorstMonthMeta">Più nubi</div>
+          </div>
+        </div>
+
+        <h3 style="margin-top:18px;color:var(--blue);font-size:13px;letter-spacing:.5px">📅 Calendario annuale</h3>
+        <div id="historyCalendar" class="history-calendar"></div>
+        <p class="status" style="margin-top:6px;font-size:11px">Probabilità cielo sereno per notte (22:00-03:00) basata su media ultimi 5 anni.</p>
+
+        <h3 style="margin-top:18px;color:var(--blue);font-size:13px;letter-spacing:.5px">🎯 Indice di fattibilità DSO</h3>
+        <p class="status" style="font-size:11px">Combina altitudine notturna, fase lunare e probabilità cielo sereno. Punteggio 0-100.</p>
+        <div id="dsoFeasibility" class="feasibility-list"></div>
+
+        <h3 style="margin-top:18px;color:var(--blue);font-size:13px;letter-spacing:.5px">🌒 Astro del momento</h3>
+        <div id="astroNow" class="astro-now-grid"></div>
+      </div>
+    </section>
+  </div><!-- /tab-pane history -->
+
+  <p class="foot">Dati storici: Open-Meteo Historical API (media ultimi 5 anni). Calcoli astronomici: Astronomy Engine (offline). La posizione viene richiesta solo dal tuo browser.</p>
 
 
   <!-- Glossario -->
@@ -591,6 +670,7 @@
 </main>
 <script src="data/gear.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="./astronomy.engine.js"></script>
 <script src="astronomy.engine.js"></script>
 <script>
 (() => {
@@ -1216,7 +1296,8 @@
     dso:true,
     ecliptic:false,
     grid:false,
-    milkyWay:false
+    milkyWay:false,
+    solar:true
   };
 
   // Helper: converte Date in coordinate equatoriali approssimate per il center di d3-celestial
@@ -1228,6 +1309,8 @@
     gmst=((gmst%360)+360)%360;
     return (gmst+lon)%360;
   }
+  // Alias: alcune funzioni usano lstFromDate, altre siderealTimeLocal — stessa cosa.
+  const lstFromDate=siderealTimeLocal;
 
   // Toggle mostra/nascondi tutti i target (ri-renderizza la mappa)
   const dsoTgl=$('dsoToggle');
@@ -1284,6 +1367,38 @@
     ['Zubenelgenubi',14.849,-16.042,2.75],['Zubeneschamali',15.284,-16.126,2.61],
     ['Unukalhai',17.193,14.390,2.65],['Cebalrai',17.725,4.567,2.76]
   ];
+
+  // Corpi del Sistema Solare (posizioni calcolate da Astronomy Engine).
+  // sym = glifo unicode, color = colore marker sulla mappa.
+  const SOLAR_BODIES=[
+    {key:'Sun',name:'Sole',sym:'☉',color:'#ffd77b',r:6.5,note:'Sorgente di luce — evita l\'astrofotografia quando è sopra l\'orizzonte.'},
+    {key:'Moon',name:'Luna',sym:'☾',color:'#e8e8f0',r:6,note:'Target luminoso: ISO bassi e tempi veloci. Frazione illuminata sotto.'},
+    {key:'Mercury',name:'Mercurio',sym:'☿',color:'#b0a8b0',r:3.2,note:'Sempre basso sull\'orizzonte, vicino al Sole. Difficile.'},
+    {key:'Venus',name:'Venere',sym:'♀',color:'#ffe9a8',r:4.2,note:'Luminosissima al crepuscolo. Solo fase, nessun dettaglio.'},
+    {key:'Mars',name:'Marte',sym:'♂',color:'#ff6b4a',r:3.6,note:'Disco rossastro; calotte polari e mari con seeing buono.'},
+    {key:'Jupiter',name:'Giove',sym:'♃',color:'#e0c8a0',r:4.4,note:'Le migliori lune galileiane e bande equatoriali.'},
+    {key:'Saturn',name:'Saturno',sym:'♄',color:'#d8c898',r:4.0,note:'Anelli spettacolari; serve focale lunga.'},
+    {key:'Uranus',name:'Urano',sym:'♅',color:'#9ad8e8',r:3.0,note:'Debole (mag ~5.8), serve cielo buio e cercapersone.'},
+    {key:'Neptune',name:'Nettuno',sym:'♆',color:'#6b8cff',r:3.0,note:'Debolissimo (mag ~7.8), solo foto con telescopio.'}
+  ];
+  // Mappa nome -> body Astronomy Engine (caricato da astronomy.engine.js)
+  function solarBody(key){return window.Astronomy?Astronomy.Body[key]:null;}
+  // Restituisce {alt,az,mag,illum} per un corpo alla data/observer dati.
+  function solarHorizontal(key,date,observer){
+    const A=window.Astronomy; if(!A)return null;
+    try{
+      const body=A.Body[key];
+      const equ=A.Equator(body,date,observer,true,true);
+      const hor=A.Horizon(date,observer,equ.ra,equ.dec,'normal');
+      let mag=null,illum=null;
+      if(key!=='Sun'){
+        const ill=A.Illumination(body,date);
+        mag=ill.mag;
+        if(key==='Moon')illum=ill.phase_fraction; // 0..1
+      }
+      return {alt:hor.altitude,az:hor.azimuth,mag,illum};
+    }catch(e){return null;}
+  }
 
   const deg=Math.PI/180;
   function equatorialToHorizontal(raH,decDeg,latDeg,lstDeg){
@@ -1401,6 +1516,22 @@
       });
     }
 
+    if(skyState.solar && window.Astronomy){
+      const observer=new Astronomy.Observer(obsLat,obsLon,0);
+      SOLAR_BODIES.forEach(b=>{
+        const h=solarHorizontal(b.key,date,observer);
+        if(!h||h.alt<0)return;
+        const p=projectAltAz(h.alt,h.az,size);
+        if(!p)return;
+        parts.push(`<g class="sky-solar" data-name="${b.name}">
+          <circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${b.r+4}" fill="${b.color}" opacity="0.16"/>
+          <circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${b.r}" fill="${b.color}" stroke="#0a0d18" stroke-width="0.6"/>
+          <text x="${(p[0]+b.r+3).toFixed(1)}" y="${(p[1]+3).toFixed(1)}" font-size="10" fill="${b.color}" font-weight="700">${b.sym}</text>
+          <title>${b.name} · alt ${h.alt.toFixed(0)}° az ${h.az.toFixed(0)}°${h.mag!=null?` · mag ${h.mag.toFixed(1)}`:''}</title>
+        </g>`);
+      });
+    }
+
     parts.push(`</g>`);
     parts.push(`<text x="${size/2}" y="16" text-anchor="middle" font-size="10" fill="#aeb5c4" opacity="0.7" letter-spacing="1.5" font-weight="600">ZENIT</text>`);
     parts.push(`<text x="${size/2}" y="${size-6}" text-anchor="middle" font-size="9" fill="#aeb5c4" opacity="0.6">${date.toLocaleString('it-IT',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})} · LST ${(lst/15).toFixed(1)}h</text>`);
@@ -1410,6 +1541,7 @@
   }
 
   function renderSkyList(){
+    renderSolarList();
     const obsLat=(typeof lat==='number')?lat:41.5;
     const date=skyState.datetime||new Date();
     const lst=lstFromDate(date,(typeof lon==='number')?lon:12.5);
@@ -1432,6 +1564,46 @@
         <span style="color:${c};font-weight:600">●</span> <b style="color:#f4f5f8">${o.name}</b>
         <small style="color:#aeb5c4;display:block;margin-top:2px">${o.type} · mag ${o.mag} · ${o.size} · alt ${Math.round(o.alt)}° ${azLabel}</small>
         <small style="color:#7a8294;display:block;margin-top:2px;font-size:11px">${o.desc}</small>
+      </li>`;
+    }).join('');
+  }
+
+  // Lista corpi del Sistema Solare (Sole, Luna, pianeti) con alt/az, magnitudine e fase lunare.
+  function renderSolarList(){
+    const ul=$('solarList'); if(!ul)return;
+    const sub=$('solarSub');
+    if(!window.Astronomy){
+      ul.innerHTML='<li style="color:#aeb5c4">Astronomy Engine non caricato (offline?). Riavvia l\'app con connessione per cachare la libreria.</li>';
+      return;
+    }
+    const obsLat=(typeof lat==='number')?lat:41.5;
+    const obsLon=(typeof lon==='number')?lon:12.5;
+    const date=skyState.datetime||new Date();
+    const observer=new Astronomy.Observer(obsLat,obsLon,0);
+    const rows=SOLAR_BODIES.map(b=>{
+      const h=solarHorizontal(b.key,date,observer);
+      if(!h)return null;
+      return {...b,...h};
+    }).filter(Boolean);
+    const visible=rows.filter(r=>r.alt>0).sort((a,b)=>b.alt-a.alt);
+    if(sub){
+      const moon=rows.find(r=>r.key==='Moon');
+      sub.textContent=visible.length+' sopra l\'orizzonte'+(moon&&moon.illum!=null?` · Luna ${(moon.illum*100).toFixed(0)}% illuminata`:'');
+    }
+    if(!visible.length){
+      ul.innerHTML='<li style="color:#aeb5c4">Nessun corpo del Sistema Solare sopra l\'orizzonte in questo momento.</li>';
+      return;
+    }
+    const azIdx=a=>Math.round(((a+22.5)%360)/45)%8;
+    const azLabel=['N','NE','E','SE','S','SW','W','NW'];
+    ul.innerHTML=visible.map(r=>{
+      const az=azLabel[azIdx(r.az)];
+      const magTxt=r.mag!=null?` · mag ${r.mag.toFixed(1)}`:'';
+      const moonTxt=r.key==='Moon'&&r.illum!=null?` · ${(r.illum*100).toFixed(0)}% illuminata`:'';
+      return `<li>
+        <span style="color:${r.color};font-weight:600;font-size:15px">${r.sym}</span> <b style="color:#f4f5f8">${r.name}</b>
+        <small style="color:#aeb5c4;display:block;margin-top:2px">alt ${Math.round(r.alt)}° ${az} (az ${Math.round(r.az)}°)${magTxt}${moonTxt}</small>
+        <small style="color:#7a8294;display:block;margin-top:2px;font-size:11px">${r.note}</small>
       </li>`;
     }).join('');
   }
@@ -1518,6 +1690,7 @@
     layerConstLines:'constLines',
     layerConstNames:'constNames',
     layerDSO:'dso',
+    layerSolar:'solar',
     layerEcliptic:'ecliptic',
     layerGrid:'grid',
     layerMilkyWay:'milkyWay'
@@ -1552,6 +1725,167 @@
       console.warn('⚠️ Service Worker non registrato:',err.message);
     });
   }
+
+  // ========= TAB SWITCHER =========
+  document.querySelectorAll('.tab').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const tab=btn.dataset.tab;
+      document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b===btn));
+      document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.dataset.pane===tab));
+      if(tab==='history'&&lat!==null)loadHistory();
+    });
+  });
+
+  // ========= STORICO & PROBABILITÀ =========
+  // Fetch una sola volta per posizione, cached per 24h in localStorage
+  async function loadHistory(){
+    const status=$('historyStatus'),content=$('historyContent');
+    if(!lat||!lon){status.textContent='Premi 📍 Posizione per caricare i dati storici.';return}
+    const cacheKey=`astroHistory_${lat.toFixed(2)}_${lon.toFixed(2)}`;
+    let cached=null;
+    try{const raw=localStorage.getItem(cacheKey);if(raw){const p=JSON.parse(raw);if(Date.now()-p.t<86400000)cached=p.data;}}catch(e){}
+    if(cached){
+      status.textContent=`📊 Dati da ${new Date(cached.fetchedAt).toLocaleString('it-IT')}`;
+      renderHistory(cached);renderAstroNow();
+      return;
+    }
+    status.textContent='📡 Scaricamento dati storici da Open-Meteo…';
+    try{
+      // ultimi 5 anni di dati giornalieri per ogni mese
+      const now=new Date();
+      const years=[];
+      for(let i=0;i<5;i++)years.push(now.getFullYear()-i);
+      const samples=[];
+      for(const y of years){
+        const start=`${y}-01-01`,end=`${y}-12-31`;
+        const url=`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${start}&end_date=${end}&daily=cloud_cover_mean&timezone=auto`;
+        const r=await fetch(url);
+        if(!r.ok)continue;
+        const j=await r.json();
+        if(j.daily&&j.daily.cloud_cover_mean){
+          j.daily.time.forEach((d,k)=>{
+            const cc=j.daily.cloud_cover_mean[k];
+            if(cc===null||cc===undefined)return;
+            const dt=new Date(d);
+            const m=dt.getMonth(),h=dt.getHours();
+            // Conta come "notte" se mese tra ottobre-marzo (più probabile utile) o comunque sera
+            // campioniamo tutti i giorni come proxy per "cielo notturno"
+            samples.push({month:m,cc});
+          });
+        }
+      }
+      if(!samples.length)throw new Error('nessun dato');
+      // Aggrega per mese
+      const monthStats=Array(12).fill(0).map(()=>({sum:0,count:0,clearDays:0}));
+      samples.forEach(s=>{
+        monthStats[s.month].sum+=s.cc;
+        monthStats[s.month].count++;
+        if(s.cc<20)monthStats[s.month].clearDays++; // soglia "sereno": copertura <20%
+      });
+      const data={
+        fetchedAt:Date.now(),
+        monthPct:monthStats.map(ms=>ms.count?Math.round((ms.clearDays/ms.count)*100):0),
+        monthAvg:monthStats.map(ms=>ms.count?Math.round(ms.sum/ms.count):0),
+        overall:samples.length?Math.round((samples.filter(s=>s.cc<20).length/samples.length)*100):0,
+        sampleCount:samples.length
+      };
+      try{localStorage.setItem(cacheKey,JSON.stringify({t:Date.now(),data}));}catch(e){}
+      status.textContent=`� Dati da ${new Date(data.fetchedAt).toLocaleString('it-IT')} · ${data.sampleCount} giorni analizzati`;
+      renderHistory(data);renderAstroNow();
+    }catch(e){
+      status.textContent='⚠️ Impossibile scaricare dati storici (offline?). Riprova con connessione attiva.';
+    }
+  }
+
+  function renderHistory(data){
+    const content=$('historyContent');if(!content)return;
+    content.style.display='block';
+    $('hcClearPct').textContent=data.overall+'%';
+    const monthNames=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+    let bestI=0,worstI=0;
+    data.monthPct.forEach((p,i)=>{if(p>data.monthPct[bestI])bestI=i;if(p<data.monthPct[worstI])worstI=i;});
+    $('hcBestMonth').textContent=monthNames[bestI];
+    $('hcBestMonthMeta').textContent=`${data.monthPct[bestI]}% sereno (media ${data.monthAvg[bestI]}% nuvole)`;
+    $('hcWorstMonth').textContent=monthNames[worstI];
+    $('hcWorstMonthMeta').textContent=`${data.monthPct[worstI]}% sereno (media ${data.monthAvg[worstI]}% nuvole)`;
+    // Calendario annuale: barre SVG verticali
+    const cal=$('historyCalendar');if(!cal)return;
+    const maxP=Math.max(...data.monthPct,1);
+    cal.innerHTML=data.monthPct.map((p,i)=>{
+      const h=Math.max(4,Math.round((p/maxP)*110));
+      const color=p>60?'#9ae6b4':p>40?'#ffd77b':'#ff6b6b';
+      return `<div class="cal-month" title="${monthNames[i]}: ${p}% sereno">
+        <div class="cal-bar" style="height:${h}px;background:${color}"><span class="cal-bar-pct">${p}%</span></div>
+        <div class="cal-bar-label">${monthNames[i]}</div>
+      </div>`;
+    }).join('');
+    // Fattibilità DSO
+    const feas=$('dsoFeasibility');if(!feas||!window.Astronomy)return;
+    const now=new Date();
+    const obs=new Astronomy.Observer(lat,lon,0);
+    const moonPhase=Astronomy.MoonPhase(now); // 0=nuova, 180=piena
+    const moonIllum=Math.abs(Math.cos((moonPhase*Math.PI/180))); // 1=new, 0=full
+    const items=SKY_CATALOG.map(o=>{
+      // Calcola altitudine massima nelle prossime 12 ore
+      let maxAlt=-90;
+      for(let h=0;h<=12;h++){
+        const t=new Date(now.getTime()+h*3600000);
+        const eq=Astronomy.Equator(o.name==='M42 Orion Nebula'?'M42':o.name==='M31 Andromeda'?'M31':o.name==='M45 Pleiadi'?'M45':o.name.split(' ')[0],t,obs,true,true);
+        const hor=Astronomy.Horizon(t,obs,eq.ra,eq.dec,'normal');
+        if(hor.altitude>maxAlt)maxAlt=hor.altitude;
+      }
+      // Semplificato: per oggetti non presenti nel database Astronomy Engine, usa alt calcolata a mano
+      if(!isFinite(maxAlt)||maxAlt<-89){
+        const lst=lstFromDate(now,lon);
+        const {alt}=equatorialToHorizontal(o.ra,o.dec,lat,lst);
+        maxAlt=Math.max(0,alt);
+      }
+      // Score: altitudine (40%) + moon (30%) + clear sky (30%)
+      const altScore=Math.min(40,Math.max(0,maxAlt*0.6)); // 60°→36, 90°→54 (cap 40)
+      const moonScore=moonIllum*30; // luna nuova→30, piena→0
+      const clearScore=(data.monthPct[now.getMonth()]/100)*30;
+      const score=Math.round(altScore+moonScore+clearScore);
+      return {...o,maxAlt,score};
+    }).sort((a,b)=>b.score-a.score);
+    feas.innerHTML=items.slice(0,8).map(o=>{
+      const colors={'galassia':'#ff6b9d','nebulosa':'#8cc5ff','ammasso aperto':'#ffd77b','ammasso globulare':'#fff5cc','nebulosa planetaria':'#9ae6b4'};
+      const c=colors[o.type]||'#ffd77b';
+      return `<div class="feas-item">
+        <div><div class="feas-name" style="color:${c}">${o.name}</div><div class="feas-sub">${o.type} · max ${Math.round(o.maxAlt)}° alt · mag ${o.mag}</div></div>
+        <div class="feas-bar-wrap"><div class="feas-bar" style="width:${o.score}%"></div></div>
+        <div class="feas-score">${o.score}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderAstroNow(){
+    const el=$('astroNow');if(!el||!window.Astronomy)return;
+    const now=new Date();
+    const obs=new Astronomy.Observer(lat,lon,0);
+    // Alba/tramonto oggi
+    let sunrise='—',sunset='—',astroDarkStart='—';
+    try{
+      const srAstro=Astronomy.SearchRiseSet(Astronomy.Body.Sun,obs,+1,now,1);
+      const ssAstro=Astronomy.SearchRiseSet(Astronomy.Body.Sun,obs,-1,now,1);
+      if(srAstro)sunrise=srAstro.date.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+      if(ssAstro)sunset=ssAstro.date.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+      // Astro dark = sole -18°: usa SearchAltitude
+      const astroSet=Astronomy.SearchAltitude(Astronomy.Body.Sun,obs,-1,now,1,new Astronomy.Degrees(-18));
+      if(astroSet)astroDarkStart=astroSet.date.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+    }catch(e){}
+    // Fase lunare
+    const moonPhase=Astronomy.MoonPhase(now);
+    const phaseName=moonPhase<22.5?'🌑 Nuova':moonPhase<67.5?'🌒 Crescente':moonPhase<112.5?'🌓 Primo quarto':moonPhase<157.5?'🌔 Gibbosa':moonPhase<202.5?'🌕 Piena':moonPhase<247.5?'🌖 Gibbosa calante':moonPhase<292.5?'🌗 Ultimo quarto':'🌘 Calante';
+    const illumPct=Math.round((1-Math.abs(Math.cos(moonPhase*Math.PI/180)))*100);
+    el.innerHTML=`
+      <div class="astro-now-card"><div class="an-icon">🌅</div><div class="an-label">Alba</div><div class="an-value">${sunrise}</div></div>
+      <div class="astro-now-card"><div class="an-icon">🌇</div><div class="an-label">Tramonto</div><div class="an-value">${sunset}</div></div>
+      <div class="astro-now-card"><div class="an-icon">🌌</div><div class="an-label">Buio astronomico</div><div class="an-value">${astroDarkStart}</div></div>
+      <div class="astro-now-card"><div class="an-icon">�</div><div class="an-label">Fase lunare</div><div class="an-value">${phaseName}</div></div>
+      <div class="astro-now-card"><div class="an-icon">💡</div><div class="an-label">Illuminazione</div><div class="an-value">${illumPct}%</div></div>
+    `;
+  }
+
   update();
   console.log('✅ update chiamato');
 })();
