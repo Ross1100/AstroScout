@@ -746,6 +746,19 @@
 
   async function places(){
     console.log('📍 places() chiamata, lat='+lat+' lon='+lon);
+    if(lat===null||lon===null){
+      $('placesStatus').textContent='Scegli prima una posizione per cercare belvederi nelle vicinanze.';
+      $('places').innerHTML='<li>📍 Nessuna posizione. Clicca <b>📍 Posizione</b> in alto o sposta la mappa.</li>';
+      clearPlaceMarkers();
+      return;
+    }
+    // Debounce: evita chiamate identiche in finestre <30s
+    const now=Date.now();
+    if(places._lastCall&&(now-places._lastCall)<30000&&places._lastLat===lat&&places._lastLon===lon){
+      console.log('⏭️ places() skippato (debounce)');
+      return;
+    }
+    places._lastCall=now;places._lastLat=lat;places._lastLon=lon;
     $('placesStatus').textContent='Cerco punti panoramici entro 50 km…';
     clearPlaceMarkers();
     try{
@@ -1087,7 +1100,11 @@ function renderSky(){
           background:{fill:'#000',stroke:'#000'},
           stars:{limit:6,style:{fill:'#ffd77b',opacity:1},colors:false,size:4,exponent:0.5},
           dsos:{limit:6,style:{fill:'#a8c8ff',stroke:'#a8c8ff',width:1,opacity:1},size:8},
-          constellations:{lines:true,lineStyle:{stroke:'#8cc5ff',width:0.5,opacity:.6},labels:true,labelStyle:{fill:'#a8c8ff',font:'11px sans-serif'}}
+          constellations:{lines:true,lineStyle:{stroke:'#8cc5ff',width:0.5,opacity:.6},labels:true,labelStyle:{fill:'#a8c8ff',font:'11px sans-serif'}},
+          mw:{show:false}, // niente tile Milky Way (97/98/99.png): non esistono sul CDN
+          galaxies:{show:false},
+          horizon:{show:false},
+          planets:{show:false}
         });
         celestialMapEl.dataset.ready='1';
       }catch(err){
