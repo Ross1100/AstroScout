@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1a1f2c"/>
+      <stop offset="70%" stop-color="#050609"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffd77b" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#ffd77b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="192" height="192" rx="32" fill="url(#bg)"/>
+  <circle cx="96" cy="96" r="60" fill="url(#glow)"/>
+  <!-- stelle sparse -->
+  <g fill="#fff">
+    <circle cx="40" cy="50" r="1.2"/>
+    <circle cx="62" cy="32" r="0.8"/>
+    <circle cx="148" cy="44" r="1.4"/>
+    <circle cx="160" cy="72" r="0.9"/>
+    <circle cx="32" cy="120" r="1.1"/>
+    <circle cx="50" cy="156" r="0.8"/>
+    <circle cx="156" cy="138" r="1.2"/>
+    <circle cx="138" cy="160" r="0.9"/>
+    <circle cx="78" cy="22" r="0.7"/>
+    <circle cx="118" cy="170" r="0.7"/>
+  </g>
+  <g fill="#ffe8a8" opacity="0.7">
+    <circle cx="28" cy="76" r="0.8"/>
+    <circle cx="166" cy="108" r="0.8"/>
+    <circle cx="84" cy="170" r="0.7"/>
+  </g>
+  <!-- Simbolo stilizzato: luna + stella -->
+  <g transform="translate(96,96)">
+    <circle cx="-8" cy="0" r="22" fill="#fff5cc"/>
+    <circle cx="0" cy="-6" r="20" fill="#050609"/>
+    <g fill="#ffd77b">
+      <path d="M 18,-12 L 21,-4 L 29,-4 L 23,1 L 26,9 L 18,4 L 10,9 L 13,1 L 7,-4 L 15,-4 Z"/>
+    </g>
+  </g>
+  <!-- "Astro Scout" wordmark rimossa per leggibilità icona -->
+</svg>
