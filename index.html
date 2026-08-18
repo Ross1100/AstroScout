@@ -1114,35 +1114,48 @@ function renderSky(){
   // ========= MAPPA DEL CIELO CON TARGET CELESTI =========
   // Default: d3-celestial (sfera celeste reale). Toggle: vista semplificata Leaflet.
   const celestialMapEl=document.getElementById('celestialMap');
-  if(celestialMapEl&&!celestialMapEl.style.height)celestialMapEl.style.height='420px';
+  if(celestialMapEl){
+    celestialMapEl.style.height='420px';
+    celestialMapEl.style.width='100%';
+  }
 
-  // Inizializza d3-celestial come default
+  // Inizializza d3-celestial come default — con retry se il container non ha ancora width
+  function renderCelestial(){
+    if(!celestialMapEl)return;
+    const w=celestialMapEl.clientWidth;
+    if(w<50){
+      console.warn('⏳ d3-celestial: container non ancora pronto, riprovo');
+      setTimeout(renderCelestial,200);
+      return;
+    }
+    try{
+      Celestial.display({
+        datapath:'https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@master/data/',
+        width:w,
+        height:420,
+        controls:false,
+        projection:'stereographic',
+        transform:'equatorial',
+        center:[0,90,0], // polo nord celeste: stelle sempre visibili dall'emisfero boreale
+        background:{fill:'#000',stroke:'#000'},
+        stars:{limit:6,style:{fill:'#ffd77b',opacity:1},colors:false,size:4,exponent:0.5},
+        dsos:{limit:6,style:{fill:'#a8c8ff',stroke:'#a8c8ff',width:1,opacity:1},size:8},
+        constellations:{lines:true,lineStyle:{stroke:'#8cc5ff',width:0.5,opacity:.6},labels:true,labelStyle:{fill:'#a8c8ff',font:'11px sans-serif'}},
+        mw:{show:false},
+        galaxies:{show:false},
+        horizon:{show:false},
+        planets:{show:false}
+      });
+      celestialMapEl.dataset.ready='1';
+    }catch(err){
+      console.warn('⚠️ d3-celestial errore:',err.message);
+    }
+  }
   function showCelestialMap(){
     const skymapEl=document.getElementById('skymap');
     if(skymapEl)skymapEl.style.display='none';
     if(celestialMapEl)celestialMapEl.style.display='block';
-    if(celestialMapEl&&!celestialMapEl.dataset.ready){
-      try{
-        Celestial.display({
-          datapath:'https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@master/data/',
-          controls:false,
-          projection:'stereographic',
-          transform:'equatorial',
-          center:[0,0,0],
-          background:{fill:'#000',stroke:'#000'},
-          stars:{limit:6,style:{fill:'#ffd77b',opacity:1},colors:false,size:4,exponent:0.5},
-          dsos:{limit:6,style:{fill:'#a8c8ff',stroke:'#a8c8ff',width:1,opacity:1},size:8},
-          constellations:{lines:true,lineStyle:{stroke:'#8cc5ff',width:0.5,opacity:.6},labels:true,labelStyle:{fill:'#a8c8ff',font:'11px sans-serif'}},
-          mw:{show:false}, // niente tile Milky Way (97/98/99.png): non esistono sul CDN
-          galaxies:{show:false},
-          horizon:{show:false},
-          planets:{show:false}
-        });
-        celestialMapEl.dataset.ready='1';
-      }catch(err){
-        console.warn('⚠️ d3-celestial errore:',err.message);
-      }
-    }
+    if(celestialMapEl&&!celestialMapEl.dataset.ready)renderCelestial();
   }
 
   // Vista semplificata Leaflet (RA→lat, Dec→lon) — per chi vuole bassa banda
@@ -1211,6 +1224,17 @@ function renderSky(){
 
   // Avvia con d3-celestial di default
   showCelestialMap();
+  // Re-render su resize (mobile rotation, split-view desktop)
+  let _resizeTimer=null;
+  window.addEventListener('resize',()=>{
+    if(_resizeTimer)clearTimeout(_resizeTimer);
+    _resizeTimer=setTimeout(()=>{
+      if(celestialMapEl){
+        celestialMapEl.dataset.ready='';
+        if(celestialMapEl.style.display!=='none')renderCelestial();
+      }
+    },300);
+  });
 
   loadPrefs();
   console.log('✅ loadPrefs ok');
