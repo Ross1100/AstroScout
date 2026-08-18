@@ -1,8 +1,11 @@
 // Service Worker per Astro Scout — Cache-first per offline
-const CACHE='astro-scout-v11';
+const CACHE='astro-scout-v12';
 const ASSETS=[
   './',
   './index.html',
+  './data/gear.js',
+  './icon-192.svg',
+  './manifest.webmanifest',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
 ];

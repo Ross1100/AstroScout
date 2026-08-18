@@ -322,83 +322,8 @@
     <section class="panel">
       <h2>La tua attrezzatura</h2>
       <div class="fields">
-        <div><label for="camera">Fotocamera</label><select id="camera">
-          <optgroup label="— Mirrorless —">
-            <optgroup label="&nbsp;&nbsp;Canon">
-              <option value="1">Canon EOS R5 / R6 / R · Full frame</option>
-              <option value="1.6">Canon EOS R7 / R10 / R50 · APS-C</option>
-            </optgroup>
-            <optgroup label="&nbsp;&nbsp;Nikon">
-              <option value="1">Nikon Z6 / Z7 / Z9 · Full frame</option>
-              <option value="1.5">Nikon Z50 / Z fc · APS-C (DX)</option>
-            </optgroup>
-            <optgroup label="&nbsp;&nbsp;Sony">
-              <option value="1">Sony α7 / α9 · Full frame</option>
-              <option value="1.5">Sony α6100 / α6400 / α6700 · APS-C</option>
-            </optgroup>
-            <optgroup label="&nbsp;&nbsp;Fujifilm">
-              <option value="1.5">Fuji X-H2 / X-T5 · APS-C</option>
-              <option value="1.5">Fuji X-T30 / X-S10 · APS-C</option>
-              <option value="0.79">Fuji GFX (medio formato)</option>
-            </optgroup>
-            <optgroup label="&nbsp;&nbsp;Olympus / OM System">
-              <option value="2">OM System OM-1 / OM-5 · Micro 4/3</option>
-            </optgroup>
-            <optgroup label="&nbsp;&nbsp;Panasonic">
-              <option value="2">Panasonic GH / G9 · Micro 4/3</option>
-            </optgroup>
-          </optgroup>
-          <optgroup label="— Reflex (DSLR) —">
-            <optgroup label="&nbsp;&nbsp;Canon">
-              <option value="1">Canon EOS 5D / 6D · Full frame</option>
-              <option value="1.6">Canon EOS 80D / 90D · APS-C</option>
-            </optgroup>
-            <optgroup label="&nbsp;&nbsp;Nikon">
-              <option value="1">Nikon D750 / D850 · Full frame</option>
-              <option value="1.5">Nikon D7500 / D500 · APS-C (DX)</option>
-            </optgroup>
-            <optgroup label="&nbsp;&nbsp;Pentax">
-              <option value="1">Pentax K-1 / K-3 · Full frame / APS-C</option>
-            </optgroup>
-          </optgroup>
-          <optgroup label="— Smartphone —">
-            <option value="1">iPhone / Pixel / Galaxy · (eq. FF)</option>
-          </optgroup>
-        </select></div>
-        <div><label for="lens">Obiettivo</label><select id="lens">
-          <optgroup label="— Grandangolari (stelle e via lattea) —">
-            <option value="14,2.8">14 mm f/2.8 (vari)</option>
-            <option value="16,2.8">16 mm f/2.8 (Sony E / Fuji X)</option>
-            <option value="20,1.8">20 mm f/1.8 (Sigma / Canon RF)</option>
-            <option value="24,1.4">24 mm f/1.4 (profi)</option>
-            <option value="24,1.8">24 mm f/1.8 (Sony / Sigma)</option>
-          </optgroup>
-          <optgroup label="— Standard (stelle e paesaggio) —">
-            <option value="35,1.4">35 mm f/1.4 (profi)</option>
-            <option value="35,1.8">35 mm f/1.8 (tutti i brand)</option>
-            <option value="50,1.4">50 mm f/1.4 (profi)</option>
-            <option value="50,1.8">50 mm f/1.8 (tutti i brand)</option>
-          </optgroup>
-          <optgroup label="— Teleobiettivi (luna e pianeti) —">
-            <option value="85,1.8">85 mm f/1.8</option>
-            <option value="135,1.8">135 mm f/1.8 (Sigma Art)</option>
-            <option value="200,2.8">200 mm f/2.8 (profi)</option>
-            <option value="200,5.6">200 mm f/5.6 (kit)</option>
-            <option value="300,4">300 mm f/4 (sport)</option>
-          </optgroup>
-          <optgroup label="— Zoom —">
-            <option value="16,3.5">16–50 mm f/3.5–5.6 (kit APS-C)</option>
-            <option value="24,2.8">24–70 mm f/2.8 (profi)</option>
-            <option value="24,4">24–105 mm f/4 (tuttofare)</option>
-            <option value="70,2.8">70–200 mm f/2.8 (profi)</option>
-          </optgroup>
-          <optgroup label="— Manuali / Vintage (spesso molto luminosi) —">
-            <option value="28,1.8">28 mm f/1.8 (Samyang / Rokinon)</option>
-            <option value="35,1.4">35 mm f/1.4 (Samyang manuale)</option>
-            <option value="50,0.95">50 mm f/0.95 (Mitakon / Voigtländer)</option>
-            <option value="85,1.2">85 mm f/1.2 (Samyang / Canon)</option>
-          </optgroup>
-        </select></div>
+        <div><label for="camera">Fotocamera</label><select id="camera"></select></div>
+        <div><label for="lens">Obiettivo</label><select id="lens"></select></div>
       </div>
       <div class="setup-wrap">
   <div class="setup" id="setup"></div>
@@ -604,6 +529,7 @@
     </div>
   </section>
 </main>
+<script src="data/gear.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 (() => {
@@ -687,6 +613,76 @@
     const d=new Date(iso);
     return d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
   }
+  // ========= POPOLA SELECT FOTOCAMERE + OBIETTIVI DA data/gear.js =========
+  function populateCameraSelect(){
+    const sel=document.getElementById('camera');
+    if(!sel||!window.CAMERAS)return;
+    const groups={};
+    CAMERAS.forEach(c=>{
+      const key=c.t;
+      if(!groups[key])groups[key]=[];
+      groups[key].push(c);
+    });
+    // Ordine: Mirrorless, Reflex, Smartphone, Astro CCD
+    const order=['Mirrorless','Reflex','Smartphone','Astro CCD'];
+    order.forEach(gName=>{
+      if(!groups[gName])return;
+      const og=document.createElement('optgroup');
+      og.label='— '+gName+' —';
+      // Sotto-sezioni per brand
+      const byBrand={};
+      groups[gName].forEach(c=>{
+        if(!byBrand[c.b])byBrand[c.b]=[];
+        byBrand[c.b].push(c);
+      });
+      Object.keys(byBrand).sort().forEach(brand=>{
+        const sub=document.createElement('optgroup');
+        sub.label='   '+brand;
+        byBrand[brand].forEach(c=>{
+          const opt=document.createElement('option');
+          opt.value=c.c;
+          opt.textContent=`${c.m} · ${c.f}`;
+          sub.appendChild(opt);
+        });
+        og.appendChild(sub);
+      });
+      sel.appendChild(og);
+    });
+  }
+  function populateLensSelect(){
+    const sel=document.getElementById('lens');
+    if(!sel||!window.LENSES)return;
+    const groups={wide:'— Grandangolari (stelle, via lattea) —',standard:'— Standard (stelle + paesaggio) —',tele:'— Teleobiettivi (luna, pianeti) —',zoom:'— Zoom versatili —'};
+    const order=['wide','standard','tele','zoom'];
+    order.forEach(k=>{
+      const arr=window.LENSES.filter(l=>l.k===k);
+      if(!arr.length)return;
+      const og=document.createElement('optgroup');
+      og.label=groups[k];
+      // Sotto-sezioni per brand
+      const byBrand={};
+      arr.forEach(l=>{
+        if(!byBrand[l.b])byBrand[l.b]=[];
+        byBrand[l.b].push(l);
+      });
+      Object.keys(byBrand).sort().forEach(brand=>{
+        const sub=document.createElement('optgroup');
+        sub.label='   '+brand;
+        byBrand[brand].forEach(l=>{
+          const opt=document.createElement('option');
+          opt.value=`${l.f},${l.a}`;
+          const fast=(k==='wide'&&l.a<=2.8)||(k!=='wide'&&l.a<=1.8);
+          opt.textContent=`${l.m} · ${l.a===Math.floor(l.a)?'f/'+l.a:'f/'+l.a.toFixed(2)}${fast?' ⭐':''}`;
+          sub.appendChild(opt);
+        });
+        og.appendChild(sub);
+      });
+      sel.appendChild(og);
+    });
+  }
+  populateCameraSelect();
+  populateLensSelect();
+
   function setup(){
     const [f,ap]=$('lens').value.split(',').map(Number),
           crop=Number($('camera').value),
