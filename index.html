@@ -1222,7 +1222,7 @@
   const lpLayer=L.tileLayer('https://djlorenz.github.io/astronomy/lp2022/overlay/tiles/{z}/{x}/{y}.png',{maxZoom:8,opacity:.55,attribution:'Light pollution: D. Lorenz et al. (2022)'});
 
   // Click sulla mappa per riposizionare
-  map.on('click',e=>{lat=e.latlng.lat;lon=e.latlng.lng;ensureUserMarker(lat,lon);if(userMarker)userMarker.bindPopup(`Posizione scelta: ${lat.toFixed(4)}, ${lon.toFixed(4)}`).openPopup();update()});
+  map.on('click',e=>{lat=e.latlng.lat;lon=e.latlng.lng;ensureUserMarker(lat,lon);if(userMarker)userMarker.bindPopup(`Posizione scelta: ${lat.toFixed(4)}, ${lon.toFixed(4)}`).openPopup();update();renderSkyMap()});
 
   function setUserMarker(la,lo){
     ensureUserMarker(la,lo);
@@ -1281,10 +1281,10 @@
   $('lpToggle').addEventListener('change',e=>{if(e.target.checked){lpLayer.addTo(map);$('lpLegend').classList.add('on')}else{map.removeLayer(lpLayer);$('lpLegend').classList.remove('on')}savePrefs()});
   $('layerDSO')?.addEventListener('change',savePrefs);
   $('refresh').addEventListener('click',update);
-  $('locate').addEventListener('click',()=>{if(!navigator.geolocation){$('place').textContent='La geolocalizzazione non è supportata dal browser.';return} $('place').textContent='Richiesta posizione…';navigator.geolocation.getCurrentPosition(p=>{lat=p.coords.latitude;lon=p.coords.longitude;$('place').textContent=`Posizione attiva: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;setUserMarker(lat,lon);update()},()=>{
+  $('locate').addEventListener('click',()=>{if(!navigator.geolocation){$('place').textContent='La geolocalizzazione non è supportata dal browser.';return} $('place').textContent='Richiesta posizione…';navigator.geolocation.getCurrentPosition(p=>{lat=p.coords.latitude;lon=p.coords.longitude;$('place').textContent=`Posizione attiva: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;setUserMarker(lat,lon);update();renderSkyMap();},()=>{
         lat=FALLBACK.lat;lon=FALLBACK.lon;usingFallback=true;
         $('place').innerHTML=`Posizione non disponibile: mostro <b>${FALLBACK.label}</b>. Tocca la mappa per scegliere un punto.`;
-        setUserMarker(lat,lon);update();
+        setUserMarker(lat,lon);update();renderSkyMap();
       },{enableHighAccuracy:false,timeout:10000})});
 
   // Effetto sparkles: singole scintille sparse al passaggio del cursore (no pattern, no loop)
@@ -2034,6 +2034,7 @@
     setUserMarker(lat,lon);}
 
   update();
+  renderSkyMap();
   console.log('✅ update chiamato');
 })();
 console.log('🌟 Script fine');
