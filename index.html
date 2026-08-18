@@ -6,9 +6,9 @@
   <title>Astro Scout</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <style>
-    :root{color-scheme:dark;--bg:#050609;--panel:#10131a;--line:#2b3040;--ink:#f4f5f8;--muted:#aeb5c4;--gold:#ffd77b;--blue:#8cc5ff;--good:#9ae6b4}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% 0,#18253c 0,transparent 36%),var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1000px;margin:auto;padding:26px 18px 48px}h1{font-size:30px;margin:0 0 5px;letter-spacing:-.8px}.lead{margin:0 0 24px;color:var(--muted)}.layout{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.panel{border:1px solid var(--line);background:#0c0f15;padding:16px}h2{font-size:15px;margin:0 0 13px;color:var(--gold)}label{display:block;font-size:11px;color:var(--muted);margin:0 0 5px}select,button{font:inherit}select{width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}button{border:1px solid #607294;background:#18243a;color:white;padding:9px 12px;border-radius:4px;cursor:pointer}button.primary{background:#d7ac52;color:#1b1405;border-color:#f6d37e}.setup{margin-top:15px;border-left:3px solid var(--gold);padding:9px 11px;background:#15130d;font-size:13px;line-height:1.45}.setup b{color:var(--gold)}.status{font-size:12px;color:var(--muted);margin:11px 0 0}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.card{border:1px solid var(--line);padding:11px;background:var(--panel)}.card span{font-size:11px;color:var(--muted)}.card strong{display:block;font-size:20px;margin-top:4px}.ok{color:var(--good)}#map{height:380px;border:1px solid var(--line);z-index:0;background:#000810 radial-gradient(ellipse at center,#0a1f3a 0%,#000510 70%)}.places{margin:0;padding:0;list-style:none}.places li{padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.places small{color:var(--muted);display:block;margin-top:3px;font-size:11px}.places a{color:var(--blue)}.foot{margin-top:18px;font-size:11px;color:var(--muted);line-height:1.4}.foot a{color:var(--blue)}@media(max-width:720px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}h1{font-size:25px}}
+    :root{color-scheme:dark;--bg:#050609;--panel:#10131a;--line:#2b3040;--ink:#f4f5f8;--muted:#aeb5c4;--gold:#ffd77b;--blue:#8cc5ff;--good:#9ae6b4}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% 0,#18253c 0,transparent 36%),var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1000px;margin:auto;padding:26px 18px 48px}h1{font-size:30px;margin:0 0 5px;letter-spacing:-.8px}.lead{margin:0 0 24px;color:var(--muted)}.layout{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.panel{border:1px solid var(--line);background:#0c0f15;padding:16px}h2{font-size:15px;margin:0 0 13px;color:var(--gold)}label{display:block;font-size:11px;color:var(--muted);margin:0 0 5px}select,button{font:inherit}select{width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}button{border:1px solid #607294;background:#18243a;color:white;padding:9px 12px;border-radius:4px;cursor:pointer}button.primary{background:#d7ac52;color:#1b1405;border-color:#f6d37e}.setup{margin-top:15px;border-left:3px solid var(--gold);padding:9px 11px;background:#15130d;font-size:13px;line-height:1.45}.setup b{color:var(--gold)}.status{font-size:12px;color:var(--muted);margin:11px 0 0}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.card{border:1px solid var(--line);padding:11px;background:var(--panel)}.card span{font-size:11px;color:var(--muted)}.card strong{display:block;font-size:20px;margin-top:4px}.ok{color:var(--good)}#map{height:380px;border:1px solid var(--line);z-index:0;background:#000810 radial-gradient(ellipse at center,#0a1f3a 0%,#000510 70%)}#skymap{height:420px;border:1px solid var(--line);z-index:0;background:#000510 radial-gradient(ellipse at center,#1a1538 0%,#000308 70%);margin-bottom:14px}.dso-marker{filter:drop-shadow(0 0 6px currentColor)}.places{margin:0;padding:0;list-style:none}.places li{padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.places small{color:var(--muted);display:block;margin-top:3px;font-size:11px}.places a{color:var(--blue)}.foot{margin-top:18px;font-size:11px;color:var(--muted);line-height:1.4}.foot a{color:var(--blue)}@media(max-width:720px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}h1{font-size:25px}}
     .leaflet-container{background:#000810 !important;font-family:inherit}
-    .leaflet-tile-pane{filter:saturate(.9) brightness(1.05)}
+    .leaflet-tile-pane{filter:saturate(1) brightness(1.1) contrast(1.05)}
     .leaflet-popup-content-wrapper{background:#0c1220;border:1px solid var(--gold);color:var(--ink);border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.7)}
     .leaflet-popup-tip{background:#0c1220}
     .leaflet-popup-content{margin:10px 12px;font-size:12px;line-height:1.4}
@@ -18,13 +18,9 @@
     .leaflet-control-attribution{background:rgba(12,18,32,.85) !important;color:var(--muted) !important;font-size:10px}
     .leaflet-control-attribution a{color:var(--blue) !important}
     .leaflet-interactive{filter:drop-shadow(0 0 4px rgba(140,197,255,.6))}
-    /* Effetto sparkles (polvere di stelle) al hover sulla mappa */
-    @keyframes sparkle{0%{opacity:0;transform:scale(0) rotate(0)}20%{opacity:1;transform:scale(1) rotate(45deg)}100%{opacity:0;transform:scale(0) rotate(180deg) translateY(-30px)}}
-    #map.sparkling{cursor:none}
-    #map.sparkling::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:400;background-image:radial-gradient(circle,rgba(255,255,255,0) 1.5px,#ffd77b 2px,transparent 3px),radial-gradient(circle,rgba(255,255,255,0) 1.5px,#fff5cc 2px,transparent 3px),radial-gradient(circle,rgba(255,255,255,0) 1.5px,#a8c8ff 2px,transparent 3px);background-size:60px 60px,80px 80px,100px 100px;background-position:0 0,30px 40px,60px 20px;animation:sparkle 1.2s linear infinite}
-    /* Singola scintilla seguente il cursore */
-    .cursor-spark{position:fixed;width:6px;height:6px;border-radius:50%;background:radial-gradient(circle,#fff 0%,#ffd77b 40%,transparent 70%);pointer-events:none;z-index:9999;mix-blend-mode:screen;animation:sparkleTrail .8s ease-out forwards}
-    @keyframes sparkleTrail{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.2) translateY(-15px)}}
+    /* Effetto sparkles (singole scintille al passaggio del cursore) — niente pattern ripetuto */
+    .cursor-spark{position:fixed;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle,#fff 0%,#ffd77b 40%,transparent 70%);pointer-events:none;z-index:9999;mix-blend-mode:screen;animation:sparkleTrail .9s ease-out forwards}
+    @keyframes sparkleTrail{0%{opacity:1;transform:scale(1) translateY(0)}100%{opacity:0;transform:scale(.3) translateY(-20px)}}
     .user-star path{animation:starPulse 3s ease-in-out infinite}
     @keyframes starPulse{0%,100%{filter:drop-shadow(0 0 6px #ffd77b) drop-shadow(0 0 10px rgba(255,215,123,.6))}50%{filter:drop-shadow(0 0 10px #fff5cc) drop-shadow(0 0 18px rgba(255,215,123,.9))}}
     /* Stelle di sfondo nel contenitore mappa (effetto spaziale) */
@@ -270,8 +266,12 @@
   <!-- STEP 8: Cielo stellato -->
   <section class="panel" style="margin-top:18px">
     <h2>🌌 Cielo stellato — Target del mese</h2>
-    <p class="status">Oggetti celesti più fotografabili dalla tua posizione, ordinati per altezza nel cielo stasera.</p>
-    <ul class="places" id="sky"><li>Calcolo target in corso…</li></ul>
+    <p class="status">I 14 oggetti celesti più famosi del cielo boreale, con magnitudine e altitudine massima stasera. Clicca un marker sulla mappa per i dettagli.</p>
+    <div class="map-toolbar">
+      <label><input type="checkbox" id="dsoToggle" checked> ✨ Mostra tutti i target</label>
+    </div>
+    <div id="skymap" aria-label="Mappa dei target celesti"></div>
+    <ul class="places" id="sky" style="margin-top:14px"><li>Calcolo target in corso…</li></ul>
   </section>
   <section class="panel" style="margin-top:18px">
     <h2>Posti da cui scattare nelle vicinanze</h2>
@@ -594,8 +594,8 @@
     attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> · © <a href="https://carto.com/attributions">CARTO</a>'
   }).addTo(map);
 
-  // Filtro CSS: palette blu con regioni in giallo (effetto "spaziale" personalizzato)
-  mapEl.style.filter='hue-rotate(180deg) saturate(1.6) brightness(.95) contrast(1.15) sepia(.15)';
+  // Filtro CSS: palette blu con regioni in giallo (più chiaro e leggibile)
+  mapEl.style.filter='hue-rotate(180deg) saturate(1.2) brightness(1.15) contrast(1.05) sepia(.08)';
 
   // Marker utente: oro con alone luminoso (stile "stella")
   const userMarker=L.circleMarker([lat,lon],{
@@ -642,24 +642,79 @@
   $('refresh').addEventListener('click',update);
   $('locate').addEventListener('click',()=>{if(!navigator.geolocation){$('place').textContent='La geolocalizzazione non è supportata dal browser.';return} $('place').textContent='Richiesta posizione…';navigator.geolocation.getCurrentPosition(p=>{lat=p.coords.latitude;lon=p.coords.longitude;$('place').textContent=`Posizione attiva: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;setUserMarker(lat,lon);update()},()=>{$('place').textContent='Posizione non disponibile: uso Barcellona Pozzo di Gotto.'},{enableHighAccuracy:false,timeout:10000})});
 
-  // Effetto sparkles (polvere di stelle) al hover sulla mappa
+  // Effetto sparkles: singole scintille sparse al passaggio del cursore (no pattern, no loop)
   let sparkleThrottle=0;
   mapEl.addEventListener('mousemove',e=>{
     const now=Date.now();
-    if(now-sparkleThrottle<60)return; // throttling 60ms
+    if(now-sparkleThrottle<120)return; // throttling 120ms (max ~8 scintille/sec)
     sparkleThrottle=now;
-    mapEl.classList.add('sparkling');
     const s=document.createElement('div');
     s.className='cursor-spark';
-    const colors=['#ffd77b','#fff5cc','#a8c8ff','#ffb3d1'];
-    s.style.background=`radial-gradient(circle,#fff 0%,${colors[Math.floor(Math.random()*colors.length)]} 40%,transparent 70%)`;
-    s.style.left=(e.clientX-3)+'px';
-    s.style.top=(e.clientY-3)+'px';
+    const colors=['#ffd77b','#fff5cc','#a8c8ff'];
+    const size=4+Math.random()*4; // 4-8px
+    s.style.width=size+'px';
+    s.style.height=size+'px';
+    s.style.background=`radial-gradient(circle,#fff 0%,${colors[Math.floor(Math.random()*colors.length)]} 50%,transparent 80%)`;
+    s.style.left=(e.clientX-size/2)+'px';
+    s.style.top=(e.clientY-size/2)+'px';
     s.style.position='fixed';
     document.body.appendChild(s);
-    setTimeout(()=>s.remove(),800);
+    setTimeout(()=>s.remove(),900);
   });
-  mapEl.addEventListener('mouseleave',()=>mapEl.classList.remove('sparkling'));
+
+  // ========= MAPPA DEL CIELO CON TARGET CELESTI =========
+  // Conversione RA(h) + Dec(°) → coordinate geografiche per Leaflet
+  // Usiamo una proiezione semplificata: RA=h*15 → longitudine, Dec → latitudine
+  // (è una rappresentazione, non astronomicamente rigorosa, ma leggibile)
+  const skyMapEl=document.getElementById('skymap');
+  if(skyMapEl&&!skyMapEl.style.height)skyMapEl.style.height='420px';
+
+  const skyMap=L.map('skymap',{zoomControl:true,minZoom:1,maxZoom:4,worldCopyJump:true}).setView([30,0],1);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',{
+    maxZoom:4,
+    subdomains:'abcd',
+    attribution:'Target celesti: catalogo Messier + NGC'
+  }).addTo(skyMap);
+
+  // Colori per tipo di oggetto
+  const dsoColors={
+    'galassia':'#ff6b9d',
+    'nebulosa':'#a8c8ff',
+    'ammasso aperto':'#ffd77b',
+    'ammasso globulare':'#fff5cc',
+    'nebulosa planetaria':'#9ae6b4'
+  };
+
+  const dsoLayer=L.layerGroup().addTo(skyMap);
+
+  function renderSkyMap(){
+    dsoLayer.clearLayers();
+    SKY_CATALOG.forEach(o=>{
+      const lat=o.dec; // declinazione → latitudine
+      const lon=(o.ra*15)-180; // RA in ore → gradi, shift per mappa Leaflet
+      const color=dsoColors[o.type]||'#ffd77b';
+      const marker=L.circleMarker([lat,lon],{
+        radius:o.mag<5?9:o.mag<7?7:5,
+        color:'#fff',
+        fillColor:color,
+        fillOpacity:.85,
+        weight:1.5,
+        className:'dso-marker'
+      }).bindPopup(`
+        <b>${o.name}</b><br>
+        <small style="color:#a8c8ff">${o.type}</small><br>
+        <span style="opacity:.7">📐 ${o.size} · 🔆 mag ${o.mag}</span><br>
+        <p style="margin:6px 0 0;font-size:11px;color:#aeb5c4">${o.desc}</p>
+      `);
+      marker.addTo(dsoLayer);
+    });
+  }
+  renderSkyMap();
+
+  // Toggle mostra/nascondi tutti i target
+  $('dsoToggle').addEventListener('change',e=>{
+    if(e.target.checked){skyMap.addLayer(dsoLayer)}else{skyMap.removeLayer(dsoLayer)}
+  });
 
   loadPrefs();
   console.log('✅ loadPrefs ok');
