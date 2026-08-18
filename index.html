@@ -6,7 +6,7 @@
   <title>Astro Scout</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <style>
-    :root{color-scheme:dark;--bg:#050609;--panel:#10131a;--line:#2b3040;--ink:#f4f5f8;--muted:#aeb5c4;--gold:#ffd77b;--blue:#8cc5ff;--good:#9ae6b4}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% 0,#18253c 0,transparent 36%),var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1000px;margin:auto;padding:26px 18px 48px}h1{font-size:30px;margin:0 0 5px;letter-spacing:-.8px}.lead{margin:0 0 24px;color:var(--muted)}.layout{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.panel{border:1px solid var(--line);background:#0c0f15;padding:16px}h2{font-size:15px;margin:0 0 13px;color:var(--gold)}label{display:block;font-size:11px;color:var(--muted);margin:0 0 5px}select,button{font:inherit}select{width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}button{border:1px solid #607294;background:#18243a;color:white;padding:9px 12px;border-radius:4px;cursor:pointer}button.primary{background:#d7ac52;color:#1b1405;border-color:#f6d37e}.setup{margin-top:15px;border-left:3px solid var(--gold);padding:9px 11px;background:#15130d;font-size:13px;line-height:1.45}.setup b{color:var(--gold)}.status{font-size:12px;color:var(--muted);margin:11px 0 0}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.card{border:1px solid var(--line);padding:11px;background:var(--panel)}.card span{font-size:11px;color:var(--muted)}.card strong{display:block;font-size:20px;margin-top:4px}.ok{color:var(--good)}#map{height:380px;border:1px solid var(--line);z-index:0;background:#000810 radial-gradient(ellipse at center,#0a1f3a 0%,#000510 70%)}#skymap{height:420px;border:1px solid var(--line);z-index:0;background:#000510 radial-gradient(ellipse at center,#1a1538 0%,#000308 70%);margin-bottom:14px}.dso-marker{filter:drop-shadow(0 0 6px currentColor)}.places{margin:0;padding:0;list-style:none}.places li{padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.places small{color:var(--muted);display:block;margin-top:3px;font-size:11px}.places a{color:var(--blue)}.foot{margin-top:18px;font-size:11px;color:var(--muted);line-height:1.4}.foot a{color:var(--blue)}@media(max-width:720px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}h1{font-size:25px}}
+    :root{color-scheme:dark;--bg:#050609;--panel:#10131a;--line:#2b3040;--ink:#f4f5f8;--muted:#aeb5c4;--gold:#ffd77b;--blue:#8cc5ff;--good:#9ae6b4}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% 0,#18253c 0,transparent 36%),var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1000px;margin:auto;padding:26px 18px 48px}h1{font-size:30px;margin:0 0 5px;letter-spacing:-.8px}.lead{margin:0 0 14px;color:var(--muted)}.night-bar{display:flex;animation:fadeIn .5s ease .1s both;align-items:baseline;gap:10px;flex-wrap:wrap;padding:10px 14px;background:linear-gradient(90deg,#0c0f15 0,#131927 100%);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;margin-bottom:14px;font-size:13px;color:var(--muted)}.night-bar strong{color:var(--ink);font-size:15px;font-weight:600}.night-bar-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--gold);font-weight:600}.layout{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.panel{border:1px solid var(--line);background:#0c0f15;padding:16px}h2{font-size:15px;margin:0 0 13px;color:var(--gold)}label{display:block;font-size:11px;color:var(--muted);margin:0 0 5px}select,button{font:inherit}select{width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}button{border:1px solid #607294;background:#18243a;color:white;padding:9px 12px;border-radius:4px;cursor:pointer}button.primary{background:#d7ac52;color:#1b1405;border-color:#f6d37e}.setup{margin-top:15px;border-left:3px solid var(--gold);padding:9px 11px;background:#15130d;font-size:13px;line-height:1.45}.setup b{color:var(--gold)}.status{font-size:12px;color:var(--muted);margin:11px 0 0}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.card{border:1px solid var(--line);padding:11px;background:var(--panel)}.card span{font-size:11px;color:var(--muted)}.card strong{display:block;font-size:20px;margin-top:4px}.card.weather{padding:13px;background:linear-gradient(135deg,#0c0f15 0,#11151f 100%);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}.card.weather:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 8px 20px rgba(0,0,0,.35)}.card.weather strong{font-size:22px;color:var(--ink)}.card .card-meta{font-size:10px;color:var(--muted);margin-top:4px;display:block;font-weight:normal}.ok{color:var(--good)}#map{height:380px;border:1px solid var(--line);z-index:0;background:#000810 radial-gradient(ellipse at center,#0a1f3a 0%,#000510 70%)}#skymap{height:420px;border:1px solid var(--line);z-index:0;background:#000510 radial-gradient(ellipse at center,#1a1538 0%,#000308 70%);margin-bottom:14px}.dso-marker{filter:drop-shadow(0 0 6px currentColor)}.places{margin:0;padding:0;list-style:none}.places li{padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.places small{color:var(--muted);display:block;margin-top:3px;font-size:11px}.places a{color:var(--blue)}.foot{margin-top:18px;font-size:11px;color:var(--muted);line-height:1.4}.foot a{color:var(--blue)}@media(max-width:720px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}h1{font-size:25px}}
     .leaflet-container{background:#000810 !important;font-family:inherit}
     .leaflet-tile-pane{filter:saturate(1) brightness(1.1) contrast(1.05)}
     .leaflet-popup-content-wrapper{background:#0c1220;border:1px solid var(--gold);color:var(--ink);border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.7)}
@@ -60,9 +60,9 @@
     @keyframes countUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
     .verdict{animation:fadeUp .8s cubic-bezier(.2,.7,.3,1) .05s both}
-    .layout{animation:fadeUp .8s cubic-bezier(.2,.7,.3,1) .25s both}
-    .verdict+.layout+section{animation:fadeUp .8s cubic-bezier(.2,.7,.3,1) .4s both}
-    main>section.panel{animation:fadeUp .8s cubic-bezier(.2,.7,.3,1) .55s both}
+    .layout{animation:fadeIn .5s ease .15s both}
+    .verdict+.layout+section{animation:none}
+    main>section.panel{animation:none}
     .panel h2,.verdict h2{animation:fadeIn .6s ease .8s both}
 
     .verdict .dot{transition:transform .4s ease,background .5s ease,border-color .5s ease}
@@ -73,7 +73,7 @@
     .verdict.good .dot{animation:scaleIn .6s cubic-bezier(.2,.8,.3,1.4) .9s both,glowPulse 2.4s ease-in-out 1.6s infinite}
     .verdict.ok .dot{animation:scaleIn .6s cubic-bezier(.2,.8,.3,1.4) .9s both,glowPulseAmber 2.4s ease-in-out 1.6s infinite}
     .verdict.bad .dot{animation:scaleIn .6s cubic-bezier(.2,.8,.3,1.4) .9s both,glowPulseRed 2.4s ease-in-out 1.6s infinite}
-    .verdict h2,.verdict p,.verdict .meta{animation:fadeUp .6s ease 1s both}
+    .verdict h2,.verdict p,.verdict .meta{animation:none}
     .verdict .meta{animation-delay:1.2s}
     .verdict.good h2,.verdict.ok h2,.verdict.bad h2{color:var(--ink)}
 
@@ -89,9 +89,9 @@
     select:hover,select:focus{border-color:var(--blue);outline:none;box-shadow:0 0 0 4px rgba(140,197,255,.18);transform:translateY(-1px)}
 
     .card{transition:transform .3s cubic-bezier(.2,.8,.3,1),border-color .3s ease,background .3s ease,box-shadow .3s ease;animation:scaleIn .5s cubic-bezier(.2,.8,.3,1) both}
-    .card:nth-child(1){animation-delay:1.3s}
-    .card:nth-child(2){animation-delay:1.45s}
-    .card:nth-child(3){animation-delay:1.6s}
+    .card:nth-child(1){animation:none}
+    .card:nth-child(2){animation:none}
+    .card:nth-child(3){animation:none}
     .card:hover{transform:translateY(-4px) scale(1.02);border-color:var(--gold);background:#131722;box-shadow:0 12px 28px rgba(0,0,0,.4)}
     .card strong{transition:color .3s ease;display:inline-block}
     .card:hover strong{animation:countUp .4s ease}
@@ -154,6 +154,12 @@
 <main>
   <h1>Astro Scout</h1>
   <p class="lead">Configurazione di scatto, condizioni del cielo e punti panoramici vicino a te.</p>
+
+  <div class="night-bar">
+    <span class="night-bar-label">📅 Stiamo valutando</span>
+    <strong id="nightDate">la notte tra…</strong>
+    <span class="night-bar-sub" id="nightTime">Orario di riferimento: caricamento…</span>
+  </div>
 
   <!-- STEP 1: Stasera è buono? -->
   <section class="verdict" id="verdict">
@@ -244,8 +250,15 @@
       <p class="status" id="place">Posizione iniziale: Barcellona Pozzo di Gotto</p>
     </section>
     <section class="panel">
-      <h2>Condizioni notturne</h2>
-      <div class="cards"><div class="card"><span>Nuvole</span><strong id="cloud">—</strong></div><div class="card"><span>Vento</span><strong id="wind">—</strong></div><div class="card"><span><span class="g" data-tip="Quanto è limpido il cielo: più alta è, più stelle deboli si vedono. Dipende da umidità, polvere e aerosol in atmosfera.">Trasparenza</span></span><strong id="rating">—</strong></div></div>
+      <h2>🌤️ Condizioni del cielo stasera</h2>
+      <div class="cards" style="grid-template-columns:repeat(3,1fr);gap:10px">
+        <div class="card weather"><span><span class="g" data-tip="Copertura nuvolosa: 0% = sereno perfetto, 100% = coperto. Per il deep sky serve &lt;20%.">☁️ Nuvole</span></span><strong id="cloud">—</strong></div>
+        <div class="card weather"><span><span class="g" data-tip="Velocità del vento. Sotto 15 km/h è ideale: il treppiede resta stabile e le stelle non tremano.">💨 Vento</span></span><strong id="wind">—</strong><small id="windDir" class="card-meta">—</small></div>
+        <div class="card weather"><span><span class="g" data-tip="Umidità relativa: sopra 80% favorisce la formazione di condensa sull'obiettivo e appanna le stelle. Ideale &lt;60%.">� Umidità</span></span><strong id="humidity">—</strong></div>
+        <div class="card weather"><span><span class="g" data-tip="Temperatura esterna: sotto 0°C la batteria dura poco, sopra 25°C il sensore si surriscalda e fa più rumore.">🌡️ Temperatura</span></span><strong id="temp">—</strong></div>
+        <div class="card weather"><span><span class="g" data-tip="Quanto è limpido il cielo: più alta è, più stelle deboli si vedono. Dipende da umidità, polvere e aerosol in atmosfera.">✨ Trasparenza</span></span><strong id="rating">—</strong></div>
+        <div class="card weather"><span><span class="g" data-tip="Probabilità che piova o ci sia nebbia nelle prossime ore. Sotto 10% = sicuro uscire.">🌧️ Pioggia</span></span><strong id="precip">—</strong></div>
+      </div>
       <p class="status" id="forecast">Carico le condizioni previste per la prima ora notturna disponibile…</p>
     </section>
   </div>
@@ -367,7 +380,7 @@
     console.log('☁️ weather() chiamata, lat='+lat+' lon='+lon);
     $('forecast').textContent='Aggiornamento dal servizio meteo…';
     try{
-      const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=cloud_cover,wind_speed_10m&timezone=auto&forecast_days=3&daily=sunrise,sunset`;
+      const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=cloud_cover,wind_speed_10m,wind_direction_10m,relative_humidity_2m,precipitation_probability,dew_point_2m&current=temperature_2m&timezone=auto&forecast_days=3&daily=sunrise,sunset`;
       const j=await fetch(url).then(r=>r.json());
       const now=new Date();
       let i=j.hourly.time.findIndex(t=>{const d=new Date(t);return d>now&&d.getHours()>=21});
@@ -378,7 +391,29 @@
       $('wind').textContent=w+' km/h';
       $('rating').textContent=c<20&&w<18?'Buona':c<45&&w<28?'Discreta':'Debole';
       $('rating').className=c<20&&w<18?'ok':'';
+      // Nuovi campi meteo
+      const humidity=Math.round(j.hourly.relative_humidity_2m[i]??j.current?.relative_humidity_2m??0);
+      const wd=Math.round(j.hourly.wind_direction_10m[i]??0);
+      const dirs=['N','NE','E','SE','S','SO','O','NO'];
+      const wdLabel=dirs[Math.round(wd/45)%8];
+      const temp=Math.round(j.current?.temperature_2m??j.hourly.temperature_2m?.[i]??0);
+      const precip=Math.round(j.hourly.precipitation_probability[i]??0);
+      $('humidity').textContent=humidity+'%';
+      $('windDir').textContent='🧭 '+wdLabel+' ('+wd+'°)';
+      $('temp').textContent=temp+'°C';
+      $('precip').textContent=precip+'%';
       $('forecast').textContent=`Riferimento: ${j.hourly.time[i].replace('T',' ')} · condizioni indicative, non un bollettino di sicurezza.`;
+      // Popola night-bar con data/ora di riferimento
+      const refDate=new Date(j.hourly.time[i]);
+      const oggi=new Date();
+      const domani=new Date(oggi.getTime()+86400000);
+      const sameDay=refDate.getDate()===oggi.getDate()&&refDate.getMonth()===oggi.getMonth();
+      const isTomorrow=refDate.getDate()===domani.getDate()&&refDate.getMonth()===domani.getMonth();
+      const giorno=sameDay?'stasera':isTomorrow?'domani notte':'la notte del';
+      const dataStr=refDate.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});
+      const oraStr=refDate.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+      $('nightDate').textContent=`${giorno} ${dataStr}`;
+      $('nightTime').textContent=`🕒 Riferimento meteo: ${oraStr}`;
 
       // Aggiorna verdict "Stasera è buono?"
       const moon=moonPhase(now);
