@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Astro Scout</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@master/celestial.css">
+  <script src="https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@master/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@master/d3.geo.projection.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@master/celestial.min.js"></script>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#ffd77b">
   <style>
     :root{color-scheme:dark;--bg:#050609;--panel:#10131a;--line:#2b3040;--ink:#f4f5f8;--muted:#aeb5c4;--gold:#ffd77b;--blue:#8cc5ff;--good:#9ae6b4}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% 0,#18253c 0,transparent 36%),var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1000px;margin:auto;padding:26px 18px 48px}h1{font-size:30px;margin:0 0 5px;letter-spacing:-.8px}
     .topbar{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;padding:18px 20px;margin:-26px -18px 18px;background:linear-gradient(180deg,#0a0d18 0%,transparent 100%);border-bottom:1px solid var(--line)}
@@ -20,7 +26,18 @@
     .section-divider{margin:32px 0 20px;padding-bottom:8px;border-bottom:1px dashed var(--line);display:flex;align-items:center;gap:10px}
     .section-divider .icon{font-size:22px}
     .section-divider .label{font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-weight:600}
-    .section-divider .desc{font-size:11px;color:var(--muted);font-weight:normal;text-transform:none;letter-spacing:0}.foot a{color:var(--blue)}@media(max-width:720px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}h1{font-size:22px}.topbar{grid-template-columns:1fr;text-align:center;gap:12px}.topbar-actions{justify-content:center}.logo-slot{margin:0 auto}}
+    .section-divider .desc{font-size:11px;color:var(--muted);font-weight:normal;text-transform:none;letter-spacing:0}
+    .events-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+    .event-card{display:flex;gap:10px;padding:12px;background:linear-gradient(135deg,#0a0d18 0,#11161f 100%);border:1px solid var(--line);border-radius:6px;transition:all .25s ease}
+    .event-card:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 6px 16px rgba(0,0,0,.3)}
+    .event-icon{font-size:26px;flex-shrink:0}
+    .event-body{flex:1;min-width:0}
+    .event-title{color:var(--gold);font-size:12px;font-weight:600;margin-bottom:3px}
+    .event-sub{color:var(--ink);font-size:13px;font-weight:500;margin-bottom:5px;line-height:1.3}
+    .event-meta{color:var(--muted);font-size:10px;line-height:1.4}
+    @media(max-width:720px){.events-grid{grid-template-columns:1fr}}.foot a{color:var(--blue)}
+    .storage-warning{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:#3a2f12;border:1px solid #f6d37e;color:#f6d37e;padding:10px 16px;border-radius:6px;font-size:13px;z-index:9999;opacity:0;transition:all .4s ease;box-shadow:0 8px 22px rgba(0,0,0,.4);max-width:90%}
+    .storage-warning.visible{opacity:1;transform:translateX(-50%) translateY(0)}@media(max-width:720px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}h1{font-size:22px}.topbar{grid-template-columns:1fr;text-align:center;gap:12px}.topbar-actions{justify-content:center}.logo-slot{margin:0 auto}}
     .leaflet-container{background:#000810 !important;font-family:inherit}
     .leaflet-tile-pane{filter:saturate(1) brightness(1.1) contrast(1.05)}
     .leaflet-popup-content-wrapper{background:#0c1220;border:1px solid var(--gold);color:var(--ink);border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.7)}
@@ -313,6 +330,7 @@
     <p class="status">I 14 oggetti celesti più famosi del cielo boreale, con magnitudine e altitudine massima stasera. Clicca un marker sulla mappa per i dettagli.</p>
     <div class="map-toolbar">
       <label><input type="checkbox" id="dsoToggle" checked> ✨ Mostra tutti i target</label>
+      <label><input type="checkbox" id="celestialToggle"> 🔭 Sfera celeste reale (d3-celestial)</label>
     </div>
     <div id="skymap" aria-label="Mappa dei target celesti"></div>
     <ul class="places" id="sky" style="margin-top:14px"><li>Calcolo target in corso…</li></ul>
@@ -324,6 +342,37 @@
   </section>
   <p class="foot">La posizione viene richiesta solo dal tuo browser e non viene salvata da questa pagina. Meteo: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open‑Meteo</a>; punti panoramici: OpenStreetMap/Overpass. Verifica sempre accessi, parcheggi, proprietà private e regolamenti locali prima di uscire.</p>
 
+
+  <section class="panel" style="margin-top:18px">
+    <h2>☄️ Eventi astronomici</h2>
+    <p class="status">Prossimi eventi visibili dalla tua posizione: passaggi ISS, sciami meteorici, fasi lunari salienti.</p>
+    <div class="events-grid">
+      <div class="event-card">
+        <div class="event-icon">🛰️</div>
+        <div class="event-body">
+          <div class="event-title">Passaggi ISS</div>
+          <div class="event-sub" id="issNext">Calcolo in corso…</div>
+          <div class="event-meta">Stazione Spaziale Internazionale, visibile a occhio nudo come una stella mobile brillante.</div>
+        </div>
+      </div>
+      <div class="event-card">
+        <div class="event-icon">�</div>
+        <div class="event-body">
+          <div class="event-title">Sciami meteorici attivi</div>
+          <div class="event-sub" id="meteorNext">Calcolo in corso…</div>
+          <div class="event-meta">Piogge di meteore stagionali. Per fotografarle serve un treppiede e una posa di 15-30 secondi.</div>
+        </div>
+      </div>
+      <div class="event-card">
+        <div class="event-icon">🌑</div>
+        <div class="event-body">
+          <div class="event-title">Prossima luna nuova</div>
+          <div class="event-sub" id="newMoon">Calcolo in corso…</div>
+          <div class="event-meta">Cielo più buio, ideale per deep sky. Pianifica la sessione con anticipo.</div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <div class="section-divider"><span class="icon">📖</span><span class="label">Riferimento</span><span class="desc">· glossario e crediti</span></div>
 
@@ -618,7 +667,69 @@
     return SKY_CATALOG.map(o=>({...o,alt:skyAlt(o,observerLat)})).filter(o=>o.alt>20).sort((a,b)=>b.alt-a.alt).slice(0,8);
   }
 
-  function renderSky(){
+  // Sciami meteorici principali (date di picco approssimate)
+const METEOR_SHOWERS=[
+  {name:'Quadrantidi',peak:'01-03',active:'12-28 → 01-12',rate:120},
+  {name:'Liridi',peak:'04-22',active:'04-16 → 04-25',rate:18},
+  {name:'Eta Aquaridi',peak:'05-06',active:'04-19 → 05-28',rate:50},
+  {name:'Perseidi',peak:'08-12',active:'07-17 → 08-24',rate:100},
+  {name:'Orionidi',peak:'10-21',active:'10-02 → 11-07',rate:20},
+  {name:'Leonidi',peak:'11-17',active:'11-06 → 11-30',rate:15},
+  {name:'Geminidi',peak:'12-14',active:'12-04 → 12-20',rate:150},
+  {name:'Ursidi',peak:'12-22',active:'12-17 → 12-26',rate:10}
+];
+
+// Luna nuova: calcolo approssimato (algoritmo semplificato)
+function nextNewMoon(date){
+  // Ciclo metonico: 29.5305882 giorni
+  const lp=2551443,newMoon=new Date(1970,0,7,20,35,0).getTime()/1000;
+  const now=date.getTime()/1000;
+  const cycles=Math.ceil((now-newMoon)/lp);
+  const next=(newMoon+cycles*lp)*1000;
+  return new Date(next);
+}
+
+// Sciami attivi oggi
+function activeShowers(date){
+  const m=String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
+  return METEOR_SHOWERS.filter(s=>{
+    const [sm,sd]=s.peak.split('-');
+    const peakMonth=Number(sm),peakDay=Number(sd);
+    const [asm,asd]=s.active.split(' → ')[1].split('-');
+    // Semplificato: controlla solo mese/giorno
+    const curMonth=date.getMonth()+1,curDay=date.getDate();
+    const peak=peakMonth*100+peakDay;
+    const end=Number(asm)*100+Number(asd);
+    const cur=curMonth*100+curDay;
+    return cur<=end&&cur>=peak-15;
+  });
+}
+
+// ISS: calcolo molto approssimativo basato su orbita nota
+// Per un calcolo reale serve TLE aggiornati. Mostro info generale + link.
+function issInfo(){
+  return 'La ISS orbita a 400 km di quota, compie un giro ogni 90 minuti. Per i passaggi precisi sulla tua posizione usa <a href="https://heavens-above.com/" target="_blank" rel="noreferrer">Heavens-Above</a> o <a href="https://spotthestation.nasa.gov/" target="_blank" rel="noreferrer">Spot The Station</a>.';
+}
+
+function renderEvents(){
+  const now=new Date();
+  // Luna nuova
+  const nm=nextNewMoon(now);
+  const giorniNm=Math.ceil((nm-now)/(86400*1000));
+  $('newMoon').textContent=`${nm.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})} (tra ${giorniNm} giorni)`;
+  // Sciami attivi
+  const active=activeShowers(now);
+  if(active.length){
+    const top=active.sort((a,b)=>b.rate-a.rate)[0];
+    $('meteorNext').innerHTML=`<b>${top.name}</b> attivo · rate ${top.rate}/h · picco ${top.peak}`;
+  }else{
+    $('meteorNext').textContent='Nessuno sciame principale attivo oggi. Consulta il calendario annuale.';
+  }
+  // ISS
+  $('issNext').innerHTML=issInfo();
+}
+
+function renderSky(){
     const list=loadSky(lat);
     if(!list.length){
       $('sky').innerHTML='<li>Nessun target raggiunge un\'altitudine utile stasera dalla tua posizione. Prova a spostarti più a sud (emisfero nord) o aspetta il cambio di stagione.</li>';
@@ -648,6 +759,7 @@
     weather().finally(()=>d.classList.remove('loading'));
     places();
     renderSky();
+    renderEvents();
   }
   // Inizializzazione mappa Leaflet
   // Forza il calcolo dell'altezza della mappa (fix "mappa nera" quando contenitore ha display:none iniziale o CSS non caricato)
@@ -691,23 +803,57 @@
     map.setView([lat,lon],map.getZoom()||9);
   }
 
-  // Persistenza preferenze utente (camera, obiettivo, toggle LP)
+  // Persistenza preferenze utente (camera, obiettivo, toggle LP, toggle DSO)
   const STORE_KEY='astroScoutPrefs';
+  let storageOk=true; // rileva se localStorage è disponibile
+
   function savePrefs(){
-    try{localStorage.setItem(STORE_KEY,JSON.stringify({camera:$('camera').value,lens:$('lens').value,lp:$('lpToggle').checked}))}catch(_){}
-  }
-  function loadPrefs(){
+    if(!storageOk)return;
     try{
-      const s=JSON.parse(localStorage.getItem(STORE_KEY)||'{}');
+      localStorage.setItem(STORE_KEY,JSON.stringify({
+        camera:$('camera').value,
+        lens:$('lens').value,
+        lp:$('lpToggle').checked,
+        dso:$('dsoToggle')?.checked??true,
+        lat:lat.toFixed(4),
+        lon:lon.toFixed(4),
+        saved:Date.now()
+      }));
+    }catch(e){
+      storageOk=false;
+      console.warn('⚠️ localStorage non disponibile:',e.message);
+      showStorageWarning();
+    }
+  }
+
+  function loadPrefs(){
+    if(!storageOk)return;
+    try{
+      const raw=localStorage.getItem(STORE_KEY);
+      if(!raw)return;
+      const s=JSON.parse(raw);
       if(s.camera&&$('camera').querySelector(`option[value="${s.camera}"]`))$('camera').value=s.camera;
       if(s.lens&&$('lens').querySelector(`option[value="${s.lens}"]`))$('lens').value=s.lens;
       if(typeof s.lp==='boolean'){$('lpToggle').checked=s.lp;if(s.lp){lpLayer.addTo(map);$('lpLegend').classList.add('on')}}
-    }catch(_){}
+      if(typeof s.dso==='boolean'&&$('dsoToggle')){$('dsoToggle').checked=s.dso}
+      // Non ripristino lat/lon automaticamente — l'utente sceglie se usare la geolocalizzazione
+    }catch(e){
+      console.warn('⚠️ Impossibile caricare preferenze:',e.message);
+    }
+  }
+
+  function showStorageWarning(){
+    const w=document.createElement('div');
+    w.className='storage-warning';
+    w.innerHTML='⚠️ Modalità privata rilevata: le preferenze non verranno salvate tra le sessioni.';
+    document.body.appendChild(w);
+    setTimeout(()=>w.classList.add('visible'),100);
   }
 
   $('lens').addEventListener('change',()=>{setup();savePrefs()});
   $('camera').addEventListener('change',()=>{setup();savePrefs()});
   $('lpToggle').addEventListener('change',e=>{if(e.target.checked){lpLayer.addTo(map);$('lpLegend').classList.add('on')}else{map.removeLayer(lpLayer);$('lpLegend').classList.remove('on')}savePrefs()});
+  $('dsoToggle')?.addEventListener('change',e=>{if(e.target.checked){skyMap.addLayer(dsoLayer)}else{skyMap.removeLayer(dsoLayer)}savePrefs()});
   $('refresh').addEventListener('click',update);
   $('locate').addEventListener('click',()=>{if(!navigator.geolocation){$('place').textContent='La geolocalizzazione non è supportata dal browser.';return} $('place').textContent='Richiesta posizione…';navigator.geolocation.getCurrentPosition(p=>{lat=p.coords.latitude;lon=p.coords.longitude;$('place').textContent=`Posizione attiva: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;setUserMarker(lat,lon);update()},()=>{$('place').textContent='Posizione non disponibile: uso Barcellona Pozzo di Gotto.'},{enableHighAccuracy:false,timeout:10000})});
 
@@ -780,6 +926,40 @@
   }
   renderSkyMap();
 
+  // Modalità sfera celeste reale (opzionale)
+  let celestialMode=false;
+  $('celestialToggle').addEventListener('change',e=>{
+    celestialMode=e.target.checked;
+    if(celestialMode){
+      // Nascondi mappa Leaflet, mostra d3-celestial
+      const skymapEl=document.getElementById('skymap');
+      if(skymapEl)skymapEl.style.display='none';
+      // Crea div per celestial
+      let celDiv=document.getElementById('celestialMap');
+      if(!celDiv){
+        celDiv=document.createElement('div');
+        celDiv.id='celestialMap';
+        celDiv.style.cssText='height:420px;background:#000;border:1px solid var(--line);margin-bottom:14px;border-radius:4px';
+        skymapEl.parentNode.insertBefore(celDiv,skymapEl);
+      }
+      celDiv.style.display='block';
+      try{
+        Celestial.display({datapath:'https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@master/data/',controls:false,projection:'stereographic',transform:'equatorial',center:[0,0,0],background:{fill:'#000',stroke:'#000'},stars:{limit:6,style:{fill:'#ffd77b',opacity:1},colors:false,size:4,exponent:0.5},dsos:{limit:6,style:{fill:'#a8c8ff',stroke:'#a8c8ff',width:1,opacity:1},size:8},constellations:{lines:true,lineStyle:{stroke:'#8cc5ff',width:0.5,opacity:.6},labels:true,labelStyle:{fill:'#a8c8ff',font:'11px sans-serif'}}});
+      }catch(err){
+        console.warn('⚠️ d3-celestial errore:',err.message);
+        $('celestialToggle').checked=false;
+        celestialMode=false;
+        celDiv.style.display='none';
+        skymapEl.style.display='block';
+      }
+    }else{
+      const celDiv=document.getElementById('celestialMap');
+      if(celDiv)celDiv.style.display='none';
+      const skymapEl=document.getElementById('skymap');
+      if(skymapEl)skymapEl.style.display='block';
+    }
+  });
+
   // Toggle mostra/nascondi tutti i target
   $('dsoToggle').addEventListener('change',e=>{
     if(e.target.checked){skyMap.addLayer(dsoLayer)}else{skyMap.removeLayer(dsoLayer)}
@@ -789,6 +969,15 @@
   console.log('✅ loadPrefs ok');
   setup();
   console.log('✅ setup ok');
+
+  // Registrazione Service Worker per PWA offline
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').then(reg=>{
+      console.log('✅ Service Worker registrato:',reg.scope);
+    }).catch(err=>{
+      console.warn('⚠️ Service Worker non registrato:',err.message);
+    });
+  }
   update();
   console.log('✅ update chiamato');
 })();
