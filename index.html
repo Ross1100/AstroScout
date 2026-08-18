@@ -18,6 +18,13 @@
     .leaflet-control-attribution{background:rgba(12,18,32,.85) !important;color:var(--muted) !important;font-size:10px}
     .leaflet-control-attribution a{color:var(--blue) !important}
     .leaflet-interactive{filter:drop-shadow(0 0 4px rgba(140,197,255,.6))}
+    /* Effetto sparkles (polvere di stelle) al hover sulla mappa */
+    @keyframes sparkle{0%{opacity:0;transform:scale(0) rotate(0)}20%{opacity:1;transform:scale(1) rotate(45deg)}100%{opacity:0;transform:scale(0) rotate(180deg) translateY(-30px)}}
+    #map.sparkling{cursor:none}
+    #map.sparkling::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:400;background-image:radial-gradient(circle,rgba(255,255,255,0) 1.5px,#ffd77b 2px,transparent 3px),radial-gradient(circle,rgba(255,255,255,0) 1.5px,#fff5cc 2px,transparent 3px),radial-gradient(circle,rgba(255,255,255,0) 1.5px,#a8c8ff 2px,transparent 3px);background-size:60px 60px,80px 80px,100px 100px;background-position:0 0,30px 40px,60px 20px;animation:sparkle 1.2s linear infinite}
+    /* Singola scintilla seguente il cursore */
+    .cursor-spark{position:fixed;width:6px;height:6px;border-radius:50%;background:radial-gradient(circle,#fff 0%,#ffd77b 40%,transparent 70%);pointer-events:none;z-index:9999;mix-blend-mode:screen;animation:sparkleTrail .8s ease-out forwards}
+    @keyframes sparkleTrail{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.2) translateY(-15px)}}
     .user-star path{animation:starPulse 3s ease-in-out infinite}
     @keyframes starPulse{0%,100%{filter:drop-shadow(0 0 6px #ffd77b) drop-shadow(0 0 10px rgba(255,215,123,.6))}50%{filter:drop-shadow(0 0 10px #fff5cc) drop-shadow(0 0 18px rgba(255,215,123,.9))}}
     /* Stelle di sfondo nel contenitore mappa (effetto spaziale) */
@@ -25,6 +32,7 @@
     .map-toolbar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
     .map-toolbar label{display:flex;align-items:center;gap:6px;margin:0;font-size:12px;color:var(--muted);cursor:pointer;padding:6px 10px;border:1px solid var(--line);border-radius:4px;transition:all .2s ease;background:var(--panel)}
     .map-toolbar label:hover{border-color:var(--gold);color:var(--ink)}
+    .lp-icon{color:#ffd77b;filter:drop-shadow(0 0 4px rgba(255,215,123,.7));vertical-align:middle}
     .map-toolbar input{accent-color:var(--gold);margin:0}
     .lp-legend{margin-top:10px;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:4px;font-size:11px;color:var(--muted);display:none}
     .lp-legend.on{display:block;animation:fadeUp .4s ease both}
@@ -94,6 +102,18 @@
 
     .places li{transition:padding-left .25s ease,color .25s ease,background .25s ease;border-radius:4px;padding-left:4px;margin-left:-4px}
     .places li:hover{padding-left:14px;background:rgba(255,215,123,.06)}
+    /* Sky target cards */
+    .sky-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}
+    .sky-card{border:1px solid var(--line);background:linear-gradient(135deg,#0a1228 0%,#10142b 100%);padding:12px;border-radius:6px;position:relative;overflow:hidden;transition:all .3s ease;cursor:default}
+    .sky-card:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.4)}
+    .sky-card .name{color:var(--gold);font-weight:600;font-size:14px;margin-bottom:4px}
+    .sky-card .name .badge{display:inline-block;font-size:9px;background:var(--line);color:var(--ink);padding:1px 5px;border-radius:3px;margin-left:6px;vertical-align:middle;font-weight:normal}
+    .sky-card .desc{color:var(--muted);font-size:11px;line-height:1.4;margin-bottom:6px}
+    .sky-card .meta{display:flex;flex-wrap:wrap;gap:6px;font-size:10px;color:var(--muted)}
+    .sky-card .meta span{background:rgba(255,215,123,.08);padding:2px 6px;border-radius:3px;border:1px solid rgba(255,215,123,.15)}
+    .sky-card .meta span b{color:var(--ink);font-weight:600}
+    .sky-card::before{content:'';position:absolute;top:-50%;right:-50%;width:80px;height:80px;background:radial-gradient(circle,rgba(255,255,255,.15) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+    @media(max-width:720px){.sky-grid{grid-template-columns:1fr}}
     .places li:hover a{color:var(--gold)}
 
     .setup{transition:background .35s ease,border-color .35s ease,transform .25s ease}
@@ -236,7 +256,7 @@
   <section class="panel" style="margin-top:18px">
     <h2>Mappa live</h2>
     <div class="map-toolbar">
-      <label><input type="checkbox" id="lpToggle"> �️ Inquinamento luminoso</label>
+      <label><input type="checkbox" id="lpToggle"> <svg class="lp-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M9 2v3H7v3l-3 4v8a2 2 0 002 2h8a2 2 0 002-2v-8l-3-4V5h-2V2h-2zm3 17a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm0-4a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"/><path d="M3 7l2-1M21 7l-2-1M4 14h2M20 14h-2" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="round"/></svg> �️ Inquinamento luminoso</label>
     </div>
     <div id="map" aria-label="Mappa interattiva con posizione e punti panoramici"></div>
     <div class="lp-legend" id="lpLegend">
@@ -245,6 +265,13 @@
       <div class="labels"><span>Cielo buio (B1)</span><span>Suburbano (B5)</span><span>Centro città (B9)</span></div>
     </div>
     <p class="status">Tocca la mappa per spostare la ricerca in un altro punto.</p>
+  </section>
+
+  <!-- STEP 8: Cielo stellato -->
+  <section class="panel" style="margin-top:18px">
+    <h2>🌌 Cielo stellato — Target del mese</h2>
+    <p class="status">Oggetti celesti più fotografabili dalla tua posizione, ordinati per altezza nel cielo stasera.</p>
+    <ul class="places" id="sky"><li>Calcolo target in corso…</li></ul>
   </section>
   <section class="panel" style="margin-top:18px">
     <h2>Posti da cui scattare nelle vicinanze</h2>
@@ -430,6 +457,58 @@
       $('placesStatus').textContent='Servizio cartografico momentaneamente non raggiungibile.';
     }
   }
+
+  // Catalogo oggetti celesti (Messier + NGC principali) con coordinate RA/Dec e magnitudine
+  // Dati da cataloghi astronomici pubblici (SEDS Messier catalog)
+  const SKY_CATALOG=[
+    {name:'M31 Andromeda',type:'galassia',mag:3.4,ra:0.71,dec:41.27,size:'3°×1°',desc:'La galassia più vicina alla Via Lattea, visibile a occhio nudo.'},
+    {name:'M42 Orion Nebula',type:'nebulosa',mag:4.0,ra:5.59,dec:-5.39,size:'1°×1°',desc:'Nebulosa di emissione, facile da fotografare anche con teleobiettivo.'},
+    {name:'M45 Pleiadi',type:'ammasso aperto',mag:1.6,ra:3.79,dec:24.10,size:'2°',desc:'Ammasso aperto con nebulosità di riflessione blu, iconico.'},
+    {name:'M51 Whirlpool',type:'galassia',mag:8.4,ra:13.50,dec:47.20,size:'11′×7′',desc:'Galassia a spirale interagente con NGC 5195.'},
+    {name:'M81 Bode',type:'galassia',mag:6.9,ra:9.93,dec:69.07,size:'26′×14′',desc:'Galassia a spirale luminosa, ottima per astrofotografia amatoriale.'},
+    {name:'M101 Pinwheel',type:'galassia',mag:7.9,ra:14.05,dec:54.35,size:'29′×27′',desc:'Grande spirale vista di fronte, ricca di dettagli.'},
+    {name:'M104 Sombrero',type:'galassia',mag:8.0,ra:12.67,dec:-11.62,size:'9′×4′',desc:'Galassia con evidente banda di polvere equatoriale.'},
+    {name:'M27 Dumbbell',type:'nebulosa planetaria',mag:7.5,ra:19.99,dec:22.72,size:'8′',desc:'Nebulosa planetaria brillante, facile da riprendere.'},
+    {name:'M57 Ring Nebula',type:'nebulosa planetaria',mag:8.8,ra:18.89,dec:33.03,size:'1.4′',desc:'Anello di gas espulso da una stella morente.'},
+    {name:'NGC 7000 Nord America',type:'nebulosa',mag:4.0,ra:20.97,dec:44.33,size:'2°×1.7°',desc:'Grande nebulosa a emissione, forma del Nord America.'},
+    {name:'M13 Ercole',type:'ammasso globulare',mag:5.8,ra:16.69,dec:36.46,size:'20′',desc:'Ammasso globulare denso, facile con piccoli telescopi.'},
+    {name:'M8 Laguna',type:'nebulosa',mag:6.0,ra:18.06,dec:-24.38,size:'1.5°×40′',desc:'Nebulosa di emissione con giovani stelle in formazione.'},
+    {name:'M16 Aquila',type:'nebulosa',mag:6.0,ra:18.31,dec:-13.79,size:'35′',desc:'Nebulosa con i "Pilastri della Creazione", molto fotografata.'},
+    {name:'M20 Trifida',type:'nebulosa',mag:6.3,ra:18.04,dec:-23.03,size:'28′',desc:'Nebulosa con tre bande di polvere, colori contrastanti.'}
+  ];
+
+  // Converte RA (h) + Dec (°) in coordinate equatoriali, poi approssima altitudine massima stasera
+  // Per semplicità: altitudine approssimata in base alla declinazione e latitudine osservatore
+  function skyAlt(obj,observerLat){
+    // altitudine massima ≈ 90° - |lat - dec|
+    return 90-Math.abs(observerLat-obj.dec);
+  }
+  // Filtra e ordina oggetti visibili stasera (altitudine > 20°)
+  function loadSky(observerLat){
+    return SKY_CATALOG.map(o=>({...o,alt:skyAlt(o,observerLat)})).filter(o=>o.alt>20).sort((a,b)=>b.alt-a.alt).slice(0,8);
+  }
+
+  function renderSky(){
+    const list=loadSky(lat);
+    if(!list.length){
+      $('sky').innerHTML='<li>Nessun target raggiunge un\'altitudine utile stasera dalla tua posizione. Prova a spostarti più a sud (emisfero nord) o aspetta il cambio di stagione.</li>';
+      return;
+    }
+    const cards=list.map(o=>{
+      const typeIcon={galassia:'🌀',nebulosa:'☁️','ammasso aperto':'✨','ammasso globulare':'�','nebulosa planetaria':'🔵'}[o.type]||'⭐';
+      return`<div class="sky-card">
+        <div class="name">${o.name} <span class="badge">${o.type}</span></div>
+        <div class="desc">${o.desc}</div>
+        <div class="meta">
+          <span>${typeIcon} ${o.type}</span>
+          <span>📐 ${o.size}</span>
+          <span>🔆 mag <b>${o.mag}</b></span>
+          <span>⬆️ max <b>${o.alt.toFixed(0)}°</b></span>
+        </div>
+      </div>`;
+    }).join('');
+    $('sky').innerHTML=`<div class="sky-grid">${cards}</div>`;
+  }
   function update(){
     // Stato di caricamento per il verdict
     const v=$('verdict'),d=$('verdictDot'),t=$('verdictTitle'),m=$('verdictMsg');
@@ -438,6 +517,7 @@
     m.textContent='Calcolo nuvole, vento e fase lunare per la tua posizione.';
     weather().finally(()=>d.classList.remove('loading'));
     places();
+    renderSky();
   }
   // Inizializzazione mappa Leaflet
   // Forza il calcolo dell'altezza della mappa (fix "mappa nera" quando contenitore ha display:none iniziale o CSS non caricato)
@@ -453,8 +533,8 @@
     attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> · © <a href="https://carto.com/attributions">CARTO</a>'
   }).addTo(map);
 
-  // Filtro CSS per dare un tocco "spaziale" (leggero blu + luminosità controllata)
-  mapEl.style.filter='hue-rotate(195deg) invert(.92) brightness(1.05) contrast(1.1)';
+  // Filtro CSS: palette blu con regioni in giallo (effetto "spaziale" personalizzato)
+  mapEl.style.filter='hue-rotate(180deg) saturate(1.6) brightness(.95) contrast(1.15) sepia(.15)';
 
   // Marker utente: oro con alone luminoso (stile "stella")
   const userMarker=L.circleMarker([lat,lon],{
@@ -500,6 +580,25 @@
   $('lpToggle').addEventListener('change',e=>{if(e.target.checked){lpLayer.addTo(map);$('lpLegend').classList.add('on')}else{map.removeLayer(lpLayer);$('lpLegend').classList.remove('on')}savePrefs()});
   $('refresh').addEventListener('click',update);
   $('locate').addEventListener('click',()=>{if(!navigator.geolocation){$('place').textContent='La geolocalizzazione non è supportata dal browser.';return} $('place').textContent='Richiesta posizione…';navigator.geolocation.getCurrentPosition(p=>{lat=p.coords.latitude;lon=p.coords.longitude;$('place').textContent=`Posizione attiva: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;setUserMarker(lat,lon);update()},()=>{$('place').textContent='Posizione non disponibile: uso Barcellona Pozzo di Gotto.'},{enableHighAccuracy:false,timeout:10000})});
+
+  // Effetto sparkles (polvere di stelle) al hover sulla mappa
+  let sparkleThrottle=0;
+  mapEl.addEventListener('mousemove',e=>{
+    const now=Date.now();
+    if(now-sparkleThrottle<60)return; // throttling 60ms
+    sparkleThrottle=now;
+    mapEl.classList.add('sparkling');
+    const s=document.createElement('div');
+    s.className='cursor-spark';
+    const colors=['#ffd77b','#fff5cc','#a8c8ff','#ffb3d1'];
+    s.style.background=`radial-gradient(circle,#fff 0%,${colors[Math.floor(Math.random()*colors.length)]} 40%,transparent 70%)`;
+    s.style.left=(e.clientX-3)+'px';
+    s.style.top=(e.clientY-3)+'px';
+    s.style.position='fixed';
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(),800);
+  });
+  mapEl.addEventListener('mouseleave',()=>mapEl.classList.remove('sparkling'));
 
   loadPrefs();
   console.log('✅ loadPrefs ok');
