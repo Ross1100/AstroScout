@@ -24,7 +24,7 @@
     button,.btn-ghost{ touch-action:manipulation; -webkit-tap-highlight-color:transparent; cursor:pointer }
     .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s ease}
     .btn-ghost:hover{border-color:var(--gold);background:rgba(255,215,123,.08)}.lead{margin:0 0 14px;color:var(--muted)}.night-bar{display:flex;animation:fadeIn .5s ease .1s both;align-items:baseline;gap:10px;flex-wrap:wrap;padding:10px 14px;background:linear-gradient(90deg,#0c0f15 0,#131927 100%);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;margin-bottom:14px;font-size:13px;color:var(--muted)}.night-bar strong{color:var(--ink);font-size:15px;font-weight:600}.night-bar-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--gold);font-weight:600}.layout{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.panel{border:1px solid var(--line);background:#0c0f15;padding:16px}h2{font-size:15px;margin:0 0 13px;color:var(--gold)}label{display:block;font-size:11px;color:var(--muted);margin:0 0 5px}select,button{font:inherit}select{width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}button{border:1px solid #607294;background:#18243a;color:white;padding:9px 12px;border-radius:4px;cursor:pointer}button.primary{background:#d7ac52;color:#1b1405;border-color:#f6d37e}.setup{margin-top:15px;border-left:3px solid var(--gold);padding:9px 11px;background:#15130d;font-size:13px;line-height:1.45}.setup b{color:var(--gold)}.status{font-size:12px;color:var(--muted);margin:11px 0 0}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.card{border:1px solid var(--line);padding:11px;background:var(--panel)}.card span{font-size:11px;color:var(--muted)}.card strong{display:block;font-size:20px;margin-top:4px}.card.weather{padding:13px;background:linear-gradient(135deg,#0c0f15 0,#11151f 100%);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}.card.weather:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 8px 20px rgba(0,0,0,.35)}.card.weather strong{font-size:22px;color:var(--ink)}.card .card-meta{font-size:10px;color:var(--muted);margin-top:4px;display:block;font-weight:normal}.ok{color:var(--good)}#map{height:380px;border:1px solid var(--line);z-index:0;background:#000810 radial-gradient(ellipse at center,#0a1f3a 0%,#000510 70%)}#skymap{height:420px;border:1px solid var(--line);z-index:0;background:#000510 radial-gradient(ellipse at center,#1a1538 0%,#000308 70%);margin-bottom:14px}
-#celestialMap{height:420px;border:1px solid var(--line);background:#000;border-radius:4px;margin-bottom:14px;overflow:hidden}.dso-marker{filter:drop-shadow(0 0 6px currentColor)}.places{margin:0;padding:0;list-style:none}.places li{padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.places small{color:var(--muted);display:block;margin-top:3px;font-size:11px}.places a{color:var(--blue)}.foot{margin-top:18px;font-size:11px;color:var(--muted);line-height:1.4}
+#celestialMap{height:420px;border:2px solid var(--gold);background:radial-gradient(circle at 50% 30%,#0a1232 0,#02040a 70%);border-radius:6px;margin-bottom:14px;overflow:hidden;position:relative}.celestial-empty{display:flex;align-items:center;justify-content:center;height:100%;text-align:center;color:#aeb5c4;font-size:13px;padding:20px;flex-direction:column;gap:8px}.celestial-empty .em{font-size:36px}.sky-svg{display:block;width:100%;height:100%}.dso-marker{filter:drop-shadow(0 0 6px currentColor)}.places{margin:0;padding:0;list-style:none}.places li{padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.places small{color:var(--muted);display:block;margin-top:3px;font-size:11px}.places a{color:var(--blue)}.foot{margin-top:18px;font-size:11px;color:var(--muted);line-height:1.4}
     .section-divider{margin:32px 0 20px;padding-bottom:8px;border-bottom:1px dashed var(--line);display:flex;align-items:center;gap:10px}
     .section-divider .icon{font-size:22px}
     .section-divider .label{font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-weight:600}
@@ -1198,6 +1198,8 @@ function renderSky(){
       $('forecast').textContent='In attesa della tua posizione…';
       $('placesStatus').textContent='Scegli una posizione per cercare belvederi nelle vicinanze.';
       renderSky();
+      renderSkyMap();
+      renderSkyList();
       renderEvents();
       return;
     }
@@ -1206,6 +1208,8 @@ function renderSky(){
     weather().finally(()=>d.classList.remove('loading'));
     places();
     renderSky();
+    renderSkyMap();
+    renderSkyList();
     renderEvents();
   }
   // Inizializzazione mappa Leaflet
@@ -1443,6 +1447,17 @@ function renderSky(){
     const obsLon=(typeof lon==='number')?lon:12.5;
     const date=skyState.datetime||new Date();
     const lst=lstFromDate(date,obsLon);
+
+    // Se non c'è posizione, mostra un placeholder visibile
+    if(lat===null){
+      celestialMapEl.innerHTML=`<div class="celestial-empty">
+        <div class="em">🌌</div>
+        <div><b>Posizione non ancora acquisita</b></div>
+        <div>Premi <b>📍 Usa la mia posizione</b> in alto per centrare il cielo sopra la tua testa.<br>Nel frattempo mostro un'anteprima usando coordinate generiche (Roma).</div>
+      </div>`;
+      renderSkyList();
+      return;
+    }
 
     const parts=[];
     parts.push(`<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" class="sky-svg">`);
