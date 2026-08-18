@@ -194,6 +194,9 @@
     .g-item p b,.g-item p strong{color:var(--ink)}
     @media(max-width:720px){.glossary{grid-template-columns:1fr}}
 
+    /* Place inline label */
+    .place-inline{display:inline-block;font-size:11px;color:var(--blue);font-weight:normal;margin-left:6px;letter-spacing:0;cursor:help}
+
     /* ========= MOBILE UX ========= */
     @media(max-width:720px){
       /* Tipografia più leggibile */
@@ -367,7 +370,7 @@
       <p class="status" id="place">📍 Posizione non ancora scelta — clicca <b>📍 Posizione</b> in alto per iniziare.</p>
     </section>
     <section class="panel">
-      <h2>🌤️ Condizioni del cielo stasera</h2>
+      <h2>🌤️ Condizioni meteo <span id="placeInline" class="place-inline">—</span></h2>
       <div class="cards" style="grid-template-columns:repeat(3,1fr);gap:10px">
         <div class="card weather"><span>☁️ Nuvole</span><strong id="cloud">—</strong></div>
         <div class="card weather"><span>💨 Vento</span><strong id="wind">—</strong><small id="windDir" class="card-meta">—</small></div>
@@ -628,7 +631,36 @@
         </ul>`;
     }
   }
+  // Geocoding inverso (Nominatim, gratis, no API key)
+  // Cache risultati per 1h per non spammare
+  let _lastGeo=null;
+  async function reverseGeocode(la,lo){
+    const now=Date.now();
+    if(_lastGeo&&(now-_lastGeo.t)<3600000&&Math.abs(_lastGeo.lat-la)<0.01&&Math.abs(_lastGeo.lon-lo)<0.01)return _lastGeo.label;
+    try{
+      const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${la}&lon=${lo}&accept-language=it&zoom=10`,{headers:{'Accept':'application/json'}});
+      if(!r.ok)return null;
+      const j=await r.json();
+      const a=j.address||{};
+      const city=a.city||a.town||a.village||a.municipality||a.county||a.state||'';
+      const country=a.country_code?.toUpperCase()||'';
+      const label=city?(country?`${city}, ${country}`:city):(j.display_name||'').split(',').slice(0,2).join(',').trim();
+      _lastGeo={t:now,lat:la,lon:lo,label};
+      return label;
+    }catch(e){return null}
+  }
+  async function updatePlaceLabel(){
+    const el=$('placeInline');
+    if(!el)return;
+    if(lat===null||lon===null){el.textContent='—';return}
+    el.textContent='…';
+    const label=await reverseGeocode(lat,lon);
+    const coord=`${lat.toFixed(3)},${lon.toFixed(3)}`;
+    el.textContent=label?`📍 ${label}`:`📍 ${coord}`;
+    el.title=`Coordinate: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+  }
   async function weather(){
+    updatePlaceLabel();
     console.log('☁️ weather() chiamata, lat='+lat+' lon='+lon);
     $('forecast').textContent='Aggiornamento dal servizio meteo…';
     try{
