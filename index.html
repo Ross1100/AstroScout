@@ -6,7 +6,21 @@
   <title>Astro Scout</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <style>
-    :root{color-scheme:dark;--bg:#050609;--panel:#10131a;--line:#2b3040;--ink:#f4f5f8;--muted:#aeb5c4;--gold:#ffd77b;--blue:#8cc5ff;--good:#9ae6b4}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% 0,#18253c 0,transparent 36%),var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1000px;margin:auto;padding:26px 18px 48px}h1{font-size:30px;margin:0 0 5px;letter-spacing:-.8px}.lead{margin:0 0 14px;color:var(--muted)}.night-bar{display:flex;animation:fadeIn .5s ease .1s both;align-items:baseline;gap:10px;flex-wrap:wrap;padding:10px 14px;background:linear-gradient(90deg,#0c0f15 0,#131927 100%);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;margin-bottom:14px;font-size:13px;color:var(--muted)}.night-bar strong{color:var(--ink);font-size:15px;font-weight:600}.night-bar-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--gold);font-weight:600}.layout{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.panel{border:1px solid var(--line);background:#0c0f15;padding:16px}h2{font-size:15px;margin:0 0 13px;color:var(--gold)}label{display:block;font-size:11px;color:var(--muted);margin:0 0 5px}select,button{font:inherit}select{width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}button{border:1px solid #607294;background:#18243a;color:white;padding:9px 12px;border-radius:4px;cursor:pointer}button.primary{background:#d7ac52;color:#1b1405;border-color:#f6d37e}.setup{margin-top:15px;border-left:3px solid var(--gold);padding:9px 11px;background:#15130d;font-size:13px;line-height:1.45}.setup b{color:var(--gold)}.status{font-size:12px;color:var(--muted);margin:11px 0 0}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.card{border:1px solid var(--line);padding:11px;background:var(--panel)}.card span{font-size:11px;color:var(--muted)}.card strong{display:block;font-size:20px;margin-top:4px}.card.weather{padding:13px;background:linear-gradient(135deg,#0c0f15 0,#11151f 100%);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}.card.weather:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 8px 20px rgba(0,0,0,.35)}.card.weather strong{font-size:22px;color:var(--ink)}.card .card-meta{font-size:10px;color:var(--muted);margin-top:4px;display:block;font-weight:normal}.ok{color:var(--good)}#map{height:380px;border:1px solid var(--line);z-index:0;background:#000810 radial-gradient(ellipse at center,#0a1f3a 0%,#000510 70%)}#skymap{height:420px;border:1px solid var(--line);z-index:0;background:#000510 radial-gradient(ellipse at center,#1a1538 0%,#000308 70%);margin-bottom:14px}.dso-marker{filter:drop-shadow(0 0 6px currentColor)}.places{margin:0;padding:0;list-style:none}.places li{padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.places small{color:var(--muted);display:block;margin-top:3px;font-size:11px}.places a{color:var(--blue)}.foot{margin-top:18px;font-size:11px;color:var(--muted);line-height:1.4}.foot a{color:var(--blue)}@media(max-width:720px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}h1{font-size:25px}}
+    :root{color-scheme:dark;--bg:#050609;--panel:#10131a;--line:#2b3040;--ink:#f4f5f8;--muted:#aeb5c4;--gold:#ffd77b;--blue:#8cc5ff;--good:#9ae6b4}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% 0,#18253c 0,transparent 36%),var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1000px;margin:auto;padding:26px 18px 48px}h1{font-size:30px;margin:0 0 5px;letter-spacing:-.8px}
+    .topbar{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;padding:18px 20px;margin:-26px -18px 18px;background:linear-gradient(180deg,#0a0d18 0%,transparent 100%);border-bottom:1px solid var(--line)}
+    .logo-slot{width:64px;height:64px;border:1px dashed var(--gold);border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,215,123,.04);font-size:32px;overflow:hidden;transition:all .3s ease}
+    .logo-slot:hover{border-style:solid;background:rgba(255,215,123,.08)}
+    .logo-slot img{width:100%;height:100%;object-fit:cover;border-radius:12px}
+    .logo-placeholder{opacity:.5}
+    .brand{text-align:center}
+    .brand .lead{margin:0;font-size:12px}
+    .topbar-actions{display:flex;gap:8px}
+    .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s ease}
+    .btn-ghost:hover{border-color:var(--gold);background:rgba(255,215,123,.08)}.lead{margin:0 0 14px;color:var(--muted)}.night-bar{display:flex;animation:fadeIn .5s ease .1s both;align-items:baseline;gap:10px;flex-wrap:wrap;padding:10px 14px;background:linear-gradient(90deg,#0c0f15 0,#131927 100%);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;margin-bottom:14px;font-size:13px;color:var(--muted)}.night-bar strong{color:var(--ink);font-size:15px;font-weight:600}.night-bar-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--gold);font-weight:600}.layout{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.panel{border:1px solid var(--line);background:#0c0f15;padding:16px}h2{font-size:15px;margin:0 0 13px;color:var(--gold)}label{display:block;font-size:11px;color:var(--muted);margin:0 0 5px}select,button{font:inherit}select{width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}button{border:1px solid #607294;background:#18243a;color:white;padding:9px 12px;border-radius:4px;cursor:pointer}button.primary{background:#d7ac52;color:#1b1405;border-color:#f6d37e}.setup{margin-top:15px;border-left:3px solid var(--gold);padding:9px 11px;background:#15130d;font-size:13px;line-height:1.45}.setup b{color:var(--gold)}.status{font-size:12px;color:var(--muted);margin:11px 0 0}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.card{border:1px solid var(--line);padding:11px;background:var(--panel)}.card span{font-size:11px;color:var(--muted)}.card strong{display:block;font-size:20px;margin-top:4px}.card.weather{padding:13px;background:linear-gradient(135deg,#0c0f15 0,#11151f 100%);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}.card.weather:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 8px 20px rgba(0,0,0,.35)}.card.weather strong{font-size:22px;color:var(--ink)}.card .card-meta{font-size:10px;color:var(--muted);margin-top:4px;display:block;font-weight:normal}.ok{color:var(--good)}#map{height:380px;border:1px solid var(--line);z-index:0;background:#000810 radial-gradient(ellipse at center,#0a1f3a 0%,#000510 70%)}#skymap{height:420px;border:1px solid var(--line);z-index:0;background:#000510 radial-gradient(ellipse at center,#1a1538 0%,#000308 70%);margin-bottom:14px}.dso-marker{filter:drop-shadow(0 0 6px currentColor)}.places{margin:0;padding:0;list-style:none}.places li{padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.places small{color:var(--muted);display:block;margin-top:3px;font-size:11px}.places a{color:var(--blue)}.foot{margin-top:18px;font-size:11px;color:var(--muted);line-height:1.4}
+    .section-divider{margin:32px 0 20px;padding-bottom:8px;border-bottom:1px dashed var(--line);display:flex;align-items:center;gap:10px}
+    .section-divider .icon{font-size:22px}
+    .section-divider .label{font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-weight:600}
+    .section-divider .desc{font-size:11px;color:var(--muted);font-weight:normal;text-transform:none;letter-spacing:0}.foot a{color:var(--blue)}@media(max-width:720px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}h1{font-size:22px}.topbar{grid-template-columns:1fr;text-align:center;gap:12px}.topbar-actions{justify-content:center}.logo-slot{margin:0 auto}}
     .leaflet-container{background:#000810 !important;font-family:inherit}
     .leaflet-tile-pane{filter:saturate(1) brightness(1.1) contrast(1.05)}
     .leaflet-popup-content-wrapper{background:#0c1220;border:1px solid var(--gold);color:var(--ink);border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.7)}
@@ -152,8 +166,19 @@
 </head>
 <body>
 <main>
-  <h1>Astro Scout</h1>
-  <p class="lead">Configurazione di scatto, condizioni del cielo e punti panoramici vicino a te.</p>
+  <header class="topbar">
+    <div class="logo-slot" aria-label="Spazio per logo">
+      <!-- Inserisci qui il tuo logo: <img src="logo.png" alt="Astro Scout" class="user-logo"> -->
+      <span class="logo-placeholder">🌌</span>
+    </div>
+    <div class="brand">
+      <h1>Astro Scout</h1>
+      <p class="lead">Compagno per astrofotografia: cielo, attrezzatura e luoghi.</p>
+    </div>
+    <div class="topbar-actions">
+      <button id="locateTop" class="btn-ghost" title="Usa la mia posizione">📍 Posizione</button>
+    </div>
+  </header>
 
   <div class="night-bar">
     <span class="night-bar-label">📅 Stiamo valutando</span>
@@ -175,6 +200,8 @@
     </div>
   </section>
 
+
+  <div class="section-divider"><span class="icon">🛰️</span><span class="label">Sorveglianza cielo</span><span class="desc">· stasera in un colpo d’occhio</span></div>
   <div class="layout">
     <section class="panel">
       <h2>La tua attrezzatura</h2>
@@ -263,6 +290,7 @@
     </section>
   </div>
   <section class="panel" style="margin-top:18px">
+    <div class="section-divider"><span class="icon">🗺️</span><span class="label">Esplorazione</span><span class="desc">· dove andare stanotte</span></div>
     <h2>Mappa live</h2>
     <div class="map-toolbar">
       <label><input type="checkbox" id="lpToggle"> <svg class="lp-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M9 2v3H7v3l-3 4v8a2 2 0 002 2h8a2 2 0 002-2v-8l-3-4V5h-2V2h-2zm3 17a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm0-4a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"/><path d="M3 7l2-1M21 7l-2-1M4 14h2M20 14h-2" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="round"/></svg> �️ Inquinamento luminoso</label>
@@ -275,6 +303,9 @@
     </div>
     <p class="status">Tocca la mappa per spostare la ricerca in un altro punto.</p>
   </section>
+
+
+  <div class="section-divider"><span class="icon">🌌</span><span class="label">Catalogo cielo</span><span class="desc">· cosa fotografare stanotte</span></div>
 
   <!-- STEP 8: Cielo stellato -->
   <section class="panel" style="margin-top:18px">
@@ -292,6 +323,9 @@
     <ul class="places" id="places"><li>Caricamento…</li></ul>
   </section>
   <p class="foot">La posizione viene richiesta solo dal tuo browser e non viene salvata da questa pagina. Meteo: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open‑Meteo</a>; punti panoramici: OpenStreetMap/Overpass. Verifica sempre accessi, parcheggi, proprietà private e regolamenti locali prima di uscire.</p>
+
+
+  <div class="section-divider"><span class="icon">📖</span><span class="label">Riferimento</span><span class="desc">· glossario e crediti</span></div>
 
   <!-- Mini glossario -->
   <section class="panel" style="margin-top:18px">
