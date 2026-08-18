@@ -416,14 +416,55 @@
     return dirs[Math.round(deg/45)%8];
   }
 
+  // Server Overpass alternativi per fallback
+  const OVERPASS_SERVERS=[
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://overpass.privatepaste.net/api/interpreter'
+  ];
+
+  // Cache ultimo risultato valido (per mostrare qualcosa anche in caso di errore)
+  let lastPlacesCache=null;
+
+  // Query semplificata: solo "node" (più veloce), niente "way"
+  function buildOverpassQuery(lat,lon){
+    return `[out:json][timeout:15];(node["tourism"="viewpoint"](around:50000,${lat},${lon});node["natural"="peak"](around:50000,${lat},${lon}););out center 10;`;
+  }
+
+  async function fetchOverpassWithFallback(query){
+    for(let i=0;i<OVERPASS_SERVERS.length;i++){
+      const server=OVERPASS_SERVERS[i];
+      console.log(`📍 Overpass tentativo ${i+1}/${OVERPASS_SERVERS.length}: ${server}`);
+      try{
+        const ctrl=new AbortController();
+        const t=setTimeout(()=>ctrl.abort(),12000); // 12s timeout
+        const resp=await fetch(server,{method:'POST',body:query,signal:ctrl.signal});
+        clearTimeout(t);
+        if(!resp.ok){
+          console.warn(`⚠️ Server ${server} ha risposto ${resp.status}`);
+          continue;
+        }
+        const data=await resp.json();
+        if(data&&data.elements){
+          console.log(`✅ Server ${server} OK (${data.elements.length} elementi)`);
+          return data;
+        }
+      }catch(err){
+        console.warn(`⚠️ Server ${server} fallito: ${err.message}`);
+        // prova il prossimo
+      }
+    }
+    throw new Error('Tutti i server Overpass hanno fallito');
+  }
+
   async function places(){
     console.log('📍 places() chiamata, lat='+lat+' lon='+lon);
     $('placesStatus').textContent='Cerco punti panoramici entro 50 km…';
     clearPlaceMarkers();
     try{
-      const q=`[out:json][timeout:20];(node["tourism"="viewpoint"](around:50000,${lat},${lon});way["tourism"="viewpoint"](around:50000,${lat},${lon});node["natural"="peak"](around:50000,${lat},${lon});way["natural"="peak"](around:50000,${lat},${lon}););out center 12;`;
-      const j=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:q}).then(r=>r.json());
-      const items=j.elements.slice(0,10).map(x=>{
+      const query=buildOverpassQuery(lat,lon);
+      const data=await fetchOverpassWithFallback(query);
+      const items=data.elements.slice(0,10).map(x=>{
         const a=x.lat??x.center.lat,b=x.lon??x.center.lon;
         const t=x.tags||{};
         return{
@@ -433,6 +474,10 @@
           ele:t.ele?Number(t.ele):null
         };
       }).sort((p,q)=>distKm(lat,lon,p.lat,p.lon)-distKm(lat,lon,q.lat,q.lon));
+
+      // Salva in cache per fallback
+      lastPlacesCache={items,lat,lon};
+
       if(!items.length){
         $('places').innerHTML='<li>Nessun belvedere o altura mappata nelle vicinanze. Prova a spostare la mappa o consulta direttamente OpenStreetMap.</li>';
         $('placesStatus').textContent='Nessun risultato entro 50 km dalla posizione attuale.';
@@ -445,7 +490,7 @@
         const alt=p.ele?` · ⛰️ ${p.ele} m`:'';
         const icon=p.type==='peak'?'🗻':'🌄';
         const osm=`https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lon}#map=15/${p.lat}/${p.lon}`;
-        return`<li><a target="_blank" rel="noreferrer" href="${osm}">${icon} ${p.name}</a><small>📏 ${d.toFixed(1)} km · 🧭 ${dir} (${deg.toFixed(0)}°)${alt}</small></li>`;
+        return`<li><a target="_blank" rel="noreferrer" href="${osm}">${icon} ${p.name}</a><small>📏 ${d.toFixed(1)} km · � ${dir} (${deg.toFixed(0)}°)${alt}</small></li>`;
       }).join('');
       items.forEach(p=>{
         const m=L.circleMarker([p.lat,p.lon],{radius:6,color:'#8cc5ff',fillColor:'#8cc5ff',fillOpacity:.7,weight:1.5}).bindPopup(`<b>${p.name}</b><br>${distKm(lat,lon,p.lat,p.lon).toFixed(1)} km ${compass(bearing(lat,lon,p.lat,p.lon))}${p.ele?`<br>${p.ele} m s.l.m.`:''}`);
@@ -453,8 +498,24 @@
       });
       $('placesStatus').textContent=`Trovati ${items.length} punti panoramici entro 50 km. Marker blu aggiunti sulla mappa.`;
     }catch(e){
-      $('places').innerHTML='<li>La ricerca dei luoghi non è disponibile al momento. Riprova più tardi.</li>';
-      $('placesStatus').textContent='Servizio cartografico momentaneamente non raggiungibile.';
+      console.error('❌ places() fallito:',e);
+      // Mostra l'ultimo risultato valido come fallback (se vicino alla posizione attuale)
+      if(lastPlacesCache&&distKm(lat,lon,lastPlacesCache.lat,lastPlacesCache.lon)<10){
+        console.log('♻️ Mostro cache ultimo risultato valido');
+        const items=lastPlacesCache.items;
+        $('places').innerHTML=items.map(p=>{
+          const d=distKm(lat,lon,p.lat,p.lon);
+          const deg=bearing(lat,lon,p.lat,p.lon);
+          const dir=compass(deg);
+          return`<li><a target="_blank" rel="noreferrer" href="https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lon}#map=15/${p.lat}/${p.lon}">🌄 ${p.name}</a><small>📏 ${d.toFixed(1)} km · 🧭 ${dir}${p.ele?` · ⛰️ ${p.ele} m`:''} <em>(risultato precedente, riprova per aggiornare)</em></small></li>`;
+        }).join('');
+        $('placesStatus').innerHTML='⚠️ Servizio Overpass sovraccarico. <a href="#" id="retryPlaces">Riprova</a> ora.';
+        $('retryPlaces').addEventListener('click',ev=>{ev.preventDefault();places()});
+      }else{
+        $('places').innerHTML='<li>⚠️ Servizio cartografico momentaneamente non raggiungibile (504 Gateway Timeout). <a href="#" id="retryPlaces">Riprova</a> tra qualche secondo.</li>';
+        $('placesStatus').textContent='Overpass sovraccarico — riprova più tardi.';
+        $('retryPlaces')?.addEventListener('click',ev=>{ev.preventDefault();places()});
+      }
     }
   }
 
