@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Astro Scout</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@master/celestial.css">
@@ -18,11 +18,17 @@
     .logo-slot:hover{border-style:solid;background:rgba(255,215,123,.08)}
     .logo-slot img{width:100%;height:100%;object-fit:cover;border-radius:12px}
     .logo-placeholder{opacity:.5}
+    .logo-btn{cursor:pointer;padding:0;animation:spin 22s linear infinite}
+    .logo-btn:hover{animation-duration:6s}
     .brand{text-align:center}
     .brand .lead{margin:0;font-size:12px}
-    .topbar-actions{display:flex;gap:8px}
+    .brand-meta{margin:4px 0 0;font-size:11px;color:var(--muted);letter-spacing:.3px}
+    .brand-meta span{color:var(--blue)}
+    .topbar-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    button,.btn-ghost{ touch-action:manipulation; -webkit-tap-highlight-color:transparent; cursor:pointer }
     .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s ease}
-    .btn-ghost:hover{border-color:var(--gold);background:rgba(255,215,123,.08)}.lead{margin:0 0 14px;color:var(--muted)}.night-bar{display:flex;animation:fadeIn .5s ease .1s both;align-items:baseline;gap:10px;flex-wrap:wrap;padding:10px 14px;background:linear-gradient(90deg,#0c0f15 0,#131927 100%);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;margin-bottom:14px;font-size:13px;color:var(--muted)}.night-bar strong{color:var(--ink);font-size:15px;font-weight:600}.night-bar-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--gold);font-weight:600}.layout{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.panel{border:1px solid var(--line);background:#0c0f15;padding:16px}h2{font-size:15px;margin:0 0 13px;color:var(--gold)}label{display:block;font-size:11px;color:var(--muted);margin:0 0 5px}select,button{font:inherit}select{width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}button{border:1px solid #607294;background:#18243a;color:white;padding:9px 12px;border-radius:4px;cursor:pointer}button.primary{background:#d7ac52;color:#1b1405;border-color:#f6d37e}.setup{margin-top:15px;border-left:3px solid var(--gold);padding:9px 11px;background:#15130d;font-size:13px;line-height:1.45}.setup b{color:var(--gold)}.status{font-size:12px;color:var(--muted);margin:11px 0 0}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.card{border:1px solid var(--line);padding:11px;background:var(--panel)}.card span{font-size:11px;color:var(--muted)}.card strong{display:block;font-size:20px;margin-top:4px}.card.weather{padding:13px;background:linear-gradient(135deg,#0c0f15 0,#11151f 100%);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}.card.weather:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 8px 20px rgba(0,0,0,.35)}.card.weather strong{font-size:22px;color:var(--ink)}.card .card-meta{font-size:10px;color:var(--muted);margin-top:4px;display:block;font-weight:normal}.ok{color:var(--good)}#map{height:380px;border:1px solid var(--line);z-index:0;background:#000810 radial-gradient(ellipse at center,#0a1f3a 0%,#000510 70%)}#skymap{height:420px;border:1px solid var(--line);z-index:0;background:#000510 radial-gradient(ellipse at center,#1a1538 0%,#000308 70%);margin-bottom:14px}.dso-marker{filter:drop-shadow(0 0 6px currentColor)}.places{margin:0;padding:0;list-style:none}.places li{padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.places small{color:var(--muted);display:block;margin-top:3px;font-size:11px}.places a{color:var(--blue)}.foot{margin-top:18px;font-size:11px;color:var(--muted);line-height:1.4}
+    .btn-ghost:hover{border-color:var(--gold);background:rgba(255,215,123,.08)}.lead{margin:0 0 14px;color:var(--muted)}.night-bar{display:flex;animation:fadeIn .5s ease .1s both;align-items:baseline;gap:10px;flex-wrap:wrap;padding:10px 14px;background:linear-gradient(90deg,#0c0f15 0,#131927 100%);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;margin-bottom:14px;font-size:13px;color:var(--muted)}.night-bar strong{color:var(--ink);font-size:15px;font-weight:600}.night-bar-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--gold);font-weight:600}.layout{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.panel{border:1px solid var(--line);background:#0c0f15;padding:16px}h2{font-size:15px;margin:0 0 13px;color:var(--gold)}label{display:block;font-size:11px;color:var(--muted);margin:0 0 5px}select,button{font:inherit}select{width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}button{border:1px solid #607294;background:#18243a;color:white;padding:9px 12px;border-radius:4px;cursor:pointer}button.primary{background:#d7ac52;color:#1b1405;border-color:#f6d37e}.setup{margin-top:15px;border-left:3px solid var(--gold);padding:9px 11px;background:#15130d;font-size:13px;line-height:1.45}.setup b{color:var(--gold)}.status{font-size:12px;color:var(--muted);margin:11px 0 0}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.card{border:1px solid var(--line);padding:11px;background:var(--panel)}.card span{font-size:11px;color:var(--muted)}.card strong{display:block;font-size:20px;margin-top:4px}.card.weather{padding:13px;background:linear-gradient(135deg,#0c0f15 0,#11151f 100%);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}.card.weather:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 8px 20px rgba(0,0,0,.35)}.card.weather strong{font-size:22px;color:var(--ink)}.card .card-meta{font-size:10px;color:var(--muted);margin-top:4px;display:block;font-weight:normal}.ok{color:var(--good)}#map{height:380px;border:1px solid var(--line);z-index:0;background:#000810 radial-gradient(ellipse at center,#0a1f3a 0%,#000510 70%)}#skymap{height:420px;border:1px solid var(--line);z-index:0;background:#000510 radial-gradient(ellipse at center,#1a1538 0%,#000308 70%);margin-bottom:14px}
+#celestialMap{height:420px;border:1px solid var(--line);background:#000;border-radius:4px;margin-bottom:14px;overflow:hidden}.dso-marker{filter:drop-shadow(0 0 6px currentColor)}.places{margin:0;padding:0;list-style:none}.places li{padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.places small{color:var(--muted);display:block;margin-top:3px;font-size:11px}.places a{color:var(--blue)}.foot{margin-top:18px;font-size:11px;color:var(--muted);line-height:1.4}
     .section-divider{margin:32px 0 20px;padding-bottom:8px;border-bottom:1px dashed var(--line);display:flex;align-items:center;gap:10px}
     .section-divider .icon{font-size:22px}
     .section-divider .label{font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-weight:600}
@@ -179,21 +185,88 @@
     @media(prefers-reduced-motion:reduce){
       *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
     }
+
+    /* Glossario (sezione dedicata) */
+    .glossary{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:14px}
+    .g-item{border:1px solid var(--line);background:linear-gradient(135deg,#0a0d18 0,#11151f 100%);padding:14px 16px;border-radius:6px}
+    .g-item h3{color:var(--gold);font-size:13px;margin:0 0 6px;font-weight:600;letter-spacing:.2px}
+    .g-item p{margin:0;color:var(--muted);font-size:12.5px;line-height:1.55}
+    .g-item p b,.g-item p strong{color:var(--ink)}
+    @media(max-width:720px){.glossary{grid-template-columns:1fr}}
+
+    /* ========= MOBILE UX ========= */
+    @media(max-width:720px){
+      /* Tipografia più leggibile */
+      body{font-size:15px}
+      h1{font-size:22px}
+      /* Layout fluido */
+      main{padding:18px 14px 40px}
+      .topbar{grid-template-columns:1fr;text-align:center;gap:12px;margin:-18px -14px 14px;padding:16px 14px}
+      .topbar-actions{justify-content:center;gap:6px}
+      .topbar-actions .btn-ghost{flex:1;min-width:0;font-size:11px;padding:8px 6px}
+      .logo-slot{margin:0 auto}
+      /* Layout mono-colonna */
+      .layout{grid-template-columns:1fr;gap:14px}
+      .cards{grid-template-columns:1fr 1fr;gap:8px}
+      .card.weather{padding:11px}
+      .card.weather strong{font-size:18px}
+      /* Bottoni più grandi per il touch (min 44px) */
+      button,select,.btn-ghost{min-height:44px}
+      select{font-size:14px}
+      /* Setup box: parametrici sempre leggibili */
+      .setup .params{grid-template-columns:1fr 1fr 1fr}
+      .setup .param .val{font-size:15px}
+      /* Mappa ad altezza ridotta */
+      #map{height:320px}
+      #celestialMap,#skymap{height:340px}
+      /* Topbar brand leggibile */
+      .brand-meta{font-size:11px}
+      .night-bar{font-size:12px;padding:9px 12px}
+      .verdict{padding:14px;gap:12px}
+      .verdict .dot{width:38px;height:38px;font-size:20px}
+      .verdict h2{font-size:15px}
+      .verdict .meta{font-size:11px;gap:10px}
+      .events-grid{grid-template-columns:1fr;gap:8px}
+      .event-card{padding:10px}
+      .event-icon{font-size:24px}
+      /* Niente scroll orizzontale */
+      body{overflow-x:hidden}
+      .topbar,.layout,.panel,.night-bar{max-width:100%}
+      /* Card meteo con label chiara */
+      .card span{font-size:10px}
+      /* Section divider compatto */
+      .section-divider{margin:24px 0 14px}
+      .section-divider .icon{font-size:20px}
+      .section-divider .label{font-size:12px}
+      /* Place list leggibile */
+      .places li{padding:10px 0;font-size:13px}
+      /* Storage warning più compatto */
+      .storage-warning{font-size:12px;padding:8px 12px}
+    }
+    @media(max-width:380px){
+      .cards{grid-template-columns:1fr}
+      .topbar-actions .btn-ghost{font-size:10px;padding:7px 4px}
+      .setup .params{grid-template-columns:1fr}
+      .setup .param .val{font-size:14px}
+    }
   </style>
 </head>
 <body>
 <main>
   <header class="topbar">
-    <div class="logo-slot" aria-label="Spazio per logo">
+    <button id="logoBtn" class="logo-slot logo-btn" aria-label="Astro Scout — aggiorna" title="Aggiorna tutto">
       <!-- Inserisci qui il tuo logo: <img src="logo.png" alt="Astro Scout" class="user-logo"> -->
       <span class="logo-placeholder">🌌</span>
-    </div>
+    </button>
     <div class="brand">
       <h1>Astro Scout</h1>
       <p class="lead">Compagno per astrofotografia: cielo, attrezzatura e luoghi.</p>
+      <p class="brand-meta"><span id="clock">—</span> · <span id="season">caricamento…</span></p>
     </div>
     <div class="topbar-actions">
-      <button id="locateTop" class="btn-ghost" title="Usa la mia posizione">📍 Posizione</button>
+      <button id="locateTop" class="btn-ghost" title="Centra sulla mia posizione">📍 Posizione</button>
+      <button id="scrollVerdict" class="btn-ghost" title="Vai al verdict di stasera">🌙 Stasera</button>
+      <button id="refreshAll" class="btn-ghost" title="Ricarica meteo e mappa">🔄 Aggiorna</button>
     </div>
   </header>
 
@@ -296,12 +369,12 @@
     <section class="panel">
       <h2>🌤️ Condizioni del cielo stasera</h2>
       <div class="cards" style="grid-template-columns:repeat(3,1fr);gap:10px">
-        <div class="card weather"><span><span class="g" data-tip="Copertura nuvolosa: 0% = sereno perfetto, 100% = coperto. Per il deep sky serve &lt;20%.">☁️ Nuvole</span></span><strong id="cloud">—</strong></div>
-        <div class="card weather"><span><span class="g" data-tip="Velocità del vento. Sotto 15 km/h è ideale: il treppiede resta stabile e le stelle non tremano.">💨 Vento</span></span><strong id="wind">—</strong><small id="windDir" class="card-meta">—</small></div>
-        <div class="card weather"><span><span class="g" data-tip="Umidità relativa: sopra 80% favorisce la formazione di condensa sull'obiettivo e appanna le stelle. Ideale &lt;60%.">� Umidità</span></span><strong id="humidity">—</strong></div>
-        <div class="card weather"><span><span class="g" data-tip="Temperatura esterna: sotto 0°C la batteria dura poco, sopra 25°C il sensore si surriscalda e fa più rumore.">🌡️ Temperatura</span></span><strong id="temp">—</strong></div>
-        <div class="card weather"><span><span class="g" data-tip="Quanto è limpido il cielo: più alta è, più stelle deboli si vedono. Dipende da umidità, polvere e aerosol in atmosfera.">✨ Trasparenza</span></span><strong id="rating">—</strong></div>
-        <div class="card weather"><span><span class="g" data-tip="Probabilità che piova o ci sia nebbia nelle prossime ore. Sotto 10% = sicuro uscire.">🌧️ Pioggia</span></span><strong id="precip">—</strong></div>
+        <div class="card weather"><span>☁️ Nuvole</span><strong id="cloud">—</strong></div>
+        <div class="card weather"><span>💨 Vento</span><strong id="wind">—</strong><small id="windDir" class="card-meta">—</small></div>
+        <div class="card weather"><span>💧 Umidità</span><strong id="humidity">—</strong></div>
+        <div class="card weather"><span>🌡️ Temperatura</span><strong id="temp">—</strong></div>
+        <div class="card weather"><span>✨ Trasparenza</span><strong id="rating">—</strong></div>
+        <div class="card weather"><span>🌧️ Pioggia</span><strong id="precip">—</strong></div>
       </div>
       <p class="status" id="forecast">Carico le condizioni previste per la prima ora notturna disponibile…</p>
     </section>
@@ -327,12 +400,13 @@
   <!-- STEP 8: Cielo stellato -->
   <section class="panel" style="margin-top:18px">
     <h2>🌌 Cielo stellato — Target del mese</h2>
-    <p class="status">I 14 oggetti celesti più famosi del cielo boreale, con magnitudine e altitudine massima stasera. Clicca un marker sulla mappa per i dettagli.</p>
+    <p class="status">Sfera celeste reale con stelle, costellazioni e oggetti Messier/NGC. Trascina per ruotare, scrolla per zoomare. Sotto, gli 8 target più alti stasera dalla tua posizione.</p>
     <div class="map-toolbar">
       <label><input type="checkbox" id="dsoToggle" checked> ✨ Mostra tutti i target</label>
-      <label><input type="checkbox" id="celestialToggle"> 🔭 Sfera celeste reale (d3-celestial)</label>
+      <label><input type="checkbox" id="celestialToggle"> 🗺️ Vista semplificata (bassa banda)</label>
     </div>
-    <div id="skymap" aria-label="Mappa dei target celesti"></div>
+    <div id="celestialMap" aria-label="Sfera celeste reale"></div>
+    <div id="skymap" aria-label="Mappa semplificata dei target celesti" style="display:none"></div>
     <ul class="places" id="sky" style="margin-top:14px"><li>Calcolo target in corso…</li></ul>
   </section>
   <section class="panel" style="margin-top:18px">
@@ -356,7 +430,7 @@
         </div>
       </div>
       <div class="event-card">
-        <div class="event-icon">�</div>
+        <div class="event-icon">☄️</div>
         <div class="event-body">
           <div class="event-title">Sciami meteorici attivi</div>
           <div class="event-sub" id="meteorNext">Calcolo in corso…</div>
@@ -376,15 +450,60 @@
 
   <div class="section-divider"><span class="icon">📖</span><span class="label">Riferimento</span><span class="desc">· glossario e crediti</span></div>
 
-  <!-- Mini glossario -->
+  <!-- Glossario -->
   <section class="panel" style="margin-top:18px">
-    <h2>📖 Mini glossario</h2>
-    <p class="status">Passa il mouse sui termini <span class="g" data-tip="Esempio! Questo è un tooltip dimostrativo.">sottolineati</span> per la spiegazione. Ecco i concetti chiave per iniziare:</p>
-    <div class="cards" style="grid-template-columns:repeat(2,1fr)">
-      <div class="card"><span><span class="g" data-tip="La focale 'reale' rapportata a un sensore full-frame (35mm). Esempio: 16mm su APS-C (crop 1.5×) equivale a 24mm full-frame.">Focale equivalente</span></span><strong>24 mm</strong></div>
-      <div class="card"><span><span class="g" data-tip="Quanto è ferma l'atmosfera. Seeing scarso = stelle 'tremolanti', seeing buono = stelle ferme e nitide.">Seeing</span></span><strong>buono ≈ fermo</strong></div>
-      <div class="card"><span><span class="g" data-tip="Scala di inquinamento luminoso da 1 (cielo perfetto) a 9 (centro città). Più basso è, meglio è.">Scala di Bortle</span></span><strong>1 → 9</strong></div>
-      <div class="card"><span><span class="g" data-tip="Fase in cui il sole è più di 18° sotto l'orizzonte: cielo davvero buio, ideale per deep sky.">Crepuscolo astronomico</span></span><strong>~2h dopo il tramonto</strong></div>
+    <h2>📖 Glossario</h2>
+    <p class="status">I termini che vedi nelle card, nei popup e nei suggerimenti. Tienilo aperto la prima volta che esci, poi tornerà utile solo nei dubbi.</p>
+
+    <div class="glossary">
+      <div class="g-item">
+        <h3>Focale equivalente</h3>
+        <p>È la focale "reale" rapportata a un sensore full-frame (35mm). Una focale di 16mm su una APS-C con crop 1.5× equivale a 24mm full-frame. Serve per confrontare gli obiettivi: un 14mm su full-frame è un grandangolo spinto, su APS-C è solo un discreto grandangolo.</p>
+      </div>
+      <div class="g-item">
+        <h3>Apertura (f/&nbsp;)</h3>
+        <p>Il "buco" attraverso cui passa la luce. Più il numero è basso, più l'obiettivo è luminoso: f/1.4 lascia passare molta più luce di f/4. Sulle stelle fa una differenza enorme: con f/1.4 puoi scendere a ISO più bassi o tempi più corti.</p>
+      </div>
+      <div class="g-item">
+        <h3>ISO</h3>
+        <p>La sensibilità del sensore. Più alto è, più "amplifica" il segnale, ma introduce rumore (grana). Servono ISO alti (1600–6400) per le stelle, ISO bassi (100–400) per la luna che è un faro.</p>
+      </div>
+      <div class="g-item">
+        <h3>Regola del 250</h3>
+        <p>Per evitare che le stelle "striscino" (diventino segmenti invece di punti) su treppiede fisso, il tempo massimo di esposizione è circa 250&nbsp;/&nbsp;focale&nbsp;equivalente. Con 24mm: 250/24 ≈ 10 secondi. Con 50mm: 5 secondi.</p>
+      </div>
+      <div class="g-item">
+        <h3>Seeing</h3>
+        <p>Quanto è ferma l'atmosfera. Con seeing scarso le stelle tremano e i dettagli fini (anelli di Saturno, crateri lunari) si perdono. Seeing buono = stelle ferme e immagini nitide. Dipende da umidità, vento e turbolenze in alta quota.</p>
+      </div>
+      <div class="g-item">
+        <h3>Trasparenza</h3>
+        <p>Quanto è limpida l'atmosfera. Alta trasparenza = si vedono più stelle deboli e la Via Lattea è più contrastata. Bassa = aria umida, polverosa, nuvole alte invisibili a occhio nudo che però rovinano il cielo.</p>
+      </div>
+      <div class="g-item">
+        <h3>Scala di Bortle</h3>
+        <p>Scala da 1 a 9 che misura l'inquinamento luminoso. B1 = cielo perfetto (Sahara, alta montagna isolata). B9 = centro di una grande città, nemmeno le stelle più luminose si vedono. Per il deep sky serve almeno B4.</p>
+      </div>
+      <div class="g-item">
+        <h3>Crepuscolo astronomico</h3>
+        <p>Fase in cui il Sole è più di 18° sotto l'orizzonte. Il cielo è completamente buio, l'unica luce è delle stelle e della Luna. In estate alle medie latitudini può non arrivare mai (notti bianche). In inverno arriva circa 1h30–2h dopo il tramonto.</p>
+      </div>
+      <div class="g-item">
+        <h3>Crepuscolo civile e nautico</h3>
+        <p>Crepuscolo civile: Sole tra 0° e –6° sotto l'orizzonte. Si vede ancora un po' di luce, gli oggetti distinguibili. Crepuscolo nautico: Sole tra –6° e –12°. L'orizzonte si vede ancora, ma le stelle iniziano a uscire. Utile per le foto "blue hour" con paesaggio.</p>
+      </div>
+      <div class="g-item">
+        <h3>Magnitudine</h3>
+        <p>La luminosità di una stella o oggetto. Scala inversa: numeri bassi = oggetti luminosi. Sirio è –1.5, la stella Polare +2. La nebulosa di Orione è +4. La galassia di Andromeda è +3.4 (visibile a occhio nudo). In città il cielo non va oltre +3 o +4.</p>
+      </div>
+      <div class="g-item">
+        <h3>Deep sky</h3>
+        <p>Tutto quello che non è stella singola: nebulose, galassie, ammassi. Servono pose lunghe, cieli bui, focali medio-lunghe. Le foto "famose" dei magazine sono quasi sempre deep sky.</p>
+      </div>
+      <div class="g-item">
+        <h3>Via Lattea</h3>
+        <p>La nostra galassia vista da dentro. In foto si vede come una fascia chiara che attraversa il cielo. In Italia boreale è meglio in estate (ago–set) nelle ore centrali della notte. Serve un cielo buio, un grandangolo luminoso (f/2.8 o meglio), e niente luna.</p>
+      </div>
     </div>
   </section>
 </main>
@@ -394,6 +513,56 @@
   let lat=38.147, lon=15.224;
   const $=id=>document.getElementById(id);
   console.log('🚀 Astro Scout init');
+
+  // ========= HEADER DINAMICO =========
+  // Orologio + stagione astronomica
+  function updateClock(){
+    const now=new Date();
+    $('clock').textContent=now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  }
+  function astronomicalSeason(d){
+    // Stagioni astronomiche (date approssimate, emisfero boreale)
+    const y=d.getFullYear();
+    const seasons={
+      spring:new Date(y,2,20), summer:new Date(y,5,21),
+      autumn:new Date(y,8,22), winter:new Date(y,11,21)
+    };
+    if(d<seasons.spring)return'🌌 inverno boreale';
+    if(d<seasons.summer)return'🌸 primavera';
+    if(d<seasons.autumn)return'☀️ estate';
+    if(d<seasons.winter)return'🍂 autunno';
+    return'🌌 inverno boreale';
+  }
+  $('season').textContent=astronomicalSeason(new Date());
+  updateClock();
+  setInterval(updateClock,30000);
+
+  // Click sul logo → refresh completo
+  $('logoBtn').addEventListener('click',()=>{
+    document.body.style.transition='opacity .25s ease';
+    document.body.style.opacity='.6';
+    setTimeout(()=>{update();document.body.style.opacity='1'},250);
+  });
+
+  // Bottone "Stasera" → scroll al verdict
+  $('scrollVerdict').addEventListener('click',()=>{
+    $('verdict').scrollIntoView({behavior:'smooth',block:'start'});
+  });
+
+  // Bottone "Aggiorna" header → refresh
+  $('refreshAll').addEventListener('click',update);
+
+  // Bottone "Posizione" header → riusa geolocation
+  $('locateTop').addEventListener('click',()=>{
+    if(!navigator.geolocation){$('place').textContent='La geolocalizzazione non è supportata dal browser.';return}
+    $('place').textContent='Richiesta posizione…';
+    navigator.geolocation.getCurrentPosition(p=>{
+      lat=p.coords.latitude;lon=p.coords.longitude;
+      $('place').textContent=`Posizione attiva: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+      setUserMarker(lat,lon);update();
+    },()=>{$('place').textContent='Posizione non disponibile: uso posizione predefinita.';},
+    {enableHighAccuracy:false,timeout:10000});
+  });
 
   // Calcolo fase lunare (algoritmo semplificato, no dipendenze)
   function moonPhase(date){
@@ -736,7 +905,7 @@ function renderSky(){
       return;
     }
     const cards=list.map(o=>{
-      const typeIcon={galassia:'🌀',nebulosa:'☁️','ammasso aperto':'✨','ammasso globulare':'�','nebulosa planetaria':'🔵'}[o.type]||'⭐';
+      const typeIcon={galassia:'🌀',nebulosa:'☁️','ammasso aperto':'✨','ammasso globulare':'🌟','nebulosa planetaria':'🔵'}[o.type]||'⭐';
       return`<div class="sky-card">
         <div class="name">${o.name} <span class="badge">${o.type}</span></div>
         <div class="desc">${o.desc}</div>
@@ -878,9 +1047,36 @@ function renderSky(){
   });
 
   // ========= MAPPA DEL CIELO CON TARGET CELESTI =========
-  // Conversione RA(h) + Dec(°) → coordinate geografiche per Leaflet
-  // Usiamo una proiezione semplificata: RA=h*15 → longitudine, Dec → latitudine
-  // (è una rappresentazione, non astronomicamente rigorosa, ma leggibile)
+  // Default: d3-celestial (sfera celeste reale). Toggle: vista semplificata Leaflet.
+  const celestialMapEl=document.getElementById('celestialMap');
+  if(celestialMapEl&&!celestialMapEl.style.height)celestialMapEl.style.height='420px';
+
+  // Inizializza d3-celestial come default
+  function showCelestialMap(){
+    const skymapEl=document.getElementById('skymap');
+    if(skymapEl)skymapEl.style.display='none';
+    if(celestialMapEl)celestialMapEl.style.display='block';
+    if(celestialMapEl&&!celestialMapEl.dataset.ready){
+      try{
+        Celestial.display({
+          datapath:'https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@master/data/',
+          controls:false,
+          projection:'stereographic',
+          transform:'equatorial',
+          center:[0,0,0],
+          background:{fill:'#000',stroke:'#000'},
+          stars:{limit:6,style:{fill:'#ffd77b',opacity:1},colors:false,size:4,exponent:0.5},
+          dsos:{limit:6,style:{fill:'#a8c8ff',stroke:'#a8c8ff',width:1,opacity:1},size:8},
+          constellations:{lines:true,lineStyle:{stroke:'#8cc5ff',width:0.5,opacity:.6},labels:true,labelStyle:{fill:'#a8c8ff',font:'11px sans-serif'}}
+        });
+        celestialMapEl.dataset.ready='1';
+      }catch(err){
+        console.warn('⚠️ d3-celestial errore:',err.message);
+      }
+    }
+  }
+
+  // Vista semplificata Leaflet (RA→lat, Dec→lon) — per chi vuole bassa banda
   const skyMapEl=document.getElementById('skymap');
   if(skyMapEl&&!skyMapEl.style.height)skyMapEl.style.height='420px';
 
@@ -905,8 +1101,8 @@ function renderSky(){
   function renderSkyMap(){
     dsoLayer.clearLayers();
     SKY_CATALOG.forEach(o=>{
-      const lat=o.dec; // declinazione → latitudine
-      const lon=(o.ra*15)-180; // RA in ore → gradi, shift per mappa Leaflet
+      const lat=o.dec;
+      const lon=(o.ra*15)-180;
       const color=dsoColors[o.type]||'#ffd77b';
       const marker=L.circleMarker([lat,lon],{
         radius:o.mag<5?9:o.mag<7?7:5,
@@ -926,37 +1122,16 @@ function renderSky(){
   }
   renderSkyMap();
 
-  // Modalità sfera celeste reale (opzionale)
-  let celestialMode=false;
+  // Toggle: vista semplificata (off = default = d3-celestial)
   $('celestialToggle').addEventListener('change',e=>{
-    celestialMode=e.target.checked;
-    if(celestialMode){
-      // Nascondi mappa Leaflet, mostra d3-celestial
-      const skymapEl=document.getElementById('skymap');
-      if(skymapEl)skymapEl.style.display='none';
-      // Crea div per celestial
-      let celDiv=document.getElementById('celestialMap');
-      if(!celDiv){
-        celDiv=document.createElement('div');
-        celDiv.id='celestialMap';
-        celDiv.style.cssText='height:420px;background:#000;border:1px solid var(--line);margin-bottom:14px;border-radius:4px';
-        skymapEl.parentNode.insertBefore(celDiv,skymapEl);
-      }
-      celDiv.style.display='block';
-      try{
-        Celestial.display({datapath:'https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@master/data/',controls:false,projection:'stereographic',transform:'equatorial',center:[0,0,0],background:{fill:'#000',stroke:'#000'},stars:{limit:6,style:{fill:'#ffd77b',opacity:1},colors:false,size:4,exponent:0.5},dsos:{limit:6,style:{fill:'#a8c8ff',stroke:'#a8c8ff',width:1,opacity:1},size:8},constellations:{lines:true,lineStyle:{stroke:'#8cc5ff',width:0.5,opacity:.6},labels:true,labelStyle:{fill:'#a8c8ff',font:'11px sans-serif'}}});
-      }catch(err){
-        console.warn('⚠️ d3-celestial errore:',err.message);
-        $('celestialToggle').checked=false;
-        celestialMode=false;
-        celDiv.style.display='none';
-        skymapEl.style.display='block';
-      }
-    }else{
+    if(e.target.checked){
+      // passa a vista semplificata
       const celDiv=document.getElementById('celestialMap');
       if(celDiv)celDiv.style.display='none';
       const skymapEl=document.getElementById('skymap');
       if(skymapEl)skymapEl.style.display='block';
+    }else{
+      showCelestialMap();
     }
   });
 
@@ -964,6 +1139,9 @@ function renderSky(){
   $('dsoToggle').addEventListener('change',e=>{
     if(e.target.checked){skyMap.addLayer(dsoLayer)}else{skyMap.removeLayer(dsoLayer)}
   });
+
+  // Avvia con d3-celestial di default
+  showCelestialMap();
 
   loadPrefs();
   console.log('✅ loadPrefs ok');
