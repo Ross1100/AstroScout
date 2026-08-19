@@ -1058,6 +1058,7 @@
   </div><!-- /tab-pane history -->
 
   <p class="foot">I calcoli astronomici avvengono sul tuo dispositivo. Le coordinate vengono inviate a Open-Meteo, Nominatim e Overpass per meteo, nome della località e punti panoramici. Nessun account, nessun tracciamento.</p>
+  <p class="foot" style="margin-top:8px">Sviluppato da <a href="https://www.linkedin.com/in/rosariocoppolino/?locale=it" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:none;border-bottom:1px dotted var(--blue)">Rosario Coppolino</a></p>
 
 
 
@@ -2791,7 +2792,7 @@
 
   // Registrazione Service Worker per PWA offline
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js?v=20260819d').then(reg=>{
+    navigator.serviceWorker.register('sw.js?v=20260819e').then(reg=>{
       console.log('✅ Service Worker registrato:',reg.scope);
 
       // Se c'è un SW in attesa, forza l'update
