@@ -1,7 +1,7 @@
 // Dataset fotocamere e lenti per Astro Scout
 // Compatto: tieni solo i modelli più rilevanti per astrofotografia.
 
-const CAMERAS = [
+window.CAMERAS = [
   // ===== MIRRORLESS =====
   // Canon
   {b:'Canon',t:'Mirrorless',m:'EOS R1',f:'Full frame',c:1.0},
@@ -103,7 +103,7 @@ const CAMERAS = [
   {b:'Player One',t:'Astro CCD',m:'Poseidon-C (colore)',f:'APS-C IMX571',c:1.6}
 ];
 
-const LENSES = [
+window.LENSES = [
   // ===== GRANDANGOLARI (stelle, via lattea) =====
   {b:'Sony',k:'wide',m:'FE 14mm f/1.8 GM',f:14,a:1.8},
   {b:'Sony',k:'wide',m:'FE 12-24mm f/2.8 GM',f:14,a:2.8},
