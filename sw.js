@@ -1,5 +1,5 @@
 // Service Worker per Astro Scout — Network-first per HTML, cache per asset statici
-const CACHE='astro-scout-v109-COPY';
+const CACHE='astro-scout-v110-FIX';
 const ASSETS=[
   './',
   './index.html',
@@ -14,12 +14,15 @@ const ASSETS=[
 ];
 
 self.addEventListener('install',e=>{
-  // Forza la cancellazione di TUTTE le cache vecchie (anche v21, v22, ecc.)
+  // Cancella SOLO le cache con il prefisso astro-scout- (lascia stare cache di altre app/PWA)
   e.waitUntil(
     caches.keys()
-      .then(keys=>Promise.all(keys.map(k=>caches.delete(k))))
+      .then(keys=>Promise.all(keys
+        .filter(k=>k.startsWith('astro-scout-')&&k!==CACHE)
+        .map(k=>caches.delete(k))))
       .then(()=>caches.open(CACHE))
-      .then(c=>c.addAll(ASSETS))
+      // Pre-cache tollerante: logga ma non bloccare l'install se un asset fallisce
+      .then(c=>Promise.all(ASSETS.map(a=>c.add(a).catch(err=>console.warn('[SW] skip',a,err.message)))))
       .then(()=>self.skipWaiting())
   );
 });
