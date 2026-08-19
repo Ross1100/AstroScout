@@ -10,12 +10,10 @@
   <style>
     :root{color-scheme:dark;--bg:#050609;--panel:#10131a;--line:#2b3040;--ink:#f4f5f8;--muted:#aeb5c4;--gold:#ffd77b;--blue:#8cc5ff;--good:#9ae6b4}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% 0,#18253c 0,transparent 36%),var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1000px;margin:auto;padding:26px 18px 48px}h1{font-size:30px;margin:0 0 5px;letter-spacing:-.8px}
     .topbar{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;padding:18px 20px;margin:-26px -18px 18px;background:linear-gradient(180deg,#0a0d18 0%,transparent 100%);border-bottom:1px solid var(--line)}
-    .logo-slot{width:64px;height:64px;border:1px dashed var(--gold);border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,215,123,.04);font-size:32px;overflow:hidden;transition:all .3s ease}
-    .logo-slot:hover{border-style:solid;background:rgba(255,215,123,.08)}
-    .logo-slot img{width:100%;height:100%;object-fit:cover;border-radius:12px}
-    .logo-placeholder{opacity:.5}
-    .logo-btn{cursor:pointer;padding:0;animation:spin 22s linear infinite}
-    .logo-btn:hover{animation-duration:6s}
+    .logo-slot{width:72px;height:72px;border:1px solid rgba(255,215,123,.35);border-radius:14px;display:flex;align-items:center;justify-content:center;background:rgba(13,18,28,.6);overflow:hidden;transition:all .3s ease;padding:0}
+    .logo-slot:hover{border-color:var(--gold);background:rgba(255,215,123,.08)}
+    .logo-slot img{width:100%;height:100%;object-fit:cover;border-radius:14px}
+    .logo-btn{cursor:pointer;animation:none}
     .brand{text-align:center}
     .brand .lead{margin:0;font-size:12px}
     .brand-meta{margin:4px 0 0;font-size:11px;color:var(--muted);letter-spacing:.3px}
@@ -308,8 +306,8 @@
     .wiki-modal .wiki-desc{font-size:14px;line-height:1.55;margin:12px 0}
     .wiki-modal .wiki-actions{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
     .wiki-modal button{cursor:pointer;font:inherit}
-    .wiki-modal .wiki-close{position:absolute;top:10px;right:14px;background:transparent;border:0;color:var(--muted);font-size:22px;cursor:pointer;line-height:1}
-    .wiki-modal .wiki-close:hover{color:var(--gold)}
+    .wiki-modal .wiki-close{position:absolute;top:6px;right:6px;background:transparent;border:0;color:var(--muted);font-size:28px;cursor:pointer;line-height:1;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:6px;padding:0;z-index:2}
+    .wiki-modal .wiki-close:hover{color:var(--gold);background:rgba(255,255,255,.06)}
     .wiki-modal a.wiki-link{color:var(--blue);text-decoration:none;border-bottom:1px dotted}
     .wiki-modal a.wiki-link:hover{border-bottom-style:solid}
     .wiki-spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--muted);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px}
@@ -320,24 +318,23 @@
 <body>
 <main>
   <header class="topbar">
-    <button id="logoBtn" class="logo-slot logo-btn" aria-label="Astro Scout — aggiorna" title="Aggiorna tutto">
-      <!-- Inserisci qui il tuo logo: <img src="logo.png" alt="Astro Scout" class="user-logo"> -->
-      <span class="logo-placeholder">🌌</span>
+    <button id="logoBtn" class="logo-slot logo-btn" aria-label="Aggiorna tutti i dati" title="Aggiorna tutti i dati">
+      <img src="logo-header.png" alt="Astro Scout" class="user-logo">
     </button>
     <div class="brand">
       <h1>Astro Scout</h1>
-      <p class="lead">Compagno per astrofotografia: cielo, attrezzatura e luoghi.</p>
+      <p class="lead">Se stanotte vale la pena uscire, con che impostazioni e da dove.</p>
       <p class="brand-meta"><span id="clock">—</span> · <span id="season">caricamento…</span></p>
     </div>
     <div class="topbar-actions">
-      <button id="locateTop" class="btn-ghost" title="Centra sulla mia posizione">📍 Posizione</button>
-      <button id="scrollVerdict" class="btn-ghost" title="Vai al verdict di stasera">🌙 Stasera</button>
-      <button id="refreshAll" class="btn-ghost" title="Ricarica meteo e mappa">🔄 Aggiorna</button>
+      <button id="locateTop" class="btn-ghost" title="Usa la mia posizione">📍 Posizione</button>
+      <button id="scrollVerdict" class="btn-ghost" title="Vai al giudizio di stasera">🌙 Stasera</button>
+      <button id="refreshAll" class="btn-ghost" title="Ricalcola il cielo">Aggiorna</button>
     </div>
   </header>
 
   <div class="night-bar">
-    <span class="night-bar-label">📅 Stiamo valutando</span>
+    <span class="night-bar-label">Notte valutata</span>
     <strong id="nightDate">la notte tra…</strong>
     <span class="night-bar-sub" id="nightTime">Orario di riferimento: caricamento…</span>
   </div>
@@ -364,24 +361,24 @@
   </section>
 
 
-  <div class="section-divider"><span class="icon">🛰️</span><span class="label">Sorveglianza cielo</span><span class="desc">· stasera in un colpo d’occhio</span></div>
+  <div class="section-divider"><span class="icon">🛰️</span><span class="label">Stanotte</span><span class="desc">· meteo e attrezzatura in un colpo d’occhio</span></div>
   <div class="layout">
     <section class="panel">
-      <h2>La tua attrezzatura</h2>
+      <h2>Attrezzatura</h2>
       <div class="fields">
         <div><label for="camera">Fotocamera</label><select id="camera"></select></div>
         <div><label for="lens">Obiettivo</label><select id="lens"></select></div>
       </div>
       <div class="setup-wrap">
   <div class="subject-picker" style="margin-bottom:10px">
-    <label for="subject" style="margin-bottom:5px">🎯 Cosa vuoi fotografare?</label>
+    <label for="subject" style="margin-bottom:5px">Cosa vuoi fotografare?</label>
     <select id="subject">
-      <option value="stars">📸 Stelle e paesaggio</option>
-      <option value="milkyway">🌌 Via Lattea</option>
-      <option value="deepsky">🔭 Deep sky (nebulose, galassie)</option>
-      <option value="moon">🌙 Luna</option>
-      <option value="planets">🪐 Pianeti</option>
-      <option value="startrail">⭐ Scie stellari (startrail)</option>
+      <option value="stars">Stelle e paesaggio</option>
+      <option value="milkyway">Via Lattea</option>
+      <option value="deepsky">Deep sky — nebulose e galassie</option>
+      <option value="moon">Luna</option>
+      <option value="planets">Pianeti</option>
+      <option value="startrail">Scie stellari</option>
     </select>
   </div>
   <div class="setup" id="setup"></div>
@@ -517,48 +514,48 @@
     <div class="tri-caption">Triangolo dell'esposizione</div>
   </div>
 </div>
-      <div class="actions"><button class="primary" id="locate">Usa la mia posizione</button><button id="refresh">Aggiorna cielo</button></div>
-      <p class="status" id="place">📍 Posizione non ancora scelta — clicca <b>📍 Posizione</b> in alto per iniziare.</p>
+      <div class="actions"><button class="primary" id="locate">Posizione</button><button id="refresh">Ricalcola il cielo</button></div>
+      <p class="status" id="place">Nessuna posizione: usa il pulsante Posizione in alto.</p>
     </section>
     <section class="panel">
       <h2>🌤️ Condizioni meteo <span id="placeInline" class="place-inline">—</span></h2>
       <div class="cards" style="grid-template-columns:repeat(3,1fr);gap:10px">
-        <div class="card weather"><span>☁️ Nuvole</span><strong id="cloud">—</strong></div>
-        <div class="card weather"><span>💨 Vento</span><strong id="wind">—</strong><small id="windDir" class="card-meta">—</small></div>
-        <div class="card weather"><span>💧 Umidità</span><strong id="humidity">—</strong></div>
-        <div class="card weather"><span>🌡️ Temperatura</span><strong id="temp">—</strong></div>
-        <div class="card weather"><span>✨ Trasparenza</span><strong id="rating">—</strong></div>
-        <div class="card weather"><span>🌧️ Pioggia</span><strong id="precip">—</strong></div>
-        <div class="card weather"><span>💦 Condensa</span><strong id="dew">—</strong><small id="dewMeta" class="card-meta">spread punto di rugiada</small></div>
+        <div class="card weather"><span>Nuvole</span><strong id="cloud">—</strong></div>
+        <div class="card weather"><span>Vento</span><strong id="wind">—</strong><small id="windDir" class="card-meta">—</small></div>
+        <div class="card weather"><span>Umidità</span><strong id="humidity">—</strong></div>
+        <div class="card weather"><span>Temperatura</span><strong id="temp">—</strong></div>
+        <div class="card weather"><span>Trasparenza</span><strong id="rating">—</strong></div>
+        <div class="card weather"><span>Pioggia</span><strong id="precip">—</strong></div>
+        <div class="card weather"><span>Condensa</span><strong id="dew">—</strong><small id="dewMeta" class="card-meta">scarto dal punto di rugiada</small></div>
       </div>
-      <p class="status" id="forecast">Carico le condizioni previste per la prima ora notturna disponibile…</p>
+      <p class="status" id="forecast">—</p>
     </section>
   </div>
   <section class="panel" style="margin-top:18px">
-    <div class="section-divider"><span class="icon">🗺️</span><span class="label">Esplorazione</span><span class="desc">· dove andare stanotte</span></div>
-    <h2>Mappa live</h2>
+    <div class="section-divider"><span class="icon">🗺️</span><span class="label">Dove andare</span><span class="desc">· belvederi e cieli bui vicino a te</span></div>
+    <h2>Mappa</h2>
     <div class="map-toolbar">
       <label><input type="checkbox" id="lpToggle"> <svg class="lp-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M9 2v3H7v3l-3 4v8a2 2 0 002 2h8a2 2 0 002-2v-8l-3-4V5h-2V2h-2zm3 17a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm0-4a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"/><path d="M3 7l2-1M21 7l-2-1M4 14h2M20 14h-2" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="round"/></svg> Inquinamento luminoso</label>
     </div>
     <div id="map" aria-label="Mappa interattiva con posizione e punti panoramici"></div>
     <div class="lp-legend" id="lpLegend">
-      <strong style="color:var(--gold)">Scala di Bortle approssimata</strong>
+      <strong style="color:var(--gold)">Inquinamento luminoso — scala di Bortle stimata</strong>
       <div class="scale"></div>
       <div class="labels"><span>Cielo buio (B1)</span><span>Suburbano (B5)</span><span>Centro città (B9)</span></div>
     </div>
-    <p class="status">Tocca la mappa per spostare la ricerca in un altro punto.</p>
+    <p class="status">Tocca un punto della mappa per calcolare il cielo da lì.</p>
   </section>
 
 
-  <div class="section-divider"><span class="icon">🌌</span><span class="label">Catalogo cielo</span><span class="desc">· cosa fotografare stanotte</span></div>
+  <div class="section-divider"><span class="icon">🌌</span><span class="label">Cosa fotografare</span><span class="desc">· i target più alti dalla tua posizione</span></div>
 
   <!-- STEP 8: Cielo stellato -->
   <section class="panel" style="margin-top:18px">
-    <h2>🌌 Cielo stellato</h2>
-    <p class="status">Sfera celeste reale. Trascina per ruotare, scrolla per zoomare. Scegli data/ora e quali layer mostrare. Sotto, gli 8 target più alti dalla tua posizione.</p>
+    <h2>Cielo stellato</h2>
+    <p class="status">Il cielo come lo vedi dalla tua posizione: lo zenit al centro, l'orizzonte sul bordo. Scegli data e ora, poi tocca un oggetto per la sua scheda.</p>
     <div class="sky-controls">
       <div class="sky-time">
-        <label for="skyDateTime">📅 Quando (data e ora)</label>
+        <label for="skyDateTime">Quando</label>
         <input type="datetime-local" id="skyDateTime">
         <div class="sky-time-presets">
           <button type="button" data-preset="now" class="btn-mini">Ora</button>
@@ -580,24 +577,24 @@
           <label class="chip"><input type="checkbox" id="layerEcliptic"> Eclittica</label>
           <label class="chip"><input type="checkbox" id="layerGrid"> Griglia equatoriale</label>
           <label class="chip"><input type="checkbox" id="layerMilkyWay"> Via Lattea</label>
-          <label class="chip"><input type="checkbox" id="layerSolar" checked> ☉ Pianeti e Sole/Luna</label>
+          <label class="chip"><input type="checkbox" id="layerSolar" checked> Pianeti, Sole e Luna</label>
         </div>
       </div>
     </div>
     <div class="sky-toggle" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap">
       <label for="skyViewMode" style="margin:0">🗺️ Densità stelle:</label>
       <select id="skyViewMode" style="width:auto;flex:0 0 auto">
-        <option value="lite">⭐ Light (mag ≤ 4.5, ~150 stelle)</option>
-        <option value="rich">✨ Ricca (mag ≤ 6, ~500 stelle)</option>
-        <option value="real" selected>🌌 Realistica (mag ≤ 7.5, ~1500 stelle)</option>
+        <option value="lite">Essenziale — 150 stelle</option>
+        <option value="rich">Ricca — 500 stelle</option>
+        <option value="real" selected>Completa — 1.500 stelle</option>
       </select>
-      <span style="font-size:11px;color:var(--muted);margin-left:8px">Limite magnitudine (stelle più deboli visibili)</span>
+      <span style="font-size:11px;color:var(--muted);margin-left:8px">Più stelle rendono il cielo realistico ma appesantiscono il disegno su telefono.</span>
     </div>
     <div id="celestialMap" aria-label="Sfera celeste reale"></div>
-    <p class="status" style="margin:6px 0 0;font-size:11px;color:var(--muted)">💡 <b>Tocca una stella, un pianeta o un DSO</b> sulla mappa o nella lista qui sotto per vedere la scheda Wikipedia.</p>
+    <p class="status" style="margin:6px 0 0;font-size:11px;color:var(--muted)">Tocca un oggetto, sulla mappa o nella lista, per la sua scheda.</p>
     <ul class="places" id="sky" style="margin-top:14px"><li>Calcolo target in corso…</li></ul>
     <h2 style="margin-top:18px">🪐 Pianeti e Luna <span class="card-meta" id="solarSub" style="font-weight:normal">—</span></h2>
-    <p class="status">Posizioni reali calcolate con Astronomy Engine per la data/ora scelta. La Luna mostra anche la frazione illuminata.</p>
+    <p class="status">Posizioni calcolate per la data e l'ora scelte. Per la Luna è indicata anche la frazione illuminata.</p>
     <ul class="places" id="solarList"><li>Calcolo corpi del Sistema Solare in corso…</li></ul>
   </section>
   <section class="panel" style="margin-top:18px">
@@ -608,7 +605,7 @@
 <!-- Glossario -->
   <section class="panel" style="margin-top:18px">
     <h2>📖 Glossario</h2>
-    <p class="status">I termini che vedi nelle card, nei popup e nei suggerimenti. Tienilo aperto la prima volta che esci, poi tornerà utile solo nei dubbi.</p>
+    <p class="status">I termini che compaiono nelle card e nelle schede. Utile la prima volta che esci con l'attrezzatura.</p>
 
     <div class="glossary">
       <div class="g-item">
@@ -653,6 +650,14 @@
         <p>La luminosità di una stella o oggetto. Scala inversa: numeri bassi = oggetti luminosi. Sirio è –1.5, la stella Polare +2. La nebulosa di Orione è +4. La galassia di Andromeda è +3.4 (visibile a occhio nudo). In città il cielo non va oltre +3 o +4.</p>
       </div>
       <div class="g-item">
+        <h3>Altezza (h)</h3>
+        <p>Quanto è alto un astro sull'orizzonte, in gradi: 0° = orizzonte, 90° = zenit (sopra la testa). Sotto i 15° l'aria è densa e il seeing peggiora. I target migliori stanno tra 30° e 70°.</p>
+      </div>
+      <div class="g-item">
+        <h3>Punto di rugiada</h3>
+        <p>La temperatura alla quale l'aria diventa satura e l'umidità condensa. Se la temperatura esterna è vicina a questo valore, condensa sulla lente dell'obiettivo e nelle ottiche. Lo "spread" è la differenza T – rugiada: sotto i 3°C c'è rischio concreto di condensa.</p>
+      </div>
+      <div class="g-item">
         <h3>Deep sky</h3>
         <p>Tutto quello che non è stella singola: nebulose, galassie, ammassi. Servono pose lunghe, cieli bui, focali medio-lunghe. Le foto "famose" dei magazine sono quasi sempre deep sky.</p>
       </div>
@@ -664,27 +669,27 @@
   </section>
 
   <section class="panel" style="margin-top:18px" id="feedbackSection">
-    <h2>💬 Feedback & suggerimenti</h2>
-    <p class="status">Aiutami a migliorare Astro Scout: segnala bug, proponi funzionalità o racconta la tua esperienza. Il feedback arriva direttamente via mail e viene anche salvato in locale come backup.</p>
+    <h2>Feedback & suggerimenti</h2>
+    <p class="status">Segnala un problema o proponi un'idea. Mi arriva via mail e resta salvato anche su questo dispositivo.</p>
     <div class="feedback-form">
       <label for="fbType">Tipo</label>
       <select id="fbType">
-        <option value="bug">🐛 Bug / qualcosa non funziona</option>
-        <option value="idea">💡 Idea / funzionalità</option>
-        <option value="praise">⭐ Feedback positivo</option>
+        <option value="bug">Qualcosa non funziona</option>
+        <option value="idea">Ho un'idea</option>
+        <option value="praise">Un complimento</option>
         <option value="other">Altro</option>
       </select>
       <label for="fbTitle" style="margin-top:10px">Titolo breve</label>
-      <input type="text" id="fbTitle" placeholder="Es. 'La mappa del cielo non si aggiorna dopo lo zoom'" maxlength="80" style="width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px;font:inherit">
+      <input type="text" id="fbTitle" placeholder="Es. la mappa del cielo non si aggiorna" maxlength="80" style="width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px;font:inherit">
       <label for="fbBody" style="margin-top:10px">Descrizione</label>
-      <textarea id="fbBody" rows="4" placeholder="Cosa è successo, cosa ti aspettavi, browser e dispositivo..." style="width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px;font:inherit;resize:vertical"></textarea>
+      <textarea id="fbBody" rows="4" placeholder="Cosa è successo, cosa ti aspettavi, che dispositivo usi" style="width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px;font:inherit;resize:vertical"></textarea>
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">
-        <button type="button" id="fbSend" class="primary">📤 Invia feedback</button>
+        <button type="button" id="fbSend" class="primary">Invia feedback</button>
         <details style="margin-left:auto">
-          <summary style="cursor:pointer;color:var(--muted);font-size:13px">Opzioni locali</summary>
+          <summary style="cursor:pointer;color:var(--muted);font-size:13px">Altre opzioni</summary>
           <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
             <button type="button" id="fbSaveLocal" style="padding:6px 10px;font-size:13px">💾 Salva bozza</button>
-            <button type="button" id="fbClear" style="padding:6px 10px;font-size:13px">🗑️ Svuota salvati</button>
+            <button type="button" id="fbClear" style="padding:6px 10px;font-size:13px">Elimina i salvati</button>
           </div>
         </details>
       </div>
@@ -722,10 +727,10 @@
 
         <h3 style="margin-top:18px;color:var(--blue);font-size:13px;letter-spacing:.5px">📅 Calendario annuale</h3>
         <div id="historyCalendar" class="history-calendar"></div>
-        <p class="status" style="margin-top:6px;font-size:11px">Probabilità cielo sereno per notte (22:00-03:00) basata su media ultimi 5 anni.</p>
+        <p class="status" style="margin-top:6px;font-size:11px">Quota di giorni con copertura nuvolosa media sotto il 20%, sugli ultimi 5 anni.</p>
 
-        <h3 style="margin-top:18px;color:var(--blue);font-size:13px;letter-spacing:.5px">🎯 Indice di fattibilità DSO</h3>
-        <p class="status" style="font-size:11px">Combina altitudine notturna, fase lunare e probabilità cielo sereno. Punteggio 0-100.</p>
+        <h3 style="margin-top:18px;color:var(--blue);font-size:13px;letter-spacing:.5px">Fattibilità dei target deep sky</h3>
+        <p class="status" style="font-size:11px">Combina altezza notturna, fase lunare e probabilità di cielo sereno. Punteggio 0-100.</p>
         <div id="dsoFeasibility" class="feasibility-list"></div>
 
         <h3 style="margin-top:18px;color:var(--blue);font-size:13px;letter-spacing:.5px">🌒 Astro del momento</h3>
@@ -734,7 +739,7 @@
     </section>
   </div><!-- /tab-pane history -->
 
-  <p class="foot">Dati storici: Open-Meteo Historical API (media ultimi 5 anni). Calcoli astronomici: Astronomy Engine (offline). La posizione viene richiesta solo dal tuo browser.</p>
+  <p class="foot">I calcoli astronomici avvengono sul tuo dispositivo. Le coordinate vengono inviate a Open-Meteo, Nominatim e Overpass per meteo, nome della località e punti panoramici. Nessun account, nessun tracciamento.</p>
 
 
 
@@ -941,7 +946,7 @@
       checklist:['Allontanati dai centri abitati (almeno 30km)','Controlla fase lunare <30% sul calendario','Inquina bluastro del bulge si vede meglio tra giugno e settembre','Stack di 8-16 scatti identici + dark frames per ridurre il rumore']
     },
     deepsky:{
-      head:'� Deep sky (nebulose, galassie)',
+      head:'Deep sky (nebulose, galassie)',
       getParams:(f,ap,eq)=>{const pp=4;return{iso:1600,shutter:'120s',aperture:`f/${ap}`};},
       why:(f,eq,ap)=>`Per deep sky servono pose molto lunghe (120s) per raccogliere fotoni da oggetti deboli. ISO 1600 bilancia segnale e rumore; f/${ap} aperto per massima luce. Richiede montatura equatoriale per inseguimento.`,
       checklist:['Montatura equatoriale con allineamento polare accurato','Cielo Bortle ≤4 (meglio ≤2 per galassie deboli)','Dark frames, bias frames e flat frames per la calibrazione','Software di stacking (Siril, DeepSkyStacker)']
@@ -1051,12 +1056,12 @@
       const dewT=Math.round(j.hourly.dew_point_2m?.[i]??NaN);
       if(!isNaN(dewT)){
         const spread=temp-dewT;
-        const risk=spread<3?'� Rischio':spread<6?'🟡 Attenzione':'🟢 OK';
+        const risk=spread<3?'Molto probabile':spread<6?'Possibile':'Nessun rischio';
         $('dew').textContent=spread+'°C';
         $('dewMeta').textContent=`Td ${dewT}°C · ${risk}`;
       }else{
         $('dew').textContent='—';
-        $('dewMeta').textContent='dato non disponibile';
+        $('dewMeta').textContent='—';
       }
       $('forecast').textContent=`Riferimento: ${j.hourly.time[i].replace('T',' ')} · condizioni indicative, non un bollettino di sicurezza.`;
       // Popola night-bar con data/ora di riferimento
@@ -1085,14 +1090,14 @@
           try{
             const obs=new Astronomy.Observer(lat,lon,0);
             const t=Astronomy.SearchAltitude(Astronomy.Body.Sun,obs,-1,new Date(),1);
-            return t?'buio astronomico alle '+fmtTime(t.date):'buio astronomico ~2h dopo il tramonto';
-          }catch(e){return 'buio astronomico ~2h dopo il tramonto';}
+            return t?'buio astronomico alle '+fmtTime(t.date):'buio astronomico non raggiunto stanotte';
+          }catch(e){return 'buio astronomico non raggiunto stanotte';}
         })()
-        :'buio astronomico ~2h dopo il tramonto';
+        :'buio astronomico non raggiunto stanotte';
     }catch(e){
       $('forecast').textContent='Non riesco a raggiungere il servizio meteo. Riprova con connessione attiva.';
       $('verdictTitle').textContent='Dati meteo non disponibili';
-      $('verdictMsg').textContent='Verifica la connessione e riprova: non posso valutare la serata.';
+      $('verdictMsg').textContent='Verifica la connessione e riprova: dati insufficienti per valutare la serata.';
     }
   }
   // [Spostato più sotto: placeMarkers dipende da 'map' che viene creato dopo l'init Leaflet]
@@ -1165,7 +1170,7 @@
     console.log('📍 places() chiamata, lat='+lat+' lon='+lon);
     if(lat===null||lon===null){
       $('placesStatus').textContent='Scegli prima una posizione per cercare belvederi nelle vicinanze.';
-      $('places').innerHTML='<li>📍 Nessuna posizione. Clicca <b>📍 Posizione</b> in alto o sposta la mappa.</li>';
+      $('places').innerHTML='<li>Nessuna posizione: usa il pulsante Posizione o tocca la mappa.</li>';
       clearPlaceMarkers();
       return;
     }
@@ -1213,7 +1218,7 @@
         const m=L.circleMarker([p.lat,p.lon],{radius:6,color:'#8cc5ff',fillColor:'#8cc5ff',fillOpacity:.7,weight:1.5}).bindPopup(`<b>${p.name}</b><br>${distKm(lat,lon,p.lat,p.lon).toFixed(1)} km ${compass(bearing(lat,lon,p.lat,p.lon))}${p.ele?`<br>${p.ele} m s.l.m.`:''}`);
         m.addTo(placeMarkers);
       });
-      $('placesStatus').textContent=`Trovati ${items.length} punti panoramici entro 50 km. Marker blu aggiunti sulla mappa.`;
+      $('placesStatus').textContent=`${items.length} punti panoramici entro 50 km, segnati in blu sulla mappa.`;
     }catch(e){
       console.error('❌ places() fallito:',e);
       // Mostra l'ultimo risultato valido come fallback (se vicino alla posizione attuale)
@@ -1224,13 +1229,13 @@
           const d=distKm(lat,lon,p.lat,p.lon);
           const deg=bearing(lat,lon,p.lat,p.lon);
           const dir=compass(deg);
-          return`<li><a target="_blank" rel="noreferrer" href="https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lon}#map=15/${p.lat}/${p.lon}">🌄 ${p.name}</a><small>📏 ${d.toFixed(1)} km · 🧭 ${dir}${p.ele?` · ⛰️ ${p.ele} m`:''} <em>(risultato precedente, riprova per aggiornare)</em></small></li>`;
+          return`<li><a target="_blank" rel="noreferrer" href="https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lon}#map=15/${p.lat}/${p.lon}">🌄 ${p.name}</a><small>📏 ${d.toFixed(1)} km · 🧭 ${dir}${p.ele?` · ⛰️ ${p.ele} m`:''} <em>(risultato precedente)</em></small></li>`;
         }).join('');
-        $('placesStatus').innerHTML='⚠️ Servizio Overpass sovraccarico. <a href="#" id="retryPlaces">Riprova</a> ora.';
+        $('placesStatus').innerHTML='Il servizio delle mappe non risponde. <a href="#" id="retryPlaces">Riprova</a>.';
         $('retryPlaces').addEventListener('click',ev=>{ev.preventDefault();places()});
       }else{
-        $('places').innerHTML='<li>⚠️ Servizio cartografico momentaneamente non raggiungibile (504 Gateway Timeout). <a href="#" id="retryPlaces">Riprova</a> tra qualche secondo.</li>';
-        $('placesStatus').textContent='Overpass sovraccarico — riprova più tardi.';
+        $('places').innerHTML='<li>Il servizio delle mappe non risponde. <a href="#" id="retryPlaces">Riprova</a> tra qualche secondo.</li>';
+        $('placesStatus').textContent='Il servizio delle mappe non risponde. Riprova tra qualche secondo.';
         $('retryPlaces')?.addEventListener('click',ev=>{ev.preventDefault();places()});
       }
     }
@@ -1267,7 +1272,7 @@
       m.textContent='Clicca 📍 Posizione nell\'header per consentire la geolocalizzazione, oppure sposta la mappa e tocca un punto.';
       d.textContent='📍';
       $('forecast').textContent='In attesa della tua posizione…';
-      $('placesStatus').textContent='Scegli una posizione per cercare belvederi nelle vicinanze.';
+      $('placesStatus').textContent='Nessuna posizione: usa il pulsante Posizione o tocca la mappa.';
       renderSkyMap();
       renderSkyList();
       return;
@@ -1313,7 +1318,7 @@
         radius:9,color:'#fff5cc',fillColor:'#ffd77b',fillOpacity:1,weight:3,
         className:'user-star'
       }).addTo(map);
-      userMarker.bindPopup('La tua posizione attuale');
+      userMarker.bindPopup('La tua posizione');
     }else{
       userMarker.setLatLng([la,lo]);
     }
@@ -1400,7 +1405,7 @@
   }
   function saveFeedback(arr){
     try{localStorage.setItem(FB_KEY,JSON.stringify(arr));}
-    catch(e){$('fbStatus').textContent='⚠️ localStorage non disponibile: i feedback non verranno salvati.';}
+    catch(e){$('fbStatus').textContent='Questo browser non permette di salvare: il feedback vale solo per questa sessione.';}
   }
   function renderFeedback(){
     const list=$('fbList');if(!list)return;
@@ -1424,7 +1429,7 @@
   async function sendFeedbackViaWeb3Forms(title,body,type){
     const accessKey=FB_ACCESS_KEY;
     if(!accessKey){
-      $('fbStatus').innerHTML='⚠️ Feedback key non configurata. Salvo solo in locale.';
+      $('fbStatus').innerHTML='Invio non disponibile. Il feedback resta salvato su questo dispositivo.';
       return false;
     }
     const fullBody=`[${type}] ${title||'(senza titolo)'}\n\n${body}\n\n--\nBrowser: ${navigator.userAgent}\nData: ${new Date().toISOString()}`;
@@ -1441,14 +1446,14 @@
       });
       const j=await r.json();
       if(j.success){
-        $('fbStatus').innerHTML='✅ <b>Inviato!</b> Grazie per il feedback — riceverò una mail e ti risponderò se serve.';
+        $('fbStatus').innerHTML='✅ <b>Inviato!</b> Grazie per il feedback — ti rispondo se serve.';
         return true;
       }else{
-        $('fbStatus').innerHTML='⚠️ Errore Web3Forms: '+(j.message||'sconosciuto')+'. Il feedback è comunque salvato in locale.';
+        $('fbStatus').innerHTML='Invio non riuscito. Il feedback resta salvato su questo dispositivo: riprova più tardi.';
         return false;
       }
     }catch(e){
-      $('fbStatus').innerHTML='⚠️ Errore di rete: '+e.message+'. Feedback salvato in locale.';
+      $('fbStatus').innerHTML='⚠️ Errore di rete: '+e.message+'. Il feedback resta salvato su questo dispositivo.';
       return false;
     }
   }
@@ -1478,7 +1483,7 @@
     $('fbTitle').value='';$('fbBody').value='';
   });
   $('fbClear')?.addEventListener('click',()=>{
-    if(!confirm('Cancellare TUTTI i feedback salvati in locale?'))return;
+    if(!confirm('Eliminare tutti i feedback salvati su questo dispositivo?'))return;
     localStorage.removeItem(FB_KEY);
     renderFeedback();
     clearFeedbackForm();
@@ -1558,7 +1563,7 @@
     if(rec.kind==='dso'){meta.push('<span>'+rec.type+'</span>');meta.push('<span>mag '+rec.mag+'</span>');if(rec.size)meta.push('<span>'+rec.size+'</span>');}
     if(rec.ra!=null){meta.push('<span>RA '+formatRA(rec.ra)+'</span>');meta.push('<span>Dec '+formatDec(rec.dec)+'</span>');}
     $('wikiMeta').innerHTML=meta.join(' ');
-    $('wikiDesc').innerHTML='<span class="wiki-spinner"></span>Carico descrizione da Wikipedia...';
+    $('wikiDesc').innerHTML='<span class="wiki-spinner"></span>Carico da Wikipedia\xe2\x80\xa6';
     $('wikiModal').style.display='flex';
     document.body.style.overflow='hidden';
     $('wikiWikipedia').style.display='none';
@@ -1572,7 +1577,7 @@
       $('wikiWikipedia').style.display='';
       $('wikiWikipedia').onclick=()=>window.open('https://it.wikipedia.org/wiki/'+encodeURIComponent(title),'_blank','noreferrer');
     }else{
-      $('wikiDesc').innerHTML='<div>'+rec.desc+'</div><p style="font-size:11px;color:var(--muted);margin-top:10px">Descrizione dal catalogo locale (Wikipedia non disponibile).</p>';
+      $('wikiDesc').innerHTML='<div>'+rec.desc+'</div><p style="font-size:11px;color:var(--muted);margin-top:10px">Descrizione dal catalogo interno: Wikipedia non risponde.</p>';
     }
     if(rec.kind==='star'||rec.kind==='dso'){
       $('wikiSimbad').style.display='';
@@ -1583,8 +1588,11 @@
     }
   }
   function closeWikiModal(){$('wikiModal').style.display='none';document.body.style.overflow='';}
-  $('wikiClose')?.addEventListener('click',closeWikiModal);
-  $('wikiModal')?.addEventListener('click',e=>{if(e.target===e.currentTarget)closeWikiModal();});
+  // Chiudi su click della X (event delegation per assorbire click anche su &times; / padding)
+  $('wikiModal')?.addEventListener('click',e=>{
+    if(e.target.id==='wikiClose'||e.target.closest('#wikiClose')){closeWikiModal();return;}
+    if(e.target===e.currentTarget)closeWikiModal();
+  });
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('wikiModal').style.display==='flex')closeWikiModal();});
 
   async function showWikiDetail(){
@@ -1594,7 +1602,7 @@
     $('wikiSection').scrollIntoView({behavior:'smooth',block:'start'});
     $('wikiSection').style.display='';
     $('wikiDetailName').textContent=rec.name;
-    $('wikiDetailStatus').innerHTML='<span class="wiki-spinner"></span>Carico descrizione completa...';
+    $('wikiDetailStatus').innerHTML='<span class="wiki-spinner"></span>Carico da Wikipedia…';
     $('wikiDetailBody').style.display='none';
     const title=WIKI_TITLES[name];
     let extract=null;
@@ -1605,7 +1613,7 @@
       $('wikiDetailStatus').textContent='';
     }else{
       $('wikiDetailDesc').innerHTML='<div>'+rec.desc+'</div><p style="font-size:11px;color:var(--muted);margin-top:10px">Wikipedia non disponibile per questo oggetto.</p>';
-      $('wikiDetailStatus').textContent='Descrizione locale (Wikipedia non ha un articolo dedicato).';
+      $('wikiDetailStatus').textContent='Wikipedia non ha una voce per questo oggetto.';
     }
     const meta=[];
     if(rec.kind==='star')meta.push('Tipo: Stella');
@@ -1619,7 +1627,7 @@
     $('wikiDetailMeta').innerHTML=meta.map(m=>'<span style="background:rgba(255,255,255,.04);padding:4px 10px;border-radius:3px;font-size:12px;margin-right:6px">'+m+'</span>').join('');
     const links=[];
     if(title)links.push('<li><a target="_blank" rel="noreferrer" href="https://it.wikipedia.org/wiki/'+encodeURIComponent(title)+'">🌐 Wikipedia (IT)</a></li>');
-    links.push('<li><a target="_blank" rel="noreferrer" href="https://en.wikipedia.org/wiki/Special:Search?search='+encodeURIComponent(rec.name)+'">🌐 Wikipedia (EN, cerca)</a></li>');
+    links.push('<li><a target="_blank" rel="noreferrer" href="https://en.wikipedia.org/wiki/Special:Search?search='+encodeURIComponent(rec.name)+'">Wikipedia in inglese</a></li>');
     if(rec.kind==='star'||rec.kind==='dso'){
       const q=rec.kind==='star'?rec.name:rec.name.split(' ')[0];
       links.push('<li><a target="_blank" rel="noreferrer" href="https://simbad.cds.unistra.fr/simbad/sim-id?Ident='+encodeURIComponent(q)+'&NbIdent=1&Radius=2&Radius.unit=arcmin&submit=submit+id">✈️ SIMBAD (database astronomico)</a></li>');
@@ -2113,7 +2121,7 @@
         if(!p)return;
         const radius=Math.max(0.4,(6-m)*0.45);
         const opacity=0.35+Math.min(0.55,(7-m)/8);
-        parts.push(`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${radius.toFixed(2)}" fill="#fff5cc" opacity="${opacity.toFixed(2)}" class="sky-star" data-name="${n.replace(/'/g,"\\'")}" style="cursor:pointer"><title>${n} (mag ${m.toFixed(1)}) — clicca per dettagli</title></circle>`);
+        parts.push(`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${radius.toFixed(2)}" fill="#fff5cc" opacity="${opacity.toFixed(2)}" class="sky-star" data-name="${n.replace(/'/g,"\\'")}" style="cursor:pointer"><title>${n} · mag ${m.toFixed(1)}</title></circle>`);
       });
     }
 
@@ -2162,8 +2170,8 @@
     const polAlt  = Math.abs(obsLat);     // altezza = |latitudine|
     const polAz   = isSouth ? 180 : 0;    // PNA verso N (emisfero nord), PSA verso S (emisfero sud)
     const polP = projectAltAz(polAlt, polAz, size);
-    const polLabel = isSouth ? 'PSA' : 'PNA';
-    const polSubLabel = isSouth ? 'Polo Sud dell\'Asse' : 'Polo Nord dell\'Asse';
+    const polLabel = isSouth ? 'PSC' : 'PNC';
+    const polSubLabel = isSouth ? 'Polo sud celeste' : 'Polo nord celeste';
 
     // Marker zenit "Tu sei qui"
     const cx = size/2, cy = size/2;
@@ -2171,7 +2179,7 @@
       <circle cx="${cx}" cy="${cy}" r="14" fill="none" stroke="#ffd77b" stroke-width="1" opacity="0.5"/>
       <circle cx="${cx}" cy="${cy}" r="6" fill="#ffd77b" opacity="0.85"/>
       <circle cx="${cx}" cy="${cy}" r="2" fill="#02040a"/>
-      <text x="${cx}" y="${cy-20}" text-anchor="middle" font-size="9" fill="#ffd77b" font-weight="700" letter-spacing="1">SEI QUI</text>
+      <text x="${cx}" y="${cy-20}" text-anchor="middle" font-size="9" fill="#ffd77b" font-weight="700" 
     </g>`);
 
     // Marker polo celeste (PNA per nord, PSA per sud) — indica la direzione del polo
@@ -2181,12 +2189,12 @@
         <circle cx="${polP[0].toFixed(1)}" cy="${polP[1].toFixed(1)}" r="4" fill="${polColor}" opacity="0.9"/>
         <circle cx="${polP[0].toFixed(1)}" cy="${polP[1].toFixed(1)}" r="9" fill="none" stroke="${polColor}" stroke-width="0.8" opacity="0.4" stroke-dasharray="2 2"/>
         <text x="${polP[0].toFixed(1)}" y="${(polP[1]+16).toFixed(1)}" text-anchor="middle" font-size="9" fill="${polColor}" font-weight="700">${polLabel}</text>
-        <title>${polSubLabel} — altitudine ${polAlt.toFixed(1)}° (= |latitudine|)</title>
+        <title>${polSubLabel} — altezza ${polAlt.toFixed(1)}°, pari alla tua latitudine</title>
       </g>`);
     }
 
     // Linea orizzonte (cerchio esterno) — etichetta "ORIZZONTE"
-    parts.push(`<text x="${size/2}" y="${size-22}" text-anchor="middle" font-size="9" fill="#5a6680" opacity="0.7" letter-spacing="1.5" font-weight="600">— ORIZZONTE —</text>`);
+    parts.push(`<text x="${size/2}" y="${size-22}" text-anchor="middle" font-size="9" fill="#5a6680" opacity="0.7" letter-spacing="1.5" font-weight="600">ORIZZONTE</text>`);
 
     // Testata zenit
     parts.push(`<text x="${size/2}" y="16" text-anchor="middle" font-size="10" fill="#aeb5c4" opacity="0.7" letter-spacing="1.5" font-weight="600">ZENIT</text>`);
@@ -2238,7 +2246,7 @@
     const ul=$('solarList'); if(!ul)return;
     const sub=$('solarSub');
     if(!window.Astronomy){
-      ul.innerHTML='<li style="color:#aeb5c4">Astronomy Engine non caricato (offline?). Riavvia l\'app con connessione per cachare la libreria.</li>';
+      ul.innerHTML='<li style="color:#aeb5c4">La libreria di calcolo non è ancora disponibile offline. Riavvia l'app con connessione attiva per renderla disponibile.</li>';
       return;
     }
     const obsLat=(typeof lat==='number')?lat:41.5;
@@ -2577,27 +2585,27 @@ console.log('🌟 Script fine');
   <div id="wikiModal" class="wiki-modal-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="wikiTitle">
     <div class="wiki-modal">
       <button type="button" class="wiki-close" id="wikiClose" aria-label="Chiudi">&times;</button>
-      <h3 id="wikiTitle">📖 Caricamento...</h3>
+      <h3 id="wikiTitle">Caricamento...</h3>
       <div class="wiki-meta" id="wikiMeta"></div>
       <div class="wiki-desc" id="wikiDesc"></div>
       <div class="wiki-actions">
-        <button type="button" class="primary" id="wikiDetail">📝 Vai al dettaglio</button>
-        <button type="button" id="wikiWikipedia" style="display:none">🌐 Apri su Wikipedia</button>
-        <button type="button" id="wikiSimbad" style="display:none">✈️ SIMBAD</button>
+        <button type="button" class="primary" id="wikiDetail">Scheda completa</button>
+        <button type="button" id="wikiWikipedia" style="display:none">Apri su Wikipedia</button>
+        <button type="button" id="wikiSimbad" style="display:none">SIMBAD</button>
       </div>
     </div>
   </div>
 
   <!-- SEZIONE WIKI DEDICATA (dettaglio esteso) -->
   <section class="panel" id="wikiSection" style="margin-top:18px;display:none">
-    <h2>📖 Dettaglio: <span id="wikiDetailName">--</span></h2>
+    <h2>Dettaglio: <span id="wikiDetailName">--</span></h2>
     <p class="status" id="wikiDetailStatus">Seleziona un corpo celeste dalla mappa o dalla lista per vederne il dettaglio completo.</p>
     <div id="wikiDetailBody" style="display:none">
       <div class="wiki-meta" id="wikiDetailMeta"></div>
       <div class="wiki-desc" id="wikiDetailDesc" style="font-size:14px;line-height:1.6;margin-top:10px"></div>
-      <h3 style="margin-top:18px;color:var(--blue);font-size:13px;letter-spacing:.5px">🌍 Risorse esterne</h3>
+      <h3 style="margin-top:18px;color:var(--blue);font-size:13px;letter-spacing:.5px">Approfondisci</h3>
       <ul class="places" id="wikiDetailLinks"></ul>
-      <h3 style="margin-top:18px;color:var(--blue);font-size:13px;letter-spacing:.5px">🌋 Quando osservarlo</h3>
+      <h3 style="margin-top:18px;color:var(--blue);font-size:13px;letter-spacing:.5px">Quando osservarlo</h3>
       <div id="wikiDetailBest"></div>
     </div>
   </section>

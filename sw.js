@@ -1,11 +1,13 @@
 // Service Worker per Astro Scout — Network-first per HTML, cache per asset statici
-const CACHE='astro-scout-v108-WIKIFIX';
+const CACHE='astro-scout-v109-COPY';
 const ASSETS=[
   './',
   './index.html',
   './data/gear.js',
   './astronomy.engine.js',
   './icon-192.svg',
+  './logo.png',
+  './logo-header.png',
   './manifest.webmanifest',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
