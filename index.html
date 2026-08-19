@@ -13,8 +13,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-capable" content="yes">
   <style>
-    :root{color-scheme:dark;--bg:#050609;--panel:#10131a;--line:#2b3040;--ink:#f4f5f8;--muted:#aeb5c4;--gold:#ffd77b;--blue:#8cc5ff;--good:#9ae6b4}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;width:100%;min-height:100vh}main{max-width:1000px;margin:auto;padding:26px 18px 48px;overflow-x:clip;background:var(--bg);position:relative}h1{font-size:30px;margin:0 0 5px;letter-spacing:-.8px}
-    .topbar{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;padding:18px 20px;margin:-26px -18px 18px;background:#0a0d18;border-bottom:1px solid var(--line)}
+    :root{color-scheme:dark;--bg:#050609;--panel:#10131a;--line:#2b3040;--ink:#f4f5f8;--muted:#aeb5c4;--gold:#ffd77b;--blue:#8cc5ff;--good:#9ae6b4}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;width:100vw;min-height:100vh;overflow-x:hidden;padding-top:env(safe-area-inset-top)}main{max-width:100vw;margin:0;padding:26px 18px 48px;overflow-x:hidden;background:var(--bg);position:relative;width:100vw;box-sizing:border-box}h1{font-size:30px;margin:0 0 5px;letter-spacing:-.8px}
+    .topbar{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;padding:18px 20px;margin:-26px 0 18px;background:#0a0d18;border-bottom:1px solid var(--line);border-radius:0}
     .logo-slot{height:78px;border:0;background:transparent;padding:0;display:flex;align-items:center;justify-content:center;transition:opacity .3s ease;margin-left:0}
     .logo-slot:hover{opacity:.85}
     .logo-slot img{height:78px;width:auto;display:block;image-rendering:auto}
@@ -293,14 +293,14 @@
     /* ========= MOBILE UX ========= */
     @media(max-width:720px){
       /* Tipografia — scala armonica: body 15, h2 18, h3 16, h1 22 */
-      body{font-size:15px;padding-left:max(env(safe-area-inset-left),0px);padding-right:max(env(safe-area-inset-right),0px);padding-top:max(env(safe-area-inset-top),0px)}
+      body{font-size:15px}
       h1{font-size:22px}
       h2{font-size:18px;margin:0 0 12px;letter-spacing:-.3px}
       h3{font-size:16px}
       label{font-size:11px}
       /* Layout fluido */
       main{padding:18px 14px 40px;max-width:none;width:100%;margin:0}
-      .topbar{grid-template-columns:1fr;text-align:center;gap:12px;margin:-18px -14px 14px;padding:16px 14px 12px;width:auto}
+      .topbar{grid-template-columns:1fr;text-align:center;gap:12px;margin:-18px 0 14px;padding:16px 14px 12px;width:auto}
       .topbar>*{grid-column:1;justify-self:center;max-width:100%}
       .topbar .logo-slot{margin:0 auto;justify-self:center}
       .topbar .brand{text-align:center;width:100%}
@@ -398,7 +398,7 @@
       label{font-size:11px}
 
       /* Topbar: brand + bottoni compatti, uniformati */
-      .topbar{padding:14px 14px 12px;gap:10px;margin:-14px -12px 14px;width:auto}
+      .topbar{padding:14px 14px 12px;gap:10px;margin:-14px 0 14px;width:auto}
       .topbar>*{grid-column:1;justify-self:center;max-width:100%}
       .topbar .logo-slot{margin:0 auto;justify-self:center}
       .topbar .brand{text-align:center;width:100%}
@@ -2794,7 +2794,7 @@
 
   // Registrazione Service Worker per PWA offline
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js?v=20260819m').then(reg=>{
+    navigator.serviceWorker.register('sw.js?v=20260819n').then(reg=>{
       console.log('✅ Service Worker registrato:',reg.scope);
 
       // Se c'è un SW in attesa, forza l'update
