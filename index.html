@@ -9,9 +9,11 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png?v=119">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=119">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=119">
-  <meta name="theme-color" content="#ffd77b">
+  <meta name="theme-color" content="#0a0d18">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-capable" content="yes">
   <style>
-    :root{color-scheme:dark;--bg:#050609;--panel:#10131a;--line:#2b3040;--ink:#f4f5f8;--muted:#aeb5c4;--gold:#ffd77b;--blue:#8cc5ff;--good:#9ae6b4}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1000px;margin:auto;padding:26px 18px 48px;overflow-x:clip;background:var(--bg);position:relative}h1{font-size:30px;margin:0 0 5px;letter-spacing:-.8px}
+    :root{color-scheme:dark;--bg:#050609;--panel:#10131a;--line:#2b3040;--ink:#f4f5f8;--muted:#aeb5c4;--gold:#ffd77b;--blue:#8cc5ff;--good:#9ae6b4}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;width:100%;min-height:100vh}main{max-width:1000px;margin:auto;padding:26px 18px 48px;overflow-x:clip;background:var(--bg);position:relative}h1{font-size:30px;margin:0 0 5px;letter-spacing:-.8px}
     .topbar{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;padding:18px 20px;margin:-26px -18px 18px;background:#0a0d18;border-bottom:1px solid var(--line)}
     .logo-slot{height:78px;border:0;background:transparent;padding:0;display:flex;align-items:center;justify-content:center;transition:opacity .3s ease;margin-left:0}
     .logo-slot:hover{opacity:.85}
@@ -291,7 +293,7 @@
     /* ========= MOBILE UX ========= */
     @media(max-width:720px){
       /* Tipografia — scala armonica: body 15, h2 18, h3 16, h1 22 */
-      body{font-size:15px}
+      body{font-size:15px;padding-left:max(env(safe-area-inset-left),0px);padding-right:max(env(safe-area-inset-right),0px);padding-top:max(env(safe-area-inset-top),0px)}
       h1{font-size:22px}
       h2{font-size:18px;margin:0 0 12px;letter-spacing:-.3px}
       h3{font-size:16px}
@@ -2792,7 +2794,7 @@
 
   // Registrazione Service Worker per PWA offline
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js?v=20260819l').then(reg=>{
+    navigator.serviceWorker.register('sw.js?v=20260819m').then(reg=>{
       console.log('✅ Service Worker registrato:',reg.scope);
 
       // Se c'è un SW in attesa, forza l'update
