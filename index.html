@@ -1584,8 +1584,7 @@
   }
   function closeWikiModal(){$('wikiModal').style.display='none';document.body.style.overflow='';}
   $('wikiClose')?.addEventListener('click',closeWikiModal);
-  $('wikiClose2')?.addEventListener('click',closeWikiModal);
-  $('wikiModal')?.addEventListener('click',e=>{if(e.target.id==='wikiModal')closeWikiModal();});
+  $('wikiModal')?.addEventListener('click',e=>{if(e.target===e.currentTarget)closeWikiModal();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('wikiModal').style.display==='flex')closeWikiModal();});
 
   async function showWikiDetail(){
@@ -2585,7 +2584,6 @@ console.log('🌟 Script fine');
         <button type="button" class="primary" id="wikiDetail">📝 Vai al dettaglio</button>
         <button type="button" id="wikiWikipedia" style="display:none">🌐 Apri su Wikipedia</button>
         <button type="button" id="wikiSimbad" style="display:none">✈️ SIMBAD</button>
-        <button type="button" id="wikiClose2">Chiudi</button>
       </div>
     </div>
   </div>

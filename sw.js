@@ -1,5 +1,5 @@
 // Service Worker per Astro Scout — Network-first per HTML, cache per asset statici
-const CACHE='astro-scout-v107-WIKI';
+const CACHE='astro-scout-v108-WIKIFIX';
 const ASSETS=[
   './',
   './index.html',
