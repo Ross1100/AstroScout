@@ -24,7 +24,7 @@
     button,.btn-ghost{ touch-action:manipulation; -webkit-tap-highlight-color:transparent; cursor:pointer }
     .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s ease}
     .btn-ghost:hover{border-color:var(--gold);background:rgba(255,215,123,.08)}.lead{margin:0 0 14px;color:var(--muted)}.night-bar{display:flex;animation:fadeIn .5s ease .1s both;align-items:baseline;gap:10px;flex-wrap:wrap;padding:10px 14px;background:linear-gradient(90deg,#0c0f15 0,#131927 100%);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;margin-bottom:14px;font-size:13px;color:var(--muted)}.night-bar strong{color:var(--ink);font-size:15px;font-weight:600}.night-bar-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--gold);font-weight:600}.layout{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.panel{border:1px solid var(--line);background:#0c0f15;padding:16px}h2{font-size:15px;margin:0 0 13px;color:var(--gold)}label{display:block;font-size:11px;color:var(--muted);margin:0 0 5px}select,button{font:inherit}select{width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px;appearance:auto;-webkit-appearance:auto;cursor:pointer;font-size:13px}select option{background:var(--panel);color:var(--ink);padding:6px}select option:disabled{color:var(--muted);font-style:italic;font-weight:600}.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0}.fields>div{min-width:0}.subject-picker{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}.subject-picker select{width:100%;font-size:13px}.actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}button{border:1px solid #607294;background:#18243a;color:white;padding:9px 12px;border-radius:4px;cursor:pointer}button.primary{background:#d7ac52;color:#1b1405;border-color:#f6d37e}.setup{margin-top:15px;border-left:3px solid var(--gold);padding:9px 11px;background:#15130d;font-size:13px;line-height:1.45}.setup b{color:var(--gold)}.status{font-size:12px;color:var(--muted);margin:11px 0 0}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.card{border:1px solid var(--line);padding:11px;background:var(--panel)}.card span{font-size:11px;color:var(--muted)}.card strong{display:block;font-size:20px;margin-top:4px}.card.weather{padding:13px;background:linear-gradient(135deg,#0c0f15 0,#11151f 100%);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}.card.weather:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 8px 20px rgba(0,0,0,.35)}.card.weather strong{font-size:22px;color:var(--ink)}.card .card-meta{font-size:10px;color:var(--muted);margin-top:4px;display:block;font-weight:normal}.ok{color:var(--good)}#map{height:380px;border:1px solid var(--line);z-index:0;background:#000810 radial-gradient(ellipse at center,#0a1f3a 0%,#000510 70%)}
-#celestialMap{height:420px;border:2px solid var(--gold);background:radial-gradient(circle at 50% 30%,#0a1232 0,#02040a 70%);border-radius:6px;margin-bottom:14px;overflow:hidden;position:relative}.celestial-empty{display:flex;align-items:center;justify-content:center;height:100%;text-align:center;color:#aeb5c4;font-size:13px;padding:20px;flex-direction:column;gap:8px}.celestial-empty .em{font-size:36px}.sky-svg{display:block;width:100%;height:100%}.dso-marker{filter:drop-shadow(0 0 6px currentColor)}.places{margin:0;padding:0;list-style:none}.places li{padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.places small{color:var(--muted);display:block;margin-top:3px;font-size:11px}.places a{color:var(--blue)}.foot{margin-top:18px;font-size:11px;color:var(--muted);line-height:1.4}
+#celestialMap{height:420px;border:2px solid var(--gold);background:radial-gradient(circle at 50% 30%,#0a1232 0,#02040a 70%);border-radius:6px;margin-bottom:14px;overflow:hidden;position:relative}.celestial-empty{display:flex;align-items:center;justify-content:center;height:100%;text-align:center;color:#aeb5c4;font-size:13px;padding:20px;flex-direction:column;gap:8px}.celestial-empty .em{font-size:36px}.sky-svg{display:block;width:100%;height:100%}.obs-marker{animation:zenitPulse 4s ease-in-out infinite;transform-origin:center}.pol-marker{transition:opacity .3s}@keyframes zenitPulse{0%,100%{opacity:.7}50%{opacity:1}}@media(prefers-reduced-motion:reduce){.obs-marker{animation:none}}.obs-info text{user-select:none}.dso-marker{filter:drop-shadow(0 0 6px currentColor)}.places{margin:0;padding:0;list-style:none}.places li{padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.places small{color:var(--muted);display:block;margin-top:3px;font-size:11px}.places a{color:var(--blue)}.foot{margin-top:18px;font-size:11px;color:var(--muted);line-height:1.4}
     .section-divider{margin:32px 0 20px;padding-bottom:8px;border-bottom:1px dashed var(--line);display:flex;align-items:center;gap:10px}
     .section-divider .icon{font-size:22px}
     .section-divider .label{font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-weight:600}
@@ -363,7 +363,7 @@
       <option value="milkyway">🌌 Via Lattea</option>
       <option value="deepsky">🔭 Deep sky (nebulose, galassie)</option>
       <option value="moon">🌙 Luna</option>
-      <option value="planets">🚐 Pianeti</option>
+      <option value="planets">🪐 Pianeti</option>
       <option value="startrail">⭐ Scie stellari (startrail)</option>
     </select>
   </div>
@@ -661,11 +661,16 @@
       <label for="fbBody" style="margin-top:10px">Descrizione</label>
       <textarea id="fbBody" rows="4" placeholder="Cosa è successo, cosa ti aspettavi, browser e dispositivo..." style="width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px;font:inherit;resize:vertical"></textarea>
       <input type="hidden" id="fbAccessKey" value="">
-      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">
         <button type="button" id="fbSend" class="primary">📤 Invia feedback</button>
-        <button type="button" id="fbSaveLocal">💾 Salva in locale</button>
-        <button type="button" id="fbClear">�️ Svuota</button>
         <button type="button" id="fbConfig">⚙️ Configura invio</button>
+        <details style="margin-left:auto">
+          <summary style="cursor:pointer;color:var(--muted);font-size:13px">Opzioni locali</summary>
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+            <button type="button" id="fbSaveLocal" style="padding:6px 10px;font-size:13px">💾 Salva bozza</button>
+            <button type="button" id="fbClear" style="padding:6px 10px;font-size:13px">🗑️ Svuota salvati</button>
+          </div>
+        </details>
       </div>
       <p class="status" id="fbStatus" style="margin-top:8px"></p>
     </div>
@@ -1940,8 +1945,53 @@
     }
 
     parts.push(`</g>`);
+
+    // === RIFERIMENTI OSSERVATORE (dinamici in base a posizione + orario) ===
+    // Polo nord celeste visibile solo a nord dell'equatore (altezza = latitudine, azimut = Nord).
+    // Polo sud celeste visibile solo a sud dell'equatore (altezza = |latitudine|, azimut = Sud).
+    const isSouth = obsLat < 0;
+    const polAlt  = Math.abs(obsLat);     // altezza = |latitudine|
+    const polAz   = isSouth ? 180 : 0;    // PNA verso N (emisfero nord), PSA verso S (emisfero sud)
+    const polP = projectAltAz(polAlt, polAz, size);
+    const polLabel = isSouth ? 'PSA' : 'PNA';
+    const polSubLabel = isSouth ? 'Polo Sud dell\'Asse' : 'Polo Nord dell\'Asse';
+
+    // Marker zenit "Tu sei qui"
+    const cx = size/2, cy = size/2;
+    parts.push(`<g class="obs-marker">
+      <circle cx="${cx}" cy="${cy}" r="14" fill="none" stroke="#ffd77b" stroke-width="1" opacity="0.5"/>
+      <circle cx="${cx}" cy="${cy}" r="6" fill="#ffd77b" opacity="0.85"/>
+      <circle cx="${cx}" cy="${cy}" r="2" fill="#02040a"/>
+      <text x="${cx}" y="${cy-20}" text-anchor="middle" font-size="9" fill="#ffd77b" font-weight="700" letter-spacing="1">SEI QUI</text>
+    </g>`);
+
+    // Marker polo celeste (PNA per nord, PSA per sud) — indica la direzione del polo
+    if(polP){
+      const polColor = '#ff8aa3';
+      parts.push(`<g class="pol-marker">
+        <circle cx="${polP[0].toFixed(1)}" cy="${polP[1].toFixed(1)}" r="4" fill="${polColor}" opacity="0.9"/>
+        <circle cx="${polP[0].toFixed(1)}" cy="${polP[1].toFixed(1)}" r="9" fill="none" stroke="${polColor}" stroke-width="0.8" opacity="0.4" stroke-dasharray="2 2"/>
+        <text x="${polP[0].toFixed(1)}" y="${(polP[1]+16).toFixed(1)}" text-anchor="middle" font-size="9" fill="${polColor}" font-weight="700">${polLabel}</text>
+        <title>${polSubLabel} — altitudine ${polAlt.toFixed(1)}° (= |latitudine|)</title>
+      </g>`);
+    }
+
+    // Linea orizzonte (cerchio esterno) — etichetta "ORIZZONTE"
+    parts.push(`<text x="${size/2}" y="${size-22}" text-anchor="middle" font-size="9" fill="#5a6680" opacity="0.7" letter-spacing="1.5" font-weight="600">— ORIZZONTE —</text>`);
+
+    // Testata zenit
     parts.push(`<text x="${size/2}" y="16" text-anchor="middle" font-size="10" fill="#aeb5c4" opacity="0.7" letter-spacing="1.5" font-weight="600">ZENIT</text>`);
-    parts.push(`<text x="${size/2}" y="${size-6}" text-anchor="middle" font-size="9" fill="#aeb5c4" opacity="0.6">${date.toLocaleString('it-IT',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})} · LST ${(lst/15).toFixed(1)}h</text>`);
+
+    // === Info box osservatore (in basso, mostra i parametri che hanno generato la mappa) ===
+    const dateStr = date.toLocaleString('it-IT',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    const latStr = `${Math.abs(obsLat).toFixed(2)}°${obsLat>=0?'N':'S'}`;
+    const lonStr = `${Math.abs(obsLon).toFixed(2)}°${obsLon>=0?'E':'O'}`;
+    parts.push(`<g class="obs-info">
+      <rect x="6" y="${size-58}" width="${size-12}" height="32" rx="4" fill="#02040a" opacity="0.7" stroke="#3a4566" stroke-width="0.5"/>
+      <text x="14" y="${size-44}" font-size="10" fill="#aeb5c4">📍 ${latStr} ${lonStr}</text>
+      <text x="14" y="${size-32}" font-size="10" fill="#aeb5c4">🕐 ${dateStr} · LST ${(lst/15).toFixed(1)}h</text>
+    </g>`);
+
     parts.push(`</svg>`);
     celestialMapEl.innerHTML=parts.join('');
     celestialMapEl.dataset.ready='1';
