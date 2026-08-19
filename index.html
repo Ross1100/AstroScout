@@ -647,7 +647,7 @@
 
   <section class="panel" style="margin-top:18px" id="feedbackSection">
     <h2>💬 Feedback & suggerimenti</h2>
-    <p class="status">Aiutami a migliorare Astro Scout: segnala bug, proponi funzionalità o racconta la tua esperienza. Il feedback arriva direttamente via Web3Forms (servizio gratuito, no registrazione). Viene anche salvato in locale come backup. Premi <b>⚙️ Configura invio</b> per impostare la tua mail di destinazione (basta una access_key gratuita da <a href="https://web3forms.com" target="_blank" rel="noreferrer">web3forms.com</a>).</p>
+    <p class="status">Aiutami a migliorare Astro Scout: segnala bug, proponi funzionalità o racconta la tua esperienza. Il feedback arriva direttamente via mail e viene anche salvato in locale come backup.</p>
     <div class="feedback-form">
       <label for="fbType">Tipo</label>
       <select id="fbType">
@@ -660,10 +660,8 @@
       <input type="text" id="fbTitle" placeholder="Es. 'La mappa del cielo non si aggiorna dopo lo zoom'" maxlength="80" style="width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px;font:inherit">
       <label for="fbBody" style="margin-top:10px">Descrizione</label>
       <textarea id="fbBody" rows="4" placeholder="Cosa è successo, cosa ti aspettavi, browser e dispositivo..." style="width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px;font:inherit;resize:vertical"></textarea>
-      <input type="hidden" id="fbAccessKey" value="">
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">
         <button type="button" id="fbSend" class="primary">📤 Invia feedback</button>
-        <button type="button" id="fbConfig">⚙️ Configura invio</button>
         <details style="margin-left:auto">
           <summary style="cursor:pointer;color:var(--muted);font-size:13px">Opzioni locali</summary>
           <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
@@ -1376,6 +1374,9 @@
 
   // ========= FEEDBACK: salvataggio locale + invio via email =========
   const FB_KEY='astroScoutFeedback';
+  // Access key Web3Forms per l'invio dei feedback via mail (servizio gratuito, no account).
+  // Modifica questa stringa e fai re-deploy per cambiare la mail di destinazione.
+  const FB_ACCESS_KEY='9ffb44cf-471c-425e-a116-c28656c97c6c';
   function loadFeedback(){
     try{return JSON.parse(localStorage.getItem(FB_KEY))||[];}catch(e){return[];}
   }
@@ -1401,11 +1402,11 @@
     $('fbTitle').value='';$('fbBody').value='';$('fbType').value='bug';
     $('fbStatus').textContent='';
   }
-  // Invia feedback via Web3Forms (POST). Se la access_key manca, mostra istruzioni.
+  // Invia feedback via Web3Forms (POST). Access key hardcoded nel codice (FB_ACCESS_KEY).
   async function sendFeedbackViaWeb3Forms(title,body,type){
-    const accessKey=$('fbAccessKey')?.value.trim();
+    const accessKey=FB_ACCESS_KEY;
     if(!accessKey){
-      $('fbStatus').innerHTML='⚠️ Per inviare via mail: clicca <b>⚙️ Configura invio</b> e incolla la tua access_key gratuita da <a href="https://web3forms.com" target="_blank" rel="noreferrer">web3forms.com</a>. Intanto ho salvato il feedback in locale.';
+      $('fbStatus').innerHTML='⚠️ Feedback key non configurata. Salvo solo in locale.';
       return false;
     }
     const fullBody=`[${type}] ${title||'(senza titolo)'}\n\n${body}\n\n--\nBrowser: ${navigator.userAgent}\nData: ${new Date().toISOString()}`;
@@ -1457,17 +1458,6 @@
     renderFeedback();
     $('fbStatus').innerHTML='✅ Salvato in locale.';
     $('fbTitle').value='';$('fbBody').value='';
-  });
-  $('fbConfig')?.addEventListener('click',()=>{
-    const cur=$('fbAccessKey')?.value||'';
-    const key=prompt('Incolla la tua access_key di Web3Forms (gratuita da web3forms.com — basta la mail, niente account). Lascia vuoto per cancellare.',cur);
-    if(key===null)return; // annullato
-    $('fbAccessKey').value=key.trim();
-    if(key.trim()){
-      $('fbStatus').innerHTML='✅ Access key salvata. Da ora i feedback arriveranno via mail.';
-    }else{
-      $('fbStatus').innerHTML='⚙️ Access key rimossa. I feedback restano salvati solo in locale.';
-    }
   });
   $('fbClear')?.addEventListener('click',()=>{
     if(!confirm('Cancellare TUTTI i feedback salvati in locale?'))return;
