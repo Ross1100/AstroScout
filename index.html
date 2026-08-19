@@ -218,13 +218,14 @@
     .place-inline{display:inline-block;font-size:11px;color:var(--blue);font-weight:normal;margin-left:6px;letter-spacing:0;cursor:help}
 
     /* Exposure triangle */
-    .setup-wrap{display:flex;gap:18px;align-items:flex-start;margin-top:15px}
-    .setup-wrap .setup{flex:1;min-width:0}
-    .exposure-triangle{flex:0 0 auto;width:240px;background:linear-gradient(135deg,#0a0d18 0,#11151f 100%);border:1px solid var(--line);border-radius:8px;padding:8px 8px 6px;box-shadow:0 4px 16px rgba(0,0,0,0.4)}
+    .setup-wrap{display:flex;gap:18px;align-items:flex-start;margin-top:15px;flex-wrap:wrap}
+    .setup-wrap .setup{flex:1 1 360px;min-width:0;word-wrap:break-word;overflow-wrap:break-word}
+    .exposure-triangle{flex:0 0 200px;width:200px;background:linear-gradient(135deg,#0a0d18 0,#11151f 100%);border:1px solid var(--line);border-radius:8px;padding:8px 8px 6px;box-shadow:0 4px 16px rgba(0,0,0,0.4);position:relative;z-index:1}
     .exposure-triangle svg{width:100%;height:auto;display:block}
     .tri-caption{font-size:10px;text-align:center;color:var(--blue);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;font-weight:600}
-    @media(max-width:720px){.setup-wrap{flex-direction:column}.exposure-triangle{width:100%;max-width:260px;margin:0 auto}}
-    @media(max-width:380px){.exposure-triangle{max-width:220px}}
+    @media(max-width:720px){.sky-controls{padding:10px}.btn-mini{font-size:10px;padding:5px 7px}.chip{font-size:10px;padding:4px 8px}}
+    @media(max-width:640px){.setup-wrap{flex-direction:column}.setup-wrap .setup{flex:1 1 auto}.exposure-triangle{width:100%;max-width:220px;margin:0 auto}}
+    @media(max-width:380px){.exposure-triangle{max-width:200px}}
     .sky-controls{display:flex;flex-direction:column;gap:12px;margin:10px 0 12px;padding:12px 14px;background:linear-gradient(135deg,#0a0d18 0,#11151f 100%);border:1px solid var(--line);border-radius:6px}
     .sky-controls label{font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin:0 0 6px}
     .sky-time-presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
