@@ -1,5 +1,5 @@
 // Service Worker per Astro Scout — Network-first per HTML, cache per asset statici
-const CACHE='astro-scout-v120-SPARKLES';
+const CACHE='astro-scout-v125-MOBILE-UX3';
 const ASSETS=[
   './',
   './index.html',
@@ -37,6 +37,13 @@ self.addEventListener('activate',e=>{
       .then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
       .then(()=>self.clients.claim())
   );
+});
+
+// Messaggi dal client (es. SKIP_WAITING)
+self.addEventListener('message',e=>{
+  if(e.data&&e.data.type==='SKIP_WAITING'){
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch',e=>{
