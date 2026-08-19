@@ -1,11 +1,15 @@
 // Service Worker per Astro Scout — Network-first per HTML, cache per asset statici
-const CACHE='astro-scout-v118-GOLD';
+const CACHE='astro-scout-v119-ICONS';
 const ASSETS=[
   './',
   './index.html',
   './data/gear.js',
   './astronomy.engine.js',
-  './icon-192.svg',
+  './icon-192.png',
+  './icon-512.png',
+  './icon-maskable-192.png',
+  './icon-maskable-512.png',
+  './apple-touch-icon.png',
   './logo.png',
   './logo-header.png',
   './manifest.webmanifest',
