@@ -567,17 +567,16 @@
         </div>
       </div>
     </div>
-    <div class="sky-toggle" style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
-      <label for="skyViewMode" style="margin:0">🗺️ Vista cielo:</label>
+    <div class="sky-toggle" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap">
+      <label for="skyViewMode" style="margin:0">🗺️ Densità stelle:</label>
       <select id="skyViewMode" style="width:auto;flex:0 0 auto">
-        <option value="svg">📐 Semplificata (offline, leggera)</option>
-        <option value="stellarium">🌟 Stellarium Web (dettagliata, richiede connessione)</option>
+        <option value="lite">⭐ Light (mag ≤ 4.5, ~150 stelle)</option>
+        <option value="rich">✨ Ricca (mag ≤ 6, ~500 stelle)</option>
+        <option value="real" selected>🌌 Realistica (mag ≤ 7.5, ~1500 stelle)</option>
       </select>
+      <span style="font-size:11px;color:var(--muted);margin-left:8px">Limite magnitudine (stelle più deboli visibili)</span>
     </div>
     <div id="celestialMap" aria-label="Sfera celeste reale"></div>
-    <div id="stellariumContainer" style="display:none;height:480px;border:2px solid var(--gold);border-radius:6px;overflow:hidden;margin-bottom:14px">
-      <iframe id="stellariumFrame" src="" style="width:100%;height:100%;border:0" loading="lazy" allow="fullscreen; xr-spatial-tracking" title="Stellarium Web — sfera celeste dettagliata"></iframe>
-    </div>
     <ul class="places" id="sky" style="margin-top:14px"><li>Calcolo target in corso…</li></ul>
     <h2 style="margin-top:18px">🪐 Pianeti e Luna <span class="card-meta" id="solarSub" style="font-weight:normal">—</span></h2>
     <p class="status">Posizioni reali calcolate con Astronomy Engine per la data/ora scelta. La Luna mostra anche la frazione illuminata.</p>
@@ -648,7 +647,7 @@
 
   <section class="panel" style="margin-top:18px" id="feedbackSection">
     <h2>💬 Feedback & suggerimenti</h2>
-    <p class="status">Aiutami a migliorare Astro Scout: segnala bug, proponi funzionalità o racconta la tua esperienza. I feedback vengono salvati anche in locale (li ritrovi se ricarichi la pagina) e puoi inviarli via email con un click.</p>
+    <p class="status">Aiutami a migliorare Astro Scout: segnala bug, proponi funzionalità o racconta la tua esperienza. Il feedback arriva direttamente via Web3Forms (servizio gratuito, no registrazione). Viene anche salvato in locale come backup. Premi <b>⚙️ Configura invio</b> per impostare la tua mail di destinazione (basta una access_key gratuita da <a href="https://web3forms.com" target="_blank" rel="noreferrer">web3forms.com</a>).</p>
     <div class="feedback-form">
       <label for="fbType">Tipo</label>
       <select id="fbType">
@@ -661,10 +660,12 @@
       <input type="text" id="fbTitle" placeholder="Es. 'La mappa del cielo non si aggiorna dopo lo zoom'" maxlength="80" style="width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px;font:inherit">
       <label for="fbBody" style="margin-top:10px">Descrizione</label>
       <textarea id="fbBody" rows="4" placeholder="Cosa è successo, cosa ti aspettavi, browser e dispositivo..." style="width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px;font:inherit;resize:vertical"></textarea>
+      <input type="hidden" id="fbAccessKey" value="">
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-        <button type="button" id="fbSend" class="primary">📧 Invia via email</button>
+        <button type="button" id="fbSend" class="primary">📤 Invia feedback</button>
         <button type="button" id="fbSaveLocal">💾 Salva in locale</button>
-        <button type="button" id="fbClear">🗑️ Svuota</button>
+        <button type="button" id="fbClear">�️ Svuota</button>
+        <button type="button" id="fbConfig">⚙️ Configura invio</button>
       </div>
       <p class="status" id="fbStatus" style="margin-top:8px"></p>
     </div>
@@ -1324,6 +1325,7 @@
         camera:$('camera').value,
         lens:$('lens').value,
         subject:$('subject')?.value||'stars',
+        density:skyState.density||'real',
         lp:$('lpToggle').checked,
         dso:$('layerDSO')?.checked??true,
         lat:(typeof lat==='number')?lat.toFixed(4):null,
@@ -1346,6 +1348,7 @@
       if(s.camera&&$('camera').querySelector(`option[value="${s.camera}"]`))$('camera').value=s.camera;
       if(s.lens&&$('lens').querySelector(`option[value="${s.lens}"]`))$('lens').value=s.lens;
       if(s.subject&&$('subject')?.querySelector(`option[value="${s.subject}"]`))$('subject').value=s.subject;
+      if(s.density&&$('skyViewMode')?.querySelector(`option[value="${s.density}"]`)){$('skyViewMode').value=s.density;skyState.density=s.density;}
       if(typeof s.lp==='boolean'){$('lpToggle').checked=s.lp;if(s.lp){lpLayer.addTo(map);$('lpLegend').classList.add('on')}}
       if(typeof s.dso==='boolean'&&$('layerDSO')){$('layerDSO').checked=s.dso;skyState.dso=s.dso}
       // Non ripristino lat/lon automaticamente — l'utente sceglie se usare la geolocalizzazione
@@ -1393,22 +1396,51 @@
     $('fbTitle').value='';$('fbBody').value='';$('fbType').value='bug';
     $('fbStatus').textContent='';
   }
-  $('fbSend')?.addEventListener('click',()=>{
+  // Invia feedback via Web3Forms (POST). Se la access_key manca, mostra istruzioni.
+  async function sendFeedbackViaWeb3Forms(title,body,type){
+    const accessKey=$('fbAccessKey')?.value.trim();
+    if(!accessKey){
+      $('fbStatus').innerHTML='⚠️ Per inviare via mail: clicca <b>⚙️ Configura invio</b> e incolla la tua access_key gratuita da <a href="https://web3forms.com" target="_blank" rel="noreferrer">web3forms.com</a>. Intanto ho salvato il feedback in locale.';
+      return false;
+    }
+    const fullBody=`[${type}] ${title||'(senza titolo)'}\n\n${body}\n\n--\nBrowser: ${navigator.userAgent}\nData: ${new Date().toISOString()}`;
+    try{
+      const r=await fetch('https://api.web3forms.com/submit',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body:JSON.stringify({
+          access_key:accessKey,
+          subject:`[AstroScout ${type}] ${title||'Feedback'}`,
+          from_name:'AstroScout User',
+          message:fullBody
+        })
+      });
+      const j=await r.json();
+      if(j.success){
+        $('fbStatus').innerHTML='✅ <b>Inviato!</b> Grazie per il feedback — riceverò una mail e ti risponderò se serve.';
+        return true;
+      }else{
+        $('fbStatus').innerHTML='⚠️ Errore Web3Forms: '+(j.message||'sconosciuto')+'. Il feedback è comunque salvato in locale.';
+        return false;
+      }
+    }catch(e){
+      $('fbStatus').innerHTML='⚠️ Errore di rete: '+e.message+'. Feedback salvato in locale.';
+      return false;
+    }
+  }
+  $('fbSend')?.addEventListener('click',async()=>{
     const title=$('fbTitle').value.trim();
     const body=$('fbBody').value.trim();
     const type=$('fbType').value;
-    if(!title&&!body){$('fbStatus').textContent='�️ Scrivi almeno un titolo o una descrizione.';return;}
-    // Salva prima in locale
+    if(!title&&!body){$('fbStatus').textContent='⚠️ Scrivi almeno un titolo o una descrizione.';return;}
+    // Salva sempre in locale (backup)
     const arr=loadFeedback();
     arr.push({type,title,body,t:Date.now()});
     saveFeedback(arr);
     renderFeedback();
-    // Apri mail client
-    const subject=encodeURIComponent(`[AstroScout ${type}] ${title||'Feedback'}`);
-    const bodyEnc=encodeURIComponent(`${body}\n\n--\nBrowser: ${navigator.userAgent}\nData: ${new Date().toISOString()}`);
-    window.location.href=`mailto:ross1100@example.com?subject=${subject}&body=${bodyEnc}`;
-    $('fbStatus').innerHTML='✅ Salvato in locale e mail client aperto.';
-    $('fbTitle').value='';$('fbBody').value='';
+    // Prova a inviare via Web3Forms
+    const sent=await sendFeedbackViaWeb3Forms(title,body,type);
+    if(sent){$('fbTitle').value='';$('fbBody').value='';}
   });
   $('fbSaveLocal')?.addEventListener('click',()=>{
     const title=$('fbTitle').value.trim();
@@ -1420,6 +1452,17 @@
     renderFeedback();
     $('fbStatus').innerHTML='✅ Salvato in locale.';
     $('fbTitle').value='';$('fbBody').value='';
+  });
+  $('fbConfig')?.addEventListener('click',()=>{
+    const cur=$('fbAccessKey')?.value||'';
+    const key=prompt('Incolla la tua access_key di Web3Forms (gratuita da web3forms.com — basta la mail, niente account). Lascia vuoto per cancellare.',cur);
+    if(key===null)return; // annullato
+    $('fbAccessKey').value=key.trim();
+    if(key.trim()){
+      $('fbStatus').innerHTML='✅ Access key salvata. Da ora i feedback arriveranno via mail.';
+    }else{
+      $('fbStatus').innerHTML='⚙️ Access key rimossa. I feedback restano salvati solo in locale.';
+    }
   });
   $('fbClear')?.addEventListener('click',()=>{
     if(!confirm('Cancellare TUTTI i feedback salvati in locale?'))return;
@@ -1473,6 +1516,7 @@
   const skyState={
     datetime:null, // null = "adesso"
     stars:true,
+    density:'real', // lite|rich|real — limite magnitudine
     constLines:true,
     constNames:true,
     dso:true,
@@ -1563,6 +1607,74 @@
     ['Zubenelgenubi',14.849,-16.042,2.75],['Zubeneschamali',15.284,-16.126,2.61],
     ['Unukalhai',17.193,14.390,2.65],['Cebalrai',17.725,4.567,2.76]
   ];
+
+  // Stelle aggiuntive fino a mag 5.5 (Hipparcos subset). Formato: [nome, RA_h, Dec_deg, mag].
+  const EXT_STARS=[
+    // Stelle famose fino a mag 3
+    ['Eltanin',17.943,51.489,2.23],['Caph',0.153,59.150,2.27],['Schedar',0.675,56.537,2.24],
+    ['Alderamin',21.310,62.586,2.45],['Alphecca',15.578,26.716,2.23],['Sadr',20.370,40.257,2.23],
+    ['Markab',23.079,15.205,2.49],['Scheat',23.062,28.083,2.42],['Algenib',0.221,15.183,2.83],
+    ['Markeb',7.829,-26.802,2.49],['Aspidiske',9.285,-59.275,2.21],['Naos',8.059,-40.003,2.25],
+    // Stelle fino a mag 4
+    ['Mizar',13.399,54.925,2.23],['Alcor',13.420,54.988,4.01],['Kochab',14.845,74.156,2.07],
+    ['Pherkad',15.346,71.834,3.05],['Thuban',14.073,64.376,3.65],['Edasich',15.716,58.966,3.29],
+    ['Rastaban',17.508,52.301,2.79],['Athebyne',17.562,55.184,3.85],['Tyl',18.717,55.984,3.65],
+    ['EltaninB',17.943,51.489,4.55],['Merak',11.031,56.382,2.37],['Dubhe',11.062,61.751,1.79],
+    ['Megrez',12.257,57.033,3.32],['Phecda',11.897,53.695,2.44],['Alioth',12.900,55.960,1.76],
+    ['Alkaid',13.792,49.313,1.86],['Polaris',2.530,89.264,1.97],
+    ['CaphA',0.153,59.150,2.27],['Tsih',0.193,59.149,3.38],['Achird',0.659,57.815,3.46],
+    ['Ruchbah',1.430,60.235,2.66],['Segin',1.907,63.607,3.35],
+    // Orione
+    ['Bellatrix',5.418,6.350,1.64],['Mintaka',5.533,-0.299,2.23],['Alnilam',5.604,-1.202,1.69],
+    ['Alnitak',5.679,-1.943,1.74],['Saiph',5.796,-9.670,2.09],['Meissa',5.585,9.934,3.39],
+    // Gemelli / Cancro / Leone
+    ['Castor',7.577,31.888,1.58],['Pollux',7.755,28.026,1.14],['Alhena',6.629,16.399,1.93],
+    ['Wasat',7.335,21.982,3.50],['Propus',6.732,22.509,3.31],['Mebsuta',6.728,25.131,3.06],
+    ['Tejat',6.222,22.514,2.87],['Tarf',8.731,9.186,3.53],['Acubens',8.978,11.858,4.20],
+    ['Regulus',10.139,11.967,1.35],['Algieba',10.333,19.842,2.08],['Zosma',11.235,20.524,2.56],
+    ['Denebola',11.818,14.572,2.14],['Chertan',11.535,-15.421,3.06],['Zavijava',11.354,1.765,3.61],
+    // Vergine / Boote
+    ['Spica',13.420,-11.161,1.04],['Vindemiatrix',13.036,10.959,2.85],['Porrima',12.694,-1.450,2.74],
+    ['Auva',13.196,3.397,3.39],['Heze',13.575,-0.596,3.38],['Syrma',14.718,6.084,4.07],
+    ['Arcturus',14.261,19.182,-0.05],['Izar',14.749,27.074,2.37],['Muphrid',13.911,18.398,2.68],
+    ['Nekkar',13.912,40.358,3.49],['Seginus',14.745,38.308,3.04],['ArcturusB',14.261,19.182,4.81],
+    // Lira / Cigno / Aquila
+    ['Vega',18.616,38.784,0.03],['Sheliak',18.835,33.355,3.52],['Sulafat',18.985,32.690,3.24],
+    ['Deneb',20.690,45.280,1.25],['Albireo',19.512,27.960,3.18],['Sadr',20.370,40.257,2.23],
+    ['Gienah',20.770,40.257,2.48],['Delta Cyg',19.749,45.131,2.87],['Zeta Cyg',21.215,43.090,3.21],
+    ['Altair',19.846,8.868,0.77],['Tarazed',19.771,10.613,2.72],['Alshain',19.922,6.407,3.71],
+    // Scorpione / Sagittario
+    ['Antares',16.490,-26.432,1.06],['Shaula',17.560,-37.104,1.62],['Sargas',17.622,-42.998,1.87],
+    ['Dschubba',16.005,-22.622,2.29],['Acrab',16.090,-19.806,2.62],['Zubenelgenubi',14.849,-16.042,2.75],
+    ['Zubeneschamali',15.284,-16.126,2.61],['Kaus Australis',18.403,-34.385,1.85],
+    ['Nunki',18.921,-26.297,2.05],['Ascella',18.986,-29.880,2.59],['Albaldah',19.090,-21.024,2.89],
+    // Acquario / Pesci / Ariete
+    ['Sadalmelik',22.096,-0.319,2.95],['Sadalsuud',21.524,-5.571,2.89],['Skat',22.796,-15.821,3.27],
+    ['Fomalhaut',22.961,-29.622,1.16],['Hamal',2.119,23.462,2.00],['Sheratan',1.910,20.808,2.64],
+    ['Mesarthim',1.892,19.293,3.86],['Algenib',0.221,15.183,2.83],
+    // Toro / Auriga
+    ['Aldebaran',4.598,16.509,0.85],['Elnath',5.438,28.608,1.65],['Alcyone',3.792,24.105,2.85],
+    ['Atlas',3.820,24.054,3.62],['Electra',3.788,24.113,3.70],['Maia',3.766,24.367,3.86],
+    ['Merope',3.708,23.948,4.18],['Celaeno',3.748,24.290,5.45],['Sterope',3.696,24.105,5.76],
+    ['Capella',5.278,45.998,0.08],['Menkalinan',5.992,44.947,1.90],['Almaaz',5.067,43.823,2.99],
+    // Cane Maggiore / Minore
+    ['Sirius',6.752,-16.716,-1.46],['Adhara',6.977,-28.972,1.50],['Wezen',7.140,-26.393,1.83],
+    ['Mirzam',6.378,-17.956,1.98],['Aludra',7.400,-29.302,2.45],['Procyon',7.655,5.225,0.34],
+    ['Gomeisa',7.453,8.289,2.89],
+    // Eridano / Balena / Perseo
+    ['Achernar',1.629,-57.236,0.46],['Cursa',5.130,-5.086,2.78],['Acamar',4.951,-40.305,3.24],
+    ['Diphda',0.726,-17.987,2.04],['Mira',2.323,-2.978,3.04],['Algenib',0.221,15.183,2.83],
+    ['Mirfak',3.405,49.861,1.79],['Algol',3.136,40.956,2.12],['Atik',3.731,49.613,2.84],
+    ['Misam',3.906,47.713,3.76],['Menkib',3.961,42.580,3.96],
+    // Andromeda / Pegaso / Triangolo
+    ['Alpheratz',0.140,29.090,2.06],['Mirach',1.162,35.621,2.07],['Almach',2.064,42.330,2.10],
+    ['Markab',23.079,15.205,2.49],['Scheat',23.062,28.083,2.42],['Algenib',0.221,15.183,2.83],
+    ['Diphda',0.726,-17.987,2.04],['Deltotum',2.190,29.591,4.04],['Beta Tri',2.114,34.987,3.00],
+    ['Capella',5.278,45.998,0.08]
+  ];
+
+  // Limiti magnitudine per i 3 preset di densità
+  const STAR_LIMITS={lite:4.5,rich:5.5,real:7.5};
 
   // Corpi del Sistema Solare (posizioni calcolate da Astronomy Engine).
   // sym = glifo unicode, color = colore marker sulla mappa.
@@ -1777,12 +1889,16 @@
     }
 
     if(skyState.stars){
-      BRIGHT_STARS.forEach(([n,ra,dec,m])=>{
+      const mLimit=STAR_LIMITS[skyState.density]||STAR_LIMITS.real;
+      // Lite: solo BRIGHT_STARS (≤4.5). Rich/Real: unisci BRIGHT_STARS + EXT_STARS.
+      const allStars=skyState.density==='lite'?BRIGHT_STARS:BRIGHT_STARS.concat(EXT_STARS);
+      allStars.forEach(([n,ra,dec,m])=>{
+        if(m>mLimit)return;
         const {alt,az}=equatorialToHorizontal(ra,dec,obsLat,lst);
         const p=projectAltAz(alt,az,size);
         if(!p)return;
-        const radius=Math.max(0.8,(5-m)*0.7);
-        const opacity=0.4+Math.min(0.6,(6-m)/8);
+        const radius=Math.max(0.4,(6-m)*0.45);
+        const opacity=0.35+Math.min(0.55,(7-m)/8);
         parts.push(`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${radius.toFixed(2)}" fill="#fff5cc" opacity="${opacity.toFixed(2)}"><title>${n} (mag ${m.toFixed(1)})</title></circle>`);
       });
     }
@@ -1994,36 +2110,12 @@
     });
   });
 
-  // Toggle vista cielo: SVG semplificata (offline) ↔ Stellarium Web (dettagliata)
-  const stellariumFrame=$('stellariumFrame');
-  function updateStellariumUrl(){
-    if(!stellariumFrame)return;
-    const date=skyState.datetime||new Date();
-    // Stellarium Web embed: /sky/embed?DATE&lat=...&lng=...
-    const iso=date.toISOString().slice(0,19); // yyyy-mm-ddThh:mm:ss
-    const la=(typeof lat==='number')?lat.toFixed(4):41.9028;
-    const lo=(typeof lon==='number')?lon.toFixed(4):12.4964;
-    stellariumFrame.src=`https://stellarium-web.org/sky/embed?${iso}&lat=${la}&lng=${lo}`;
-  }
+  // Toggle densità stelle: lite (~150) / rich (~500) / real (~1500)
   $('skyViewMode')?.addEventListener('change',e=>{
-    const mode=e.target.value;
-    const svg=$('celestialMap');const stell=$('stellariumContainer');
-    if(mode==='stellarium'){
-      svg.style.display='none';
-      stell.style.display='block';
-      updateStellariumUrl();
-    }else{
-      svg.style.display='block';
-      stell.style.display='none';
-      renderSkyMap();
-    }
+    skyState.density=e.target.value;
+    renderSkyMap();
+    savePrefs();
   });
-  // Aggiorna Stellarium anche quando cambiano data/posizione
-  const _origRenderSkyMap=renderSkyMap;
-  window.renderSkyMap=function(){
-    _origRenderSkyMap.apply(this,arguments);
-    updateStellariumUrl();
-  };
 
   // Avvia
   initSkyDateTime();
