@@ -2792,7 +2792,7 @@
 
   // Registrazione Service Worker per PWA offline
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js?v=20260819i').then(reg=>{
+    navigator.serviceWorker.register('sw.js?v=20260819l').then(reg=>{
       console.log('✅ Service Worker registrato:',reg.scope);
 
       // Se c'è un SW in attesa, forza l'update
@@ -2844,7 +2844,29 @@
     setTimeout(()=>{if(b&&b.parentNode)b.remove()},12000);
   }
 
-  // (badge versione rimosso su richiesta utente)
+  // Banner sempre presente per forzare aggiornamento cache
+  (function forceUpdateBanner(){
+    if(sessionStorage.getItem('hideUpdateBanner'))return;
+    const b=document.createElement('div');
+    b.id='forceUpdate';
+    b.style.cssText='position:fixed;top:10px;left:50%;transform:translateX(-50%);background:#ffd77b;color:#1b1405;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:600;z-index:99999;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.5);font-family:system-ui';
+    b.innerHTML='🔄 Tocca per aggiornare la cache';
+    b.onclick=async()=>{
+      b.textContent='⏳ Aggiornamento...';
+      sessionStorage.setItem('hideUpdateBanner','1');
+      if('caches' in window){
+        const keys=await caches.keys();
+        await Promise.all(keys.filter(k=>k.startsWith('astro-scout-')).map(k=>caches.delete(k)));
+      }
+      if(navigator.serviceWorker){
+        const reg=await navigator.serviceWorker.getRegistration();
+        if(reg)await reg.unregister();
+      }
+      window.location.href=window.location.href.split('?')[0]+'?t='+Date.now();
+    };
+    document.body.appendChild(b);
+    setTimeout(()=>{if(b&&b.parentNode&&!sessionStorage.getItem('hideUpdateBanner'))b.remove()},20000);
+  })();
 
   // ========= TAB SWITCHER =========
   document.querySelectorAll('.tab').forEach(btn=>{
