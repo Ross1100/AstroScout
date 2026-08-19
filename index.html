@@ -1143,6 +1143,11 @@
   async function fetchOverpassWithFallback(query){
     for(let i=0;i<OVERPASS_SERVERS.length;i++){
       const server=OVERPASS_SERVERS[i];
+      // Feedback utente: solo dalla seconda richiesta in poi (prima è "caricamento..." già mostrato)
+      if(i>0){
+        const ps=$('placesStatus');
+        if(ps)ps.textContent=`Tentativo ${i+1}/${OVERPASS_SERVERS.length}...`;
+      }
       console.log(`📍 Overpass tentativo ${i+1}/${OVERPASS_SERVERS.length}: ${server}`);
       try{
         const ctrl=new AbortController();
