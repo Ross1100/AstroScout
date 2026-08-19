@@ -15,6 +15,8 @@
     .logo-slot img{width:100%;height:100%;object-fit:cover;border-radius:14px}
     .logo-btn{cursor:pointer;animation:none}
     .brand{text-align:center}
+    .brand h1{letter-spacing:-1.2px}
+    .brand h1 .a{color:var(--gold)}
     .brand .lead{margin:0;font-size:12px}
     .brand-meta{margin:4px 0 0;font-size:11px;color:var(--muted);letter-spacing:.3px}
     .brand-meta span{color:var(--blue)}
@@ -322,7 +324,7 @@
       <img src="logo-header.png" alt="Astro Scout" class="user-logo">
     </button>
     <div class="brand">
-      <h1>Astro Scout</h1>
+      <h1><span class="a">Astro</span>Scout</h1>
       <p class="lead">Se stanotte vale la pena uscire, con che impostazioni e da dove.</p>
       <p class="brand-meta"><span id="clock">—</span> · <span id="season">caricamento…</span></p>
     </div>
@@ -755,7 +757,7 @@
   let usingFallback=false;
   let lat=null, lon=null;
   const $=id=>document.getElementById(id);
-  console.log('🚀 Astro Scout init');
+  console.log('🚀 AstroScout init');
 
   // ========= HEADER DINAMICO =========
   // Orologio + stagione astronomica
