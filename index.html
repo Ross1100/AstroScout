@@ -298,7 +298,24 @@
       .setup .params{grid-template-columns:1fr}
       .setup .param .val{font-size:14px}
     }
-  </style>
+  
+    /* === WIKI MODAL === */
+    .wiki-modal-overlay{position:fixed;inset:0;background:rgba(2,4,10,.78);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px;animation:fadeIn .25s}
+    .wiki-modal{background:var(--panel);color:var(--ink);max-width:620px;width:100%;max-height:88vh;border-radius:8px;border:1px solid var(--line);overflow-y:auto;padding:22px;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.7)}
+    .wiki-modal h3{margin:0 0 6px;font-size:18px;color:var(--gold)}
+    .wiki-modal .wiki-meta{font-size:12px;color:var(--muted);margin-bottom:14px;display:flex;gap:12px;flex-wrap:wrap}
+    .wiki-modal .wiki-meta span{background:rgba(255,255,255,.04);padding:3px 8px;border-radius:3px}
+    .wiki-modal .wiki-desc{font-size:14px;line-height:1.55;margin:12px 0}
+    .wiki-modal .wiki-actions{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+    .wiki-modal button{cursor:pointer;font:inherit}
+    .wiki-modal .wiki-close{position:absolute;top:10px;right:14px;background:transparent;border:0;color:var(--muted);font-size:22px;cursor:pointer;line-height:1}
+    .wiki-modal .wiki-close:hover{color:var(--gold)}
+    .wiki-modal a.wiki-link{color:var(--blue);text-decoration:none;border-bottom:1px dotted}
+    .wiki-modal a.wiki-link:hover{border-bottom-style:solid}
+    .wiki-spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--muted);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:480px){.wiki-modal{padding:16px}.wiki-modal h3{font-size:16px}}
+</style>
 </head>
 <body>
 <main>
@@ -577,6 +594,7 @@
       <span style="font-size:11px;color:var(--muted);margin-left:8px">Limite magnitudine (stelle più deboli visibili)</span>
     </div>
     <div id="celestialMap" aria-label="Sfera celeste reale"></div>
+    <p class="status" style="margin:6px 0 0;font-size:11px;color:var(--muted)">💡 <b>Tocca una stella, un pianeta o un DSO</b> sulla mappa o nella lista qui sotto per vedere la scheda Wikipedia.</p>
     <ul class="places" id="sky" style="margin-top:14px"><li>Calcolo target in corso…</li></ul>
     <h2 style="margin-top:18px">🪐 Pianeti e Luna <span class="card-meta" id="solarSub" style="font-weight:normal">—</span></h2>
     <p class="status">Posizioni reali calcolate con Astronomy Engine per la data/ora scelta. La Luna mostra anche la frazione illuminata.</p>
@@ -1467,6 +1485,154 @@
     $('fbStatus').textContent='🗑️ Feedback cancellati.';
   });
   renderFeedback();
+
+  // ========= WIKI: fetch Wikipedia + modal popup + sezione dettaglio =========
+  // Cache locale per evitare chiamate ripetute (ttl 7 giorni).
+  const WIKI_CACHE_KEY='astroScoutWikiCache';
+  const WIKI_CACHE_TTL=7*24*60*60*1000;
+  function loadWikiCache(){try{return JSON.parse(localStorage.getItem(WIKI_CACHE_KEY))||{};}catch(e){return{};}}
+  function saveWikiCache(c){try{localStorage.setItem(WIKI_CACHE_KEY,JSON.stringify(c));}catch(e){}}
+  async function fetchWikiExtract(title){
+    const cache=loadWikiCache();
+    if(cache[title]&&Date.now()-cache[title].t<WIKI_CACHE_TTL)return cache[title].extract;
+    try{
+      const url='https://it.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&redirects=1&format=json&origin=*&titles='+encodeURIComponent(title);
+      const r=await fetch(url,{headers:{'Accept':'application/json'}});
+      if(!r.ok)return null;
+      const j=await r.json();
+      const pages=j.query&&j.query.pages;
+      if(!pages)return null;
+      const first=Object.values(pages)[0];
+      const extract=first&&first.extract;
+      if(!extract)return null;
+      cache[title]={extract,t:Date.now()};
+      saveWikiCache(cache);
+      return extract;
+    }catch(e){return null;}
+  }
+
+  // Costruisce il record oggetto (meta + descrizione locale fallback)
+  function buildWikiRecord(name){
+    const sb=SOLAR_BODIES.find(s=>s.name===name);
+    if(sb)return{kind:'planet',name:sb.name,sym:sb.sym,note:sb.note,desc:sb.sym+' '+sb.name+' \xe2\x80\x94 '+sb.note};
+    const allS=BRIGHT_STARS.concat(EXT_STARS);
+    const st=allS.find(s=>s[0]===name);
+    if(st){
+      const desc='Stella di magnitudine '+st[3].toFixed(2)+'. Coordinate J2000: RA '+st[1].toFixed(2)+'h, Dec '+st[2].toFixed(2)+'\xc2\xb0.';
+      return{kind:'star',name:st[0],ra:st[1],dec:st[2],mag:st[3],desc};
+    }
+    const dso=SKY_CATALOG.find(o=>o.name===name);
+    if(dso){
+      const desc=dso.type+' di magnitudine '+dso.mag+', dimensioni apparenti '+dso.size+'. '+dso.desc;
+      return{kind:'dso',name:dso.name,type:dso.type,mag:dso.mag,ra:dso.ra,dec:dso.dec,size:dso.size,desc};
+    }
+    const cn=CONSTELLATIONS.find(c=>c.name===name);
+    if(cn)return{kind:'constellation',name:cn.name,desc:'Costellazione con '+cn.lines.length+' stelle principali tracciate.'};
+    return null;
+  }
+
+  // Formatta RA in h m, Dec in gradi
+  function formatRA(ra){const h=Math.floor(ra);const m=Math.floor((ra-h)*60);return h+'h '+String(m).padStart(2,'0')+'m';}
+  function formatDec(dec){const sign=dec>=0?'+':'-';const a=Math.abs(dec);const d=Math.floor(a);const m=Math.round((a-d)*60);return sign+d+'\xc2\xb0 '+String(m).padStart(2,'0')+"'";}
+
+  // Calcola periodo migliore di osservazione
+  function bestObservationWindow(dec){
+    if(dec==null)return 'Osservabile durante la stagione astronomica appropriata per la tua latitudine.';
+    if(dec>60)return 'Visibile tutto l\'anno dall\'emisfero nord (declinazione molto alta).';
+    if(dec>20)return 'Ottimo in primavera/estate boreale, culminazione a sud.';
+    if(dec>-20)return 'Ottimo in inverno boreale, passa alta nel cielo.';
+    if(dec>-60)return 'Ottimo in estate/autunno australe dall\'emisfero sud, bassa al nord.';
+    return 'Visibile principalmente dall\'emisfero australe (declinazione molto negativa).';
+  }
+
+  let currentWiki=null;
+
+  async function showWikiModal(name){
+    const rec=buildWikiRecord(name);
+    if(!rec)return;
+    currentWiki={name,rec};
+    const title=WIKI_TITLES[name];
+    $('wikiTitle').textContent='📖 '+rec.name;
+    const meta=[];
+    if(rec.kind==='star')meta.push('<span>mag '+rec.mag.toFixed(2)+'</span>');
+    if(rec.kind==='dso'){meta.push('<span>'+rec.type+'</span>');meta.push('<span>mag '+rec.mag+'</span>');if(rec.size)meta.push('<span>'+rec.size+'</span>');}
+    if(rec.ra!=null){meta.push('<span>RA '+formatRA(rec.ra)+'</span>');meta.push('<span>Dec '+formatDec(rec.dec)+'</span>');}
+    $('wikiMeta').innerHTML=meta.join(' ');
+    $('wikiDesc').innerHTML='<span class="wiki-spinner"></span>Carico descrizione da Wikipedia...';
+    $('wikiModal').style.display='flex';
+    document.body.style.overflow='hidden';
+    $('wikiWikipedia').style.display='none';
+    $('wikiSimbad').style.display='none';
+    let extract=null;
+    if(title)extract=await fetchWikiExtract(title);
+    if(extract){
+      const clean=extract.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
+      const trunc=clean.length>600?clean.slice(0,600)+'…':clean;
+      $('wikiDesc').innerHTML='<div>'+trunc+'</div><p style="font-size:11px;color:var(--muted);margin-top:10px">Fonte: Wikipedia ('+title+')</p>';
+      $('wikiWikipedia').style.display='';
+      $('wikiWikipedia').onclick=()=>window.open('https://it.wikipedia.org/wiki/'+encodeURIComponent(title),'_blank','noreferrer');
+    }else{
+      $('wikiDesc').innerHTML='<div>'+rec.desc+'</div><p style="font-size:11px;color:var(--muted);margin-top:10px">Descrizione dal catalogo locale (Wikipedia non disponibile).</p>';
+    }
+    if(rec.kind==='star'||rec.kind==='dso'){
+      $('wikiSimbad').style.display='';
+      $('wikiSimbad').onclick=()=>{
+        const q=rec.kind==='star'?rec.name:rec.name.split(' ')[0];
+        window.open('https://simbad.cds.unistra.fr/simbad/sim-id?Ident='+encodeURIComponent(q)+'&NbIdent=1&Radius=2&Radius.unit=arcmin&submit=submit+id','_blank','noreferrer');
+      };
+    }
+  }
+  function closeWikiModal(){$('wikiModal').style.display='none';document.body.style.overflow='';}
+  $('wikiClose')?.addEventListener('click',closeWikiModal);
+  $('wikiClose2')?.addEventListener('click',closeWikiModal);
+  $('wikiModal')?.addEventListener('click',e=>{if(e.target.id==='wikiModal')closeWikiModal();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('wikiModal').style.display==='flex')closeWikiModal();});
+
+  async function showWikiDetail(){
+    if(!currentWiki)return;
+    const {name,rec}=currentWiki;
+    closeWikiModal();
+    $('wikiSection').scrollIntoView({behavior:'smooth',block:'start'});
+    $('wikiSection').style.display='';
+    $('wikiDetailName').textContent=rec.name;
+    $('wikiDetailStatus').innerHTML='<span class="wiki-spinner"></span>Carico descrizione completa...';
+    $('wikiDetailBody').style.display='none';
+    const title=WIKI_TITLES[name];
+    let extract=null;
+    if(title)extract=await fetchWikiExtract(title);
+    if(extract){
+      const clean=extract.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
+      $('wikiDetailDesc').innerHTML='<div style="white-space:pre-wrap">'+clean+'</div><p style="font-size:11px;color:var(--muted);margin-top:10px">Fonte: Wikipedia</p>';
+      $('wikiDetailStatus').textContent='';
+    }else{
+      $('wikiDetailDesc').innerHTML='<div>'+rec.desc+'</div><p style="font-size:11px;color:var(--muted);margin-top:10px">Wikipedia non disponibile per questo oggetto.</p>';
+      $('wikiDetailStatus').textContent='Descrizione locale (Wikipedia non ha un articolo dedicato).';
+    }
+    const meta=[];
+    if(rec.kind==='star')meta.push('Tipo: Stella');
+    if(rec.kind==='planet')meta.push('Tipo: Pianeta/Satellite');
+    if(rec.kind==='dso')meta.push('Tipo: '+rec.type);
+    if(rec.kind==='constellation')meta.push('Tipo: Costellazione');
+    if(rec.mag!=null)meta.push('Magnitudine: '+(typeof rec.mag==='number'?rec.mag.toFixed(2):rec.mag));
+    if(rec.ra!=null)meta.push('RA: '+formatRA(rec.ra));
+    if(rec.dec!=null)meta.push('Dec: '+formatDec(rec.dec));
+    if(rec.size)meta.push('Dimensioni: '+rec.size);
+    $('wikiDetailMeta').innerHTML=meta.map(m=>'<span style="background:rgba(255,255,255,.04);padding:4px 10px;border-radius:3px;font-size:12px;margin-right:6px">'+m+'</span>').join('');
+    const links=[];
+    if(title)links.push('<li><a target="_blank" rel="noreferrer" href="https://it.wikipedia.org/wiki/'+encodeURIComponent(title)+'">🌐 Wikipedia (IT)</a></li>');
+    links.push('<li><a target="_blank" rel="noreferrer" href="https://en.wikipedia.org/wiki/Special:Search?search='+encodeURIComponent(rec.name)+'">🌐 Wikipedia (EN, cerca)</a></li>');
+    if(rec.kind==='star'||rec.kind==='dso'){
+      const q=rec.kind==='star'?rec.name:rec.name.split(' ')[0];
+      links.push('<li><a target="_blank" rel="noreferrer" href="https://simbad.cds.unistra.fr/simbad/sim-id?Ident='+encodeURIComponent(q)+'&NbIdent=1&Radius=2&Radius.unit=arcmin&submit=submit+id">✈️ SIMBAD (database astronomico)</a></li>');
+    }
+    links.push('<li><a target="_blank" rel="noreferrer" href="https://eyes.nasa.gov/apps/eye/">👀 NASA Eyes (esplora il sistema solare)</a></li>');
+    $('wikiDetailLinks').innerHTML=links.join('');
+    const bestText=bestObservationWindow(rec.dec);
+    $('wikiDetailBest').innerHTML='<p style="font-size:13px;line-height:1.5">'+bestText+'</p>';
+    $('wikiDetailBody').style.display='';
+  }
+  $('wikiDetail')?.addEventListener('click',showWikiDetail);
+
   $('lpToggle').addEventListener('change',e=>{if(e.target.checked){lpLayer.addTo(map);$('lpLegend').classList.add('on')}else{map.removeLayer(lpLayer);$('lpLegend').classList.remove('on')}savePrefs()});
   $('layerDSO')?.addEventListener('change',savePrefs);
   $('refresh').addEventListener('click',update);
@@ -1502,6 +1668,17 @@
   // ========= MAPPA DEL CIELO CON TARGET CELESTI =========
   // Default: d3-celestial (sfera celeste reale). Toggle: vista semplificata Leaflet.
   const celestialMapEl=document.getElementById('celestialMap');
+  // Event delegation: click su una stella (cerchio con data-name) apre il modal wiki.
+  celestialMapEl?.addEventListener('click',e=>{
+    const starEl=e.target.closest('.sky-star');
+    if(starEl&&starEl.dataset.name){showWikiModal(starEl.dataset.name);return;}
+    const dsoEl=e.target.closest('.sky-dso');
+    if(dsoEl&&dsoEl.dataset.name){showWikiModal(dsoEl.dataset.name);return;}
+    const solarEl=e.target.closest('.sky-solar');
+    if(solarEl&&solarEl.dataset.name){showWikiModal(solarEl.dataset.name);return;}
+    const constEl=e.target.closest('[data-const]');
+    if(constEl&&constEl.dataset.const){showWikiModal(constEl.dataset.const);return;}
+  });
   if(celestialMapEl){
     celestialMapEl.style.height='420px';
     celestialMapEl.style.width='100%';
@@ -1686,6 +1863,49 @@
   ];
   // Mappa nome -> body Astronomy Engine (caricato da astronomy.engine.js)
   function solarBody(key){return window.Astronomy?Astronomy.Body[key]:null;}
+
+  // Mappa nome oggetto -> titolo Wikipedia italiano (per fetch API in showWikiModal).
+  // Se mancante, il fallback mostra solo le info locali dal catalogo.
+  const WIKI_TITLES={
+    // Sole, Luna, pianeti
+    'Sole':'Sole','Luna':'Luna','Mercurio':'Mercurio_(astronomia)','Venere':'Venere_(astronomia)',
+    'Marte':'Marte_(astronomia)','Giove':'Giove_(astronomia)','Saturno':'Saturno_(astronomia)',
+    'Urano':'Urano_(astronomia)','Nettuno':'Nettuno_(astronomia)',
+    // Stelle principali
+    'Sirius':'Sirio','Canopus':'Canopo','Arcturus':'Arturo_(astronomia)','Vega':'Vega_(astronomia)',
+    'Capella':'Capella_(astronomia)','Rigel':'Rigel','Procyon':'Procione','Achernar':'Achernar',
+    'Betelgeuse':'Betelgeuse','Hadar':'Hadar_(astronomia)','Altair':'Altair','Acrux':'Acrux',
+    'Aldebaran':'Aldebaran','Antares':'Antares','Spica':'Spica_(astronomia)','Pollux':'Pollux_(astronomia)',
+    'Fomalhaut':'Fomalhaut','Deneb':'Deneb','Regulus':'Regolo_(astronomia)','Polaris':'Stella_polare',
+    'Algol':'Algol','Alpheratz':'Alpheratz','Mirach':'Mirach','Schedar':'Schedar','Caph':'Caph',
+    'Algenib':'Algenib','Markab':'Markab','Scheat':'Scheat','Enif':'Enif','Almaak':'Almach',
+    'Mizar':'Mizar_(astronomia)','Alcor':'Alcor_(astronomia)','Albireo':'Albireo','Sadr':'Sadr_(astronomia)',
+    'Alnitak':'Alnitak','Alnilam':'Alnilam','Mintaka':'Mintaka','Bellatrix':'Bellatrix_(astronomia)',
+    'Dubhe':'Dubhe','Merak':'Merak','Phecda':'Phecda','Megrez':'Megrez','Alioth':'Alioth',
+    'Mizar':'Mizar_(astronomia)','Alkaid':'Alkaid','Eltanin':'Eltanin',
+    'Rastaban':'Rastaban','Alderamin':'Alderamin','Alfirk':'Alfirk','Errai':'Errai',
+    'Tarazed':'Tarazed','Alshain':'Alshain','Denebola':'Denebola','Zosma':'Zosma','Chertan':'Chertan',
+    'Rasalhague':'Rasalhague','Cebalrai':'Cebalrai','Marfik':'Marfik','Kornephoros':'Kornephoros',
+    'Izar':'Izar_(astronomia)','Muphrid':'Muphrid','Ruchbah':'Ruchbah',
+    'Segin':'Segin_(astronomia)',
+    'Alhena':'Alhena','Wasat':'Wasat','Mebsuta':'Mebsuta','Propus':'Propus','Tejat':'Tejat',
+    // DSO (le sigle M e NGC sono univoche: aggiungo suffisso per disambiguare)
+    'M31 Andromeda':'Galassia_di_Andromeda','M42 Orion Nebula':'Nebulosa_di_Orione',
+    'M45 Pleiadi':'Pleiadi','M51 Whirlpool':'Galassia_Vortice_(M51)',
+    'M81 Bode':'Galassia_di_Bode','M101 Pinwheel':'Galassia_Girandola',
+    'M104 Sombrero':'Galassia_Sombrero','M27 Dumbbell':'Nebulosa_Dumbbell',
+    'M57 Ring Nebula':'Nebulosa_dell\'Anello','NGC 7000 Nord America':'Nebulosa_del_Nord_America',
+    'M13 Ercole':'Ammasso_globulare_di_Ercole','M8 Laguna':'Nebulosa_della_Laguna',
+    'M16 Aquila':'Nebulosa_dell\'Aquila','M20 Trifida':'Nebulosa_Trifida',
+    // Costellazioni
+    'Orion':'Orione_(costellazione)','Taurus':'Toro_(costellazione)','Gemini':'Gemelli_(costellazione)',
+    'Cancer':'Cancro_(costellazione)','Leo':'Leone_(costellazione)','Virgo':'Vergine_(costellazione)',
+    'Libra':'Bilancia_(costellazione)','Scorpius':'Scorpione_(costellazione)',
+    'Sagittarius':'Sagittario_(costellazione)','Capricornus':'Capricorno_(costellazione)',
+    'Aquarius':'Acquario_(costellazione)','Pisces':'Pesci_(costellazione)',
+    'Aries':'Ariete_(costellazione)','Ursa Major':'Orsa_Maggiore','Ursa Minor':'Orsa_Minore',
+    'Cygnus':'Cigno_(costellazione)','Lyra':'Lira_(costellazione)'
+  };
   // Restituisce {alt,az,mag,illum} per un corpo alla data/observer dati.
   function solarHorizontal(key,date,observer){
     const A=window.Astronomy; if(!A)return null;
@@ -1879,7 +2099,7 @@
         const {alt,az}=equatorialToHorizontal(ra,dec,obsLat,lst);
         const p=projectAltAz(alt,az,size);
         if(!p)return;
-        parts.push(`<text x="${p[0].toFixed(1)}" y="${p[1].toFixed(1)}" text-anchor="middle" font-size="9" fill="#9ae6b4" opacity="0.7" font-style="italic">${c.name}</text>`);
+        parts.push(`<text x="${p[0].toFixed(1)}" y="${p[1].toFixed(1)}" text-anchor="middle" font-size="9" fill="#9ae6b4" opacity="0.7" font-style="italic" data-const="${c.name.replace(/'/g,"\\'")}" style="cursor:pointer">${c.name}</text>`);
       });
     }
 
@@ -1894,7 +2114,7 @@
         if(!p)return;
         const radius=Math.max(0.4,(6-m)*0.45);
         const opacity=0.35+Math.min(0.55,(7-m)/8);
-        parts.push(`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${radius.toFixed(2)}" fill="#fff5cc" opacity="${opacity.toFixed(2)}"><title>${n} (mag ${m.toFixed(1)})</title></circle>`);
+        parts.push(`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${radius.toFixed(2)}" fill="#fff5cc" opacity="${opacity.toFixed(2)}" class="sky-star" data-name="${n.replace(/'/g,"\\'")}" style="cursor:pointer"><title>${n} (mag ${m.toFixed(1)}) — clicca per dettagli</title></circle>`);
       });
     }
 
@@ -1910,7 +2130,7 @@
         const op=visible?0.95:0.3;
         const halo=visible?0.25:0.08;
         const shortName=o.name.replace(/^M\d+ |^NGC \d+ /,'');
-        parts.push(`<g class="sky-dso" data-name="${o.name}">
+        parts.push(`<g class="sky-dso" data-name="${o.name}" style="cursor:pointer" onclick="showWikiModal('${o.name.replace(/'/g,"\\'")}')">
           <circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${r+3}" fill="${color}" opacity="${halo}"/>
           <circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${r}" fill="${color}" stroke="#fff" stroke-width="0.8" opacity="${op}"/>
           <text x="${(p[0]+r+3).toFixed(1)}" y="${(p[1]+3).toFixed(1)}" font-size="9" fill="${color}" opacity="${op}" font-weight="700">${shortName}</text>
@@ -1925,11 +2145,11 @@
         if(!h||h.alt<0)return;
         const p=projectAltAz(h.alt,h.az,size);
         if(!p)return;
-        parts.push(`<g class="sky-solar" data-name="${b.name}">
+        parts.push(`<g class="sky-solar" data-name="${b.name}" style="cursor:pointer" onclick="showWikiModal('${b.name.replace(/'/g,"\\'")}')">
           <circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${b.r+4}" fill="${b.color}" opacity="0.16"/>
           <circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${b.r}" fill="${b.color}" stroke="#0a0d18" stroke-width="0.6"/>
           <text x="${(p[0]+b.r+3).toFixed(1)}" y="${(p[1]+3).toFixed(1)}" font-size="10" fill="${b.color}" font-weight="700">${b.sym}</text>
-          <title>${b.name} · alt ${h.alt.toFixed(0)}° az ${h.az.toFixed(0)}°${h.mag!=null?` · mag ${h.mag.toFixed(1)}`:''}</title>
+          <title>${b.name} · alt ${h.alt.toFixed(0)}° az ${h.az.toFixed(0)}°${h.mag!=null?` · mag ${h.mag.toFixed(1)}`:''} · clicca per dettagli</title>
         </g>`);
       });
     }
@@ -2006,7 +2226,7 @@
       const colors={'galassia':'#ff6b9d','nebulosa':'#8cc5ff','ammasso aperto':'#ffd77b','ammasso globulare':'#fff5cc','nebulosa planetaria':'#9ae6b4'};
       const c=colors[o.type]||'#ffd77b';
       const azLabel=compass(o.az);
-      return `<li>
+      return `<li style="cursor:pointer" onclick="showWikiModal('${o.name.replace(/'/g,"\\'")}')">
         <span style="color:${c};font-weight:600">●</span> <b style="color:#f4f5f8">${o.name}</b>
         <small style="color:#aeb5c4;display:block;margin-top:2px">${o.type} · mag ${o.mag} · ${o.size} · alt ${Math.round(o.alt)}° ${azLabel}</small>
         <small style="color:#7a8294;display:block;margin-top:2px;font-size:11px">${o.desc}</small>
@@ -2053,7 +2273,7 @@
       const moonTxt=r.key==='Moon'&&r.illum!=null?` · ${(r.illum*100).toFixed(0)}% illuminata`:'';
       const sym=r.key==='Moon'&&r.illum!=null?moonPhaseSvg(r.illum,moonWaxing):`<span style="color:${r.color};font-weight:600;font-size:15px">${r.sym}</span>`;
       const riseTxt=(r.rise||r.set)?` · sorge ${hm(r.rise)} · tramonta ${hm(r.set)}`:' · sempre sopra/sotto l\'orizzonte';
-      return `<li>
+      return `<li style="cursor:pointer" onclick="showWikiModal('${r.name.replace(/'/g,"\\'")}')">
         ${sym} <b style="color:#f4f5f8">${r.name}</b>
         <small style="color:#aeb5c4;display:block;margin-top:2px">alt ${Math.round(r.alt)}° ${az} (az ${Math.round(r.az)}°)${magTxt}${moonTxt}</small>
         <small style="color:#7a8294;display:block;margin-top:2px;font-size:11px">${r.note}</small>
@@ -2353,5 +2573,35 @@
 })();
 console.log('🌟 Script fine');
 </script>
+
+  <!-- WIKI MODAL (popup descrizione corpi celesti) -->
+  <div id="wikiModal" class="wiki-modal-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="wikiTitle">
+    <div class="wiki-modal">
+      <button type="button" class="wiki-close" id="wikiClose" aria-label="Chiudi">&times;</button>
+      <h3 id="wikiTitle">📖 Caricamento...</h3>
+      <div class="wiki-meta" id="wikiMeta"></div>
+      <div class="wiki-desc" id="wikiDesc"></div>
+      <div class="wiki-actions">
+        <button type="button" class="primary" id="wikiDetail">📝 Vai al dettaglio</button>
+        <button type="button" id="wikiWikipedia" style="display:none">🌐 Apri su Wikipedia</button>
+        <button type="button" id="wikiSimbad" style="display:none">✈️ SIMBAD</button>
+        <button type="button" id="wikiClose2">Chiudi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEZIONE WIKI DEDICATA (dettaglio esteso) -->
+  <section class="panel" id="wikiSection" style="margin-top:18px;display:none">
+    <h2>📖 Dettaglio: <span id="wikiDetailName">--</span></h2>
+    <p class="status" id="wikiDetailStatus">Seleziona un corpo celeste dalla mappa o dalla lista per vederne il dettaglio completo.</p>
+    <div id="wikiDetailBody" style="display:none">
+      <div class="wiki-meta" id="wikiDetailMeta"></div>
+      <div class="wiki-desc" id="wikiDetailDesc" style="font-size:14px;line-height:1.6;margin-top:10px"></div>
+      <h3 style="margin-top:18px;color:var(--blue);font-size:13px;letter-spacing:.5px">🌍 Risorse esterne</h3>
+      <ul class="places" id="wikiDetailLinks"></ul>
+      <h3 style="margin-top:18px;color:var(--blue);font-size:13px;letter-spacing:.5px">🌋 Quando osservarlo</h3>
+      <div id="wikiDetailBest"></div>
+    </div>
+  </section>
 </body>
 </html>
