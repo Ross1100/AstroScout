@@ -11,7 +11,7 @@
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=119">
   <meta name="theme-color" content="#ffd77b">
   <style>
-    :root{color-scheme:dark;--bg:#050609;--panel:#10131a;--line:#2b3040;--ink:#f4f5f8;--muted:#aeb5c4;--gold:#ffd77b;--blue:#8cc5ff;--good:#9ae6b4}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% 0,#18253c 0,transparent 36%),var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1000px;margin:auto;padding:26px 18px 48px;overflow-x:clip}h1{font-size:30px;margin:0 0 5px;letter-spacing:-.8px}
+    :root{color-scheme:dark;--bg:#050609;--panel:#10131a;--line:#2b3040;--ink:#f4f5f8;--muted:#aeb5c4;--gold:#ffd77b;--blue:#8cc5ff;--good:#9ae6b4}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% 0,#18253c 0,transparent 36%),var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1000px;margin:auto;padding:26px 18px 48px;overflow-x:clip;background:var(--bg);position:relative}h1{font-size:30px;margin:0 0 5px;letter-spacing:-.8px}
     .topbar{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;padding:18px 20px;margin:-26px -18px 18px;background:linear-gradient(180deg,#0a0d18 0%,transparent 100%);border-bottom:1px solid var(--line)}
     .logo-slot{height:78px;border:0;background:transparent;padding:0;display:flex;align-items:center;justify-content:center;transition:opacity .3s ease;margin-left:0}
     .logo-slot:hover{opacity:.85}
@@ -27,7 +27,7 @@
     /* Logo PNG has transparent background. The .topbar has a linear-gradient that
        creates the visible "patch" behind the logo — align it so the area under the
        logo slot uses the page background color instead. */
-    .topbar{background:linear-gradient(180deg,#0a0d18 0%,transparent 100%),linear-gradient(90deg,#0a0d18 0%,transparent 30%,transparent 70%,#0a0d18 100%)}
+    .topbar{background:linear-gradient(180deg,#0a0d18 0%,transparent 100%)}
     .brand{text-align:center}
     .brand h1{letter-spacing:-1.2px}
     .brand h1 .a{color:var(--gold)}
@@ -552,7 +552,7 @@
 
     @media(max-width:380px){
       body{font-size:14px}
-      main{padding:12px 10px 32px}
+      main{padding:12px 10px 32px;max-width:none;width:100%}
       h1{font-size:18px}
       h2{font-size:15px}
       h3{font-size:13px}
@@ -2792,7 +2792,7 @@
 
   // Registrazione Service Worker per PWA offline
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js?v=20260819e').then(reg=>{
+    navigator.serviceWorker.register('sw.js?v=20260819f').then(reg=>{
       console.log('✅ Service Worker registrato:',reg.scope);
 
       // Se c'è un SW in attesa, forza l'update
