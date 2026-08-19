@@ -355,6 +355,17 @@
         <div><label for="lens">Obiettivo</label><select id="lens"></select></div>
       </div>
       <div class="setup-wrap">
+  <div class="subject-picker" style="margin-bottom:10px">
+    <label for="subject" style="margin-bottom:5px">🎯 Cosa vuoi fotografare?</label>
+    <select id="subject">
+      <option value="stars">📸 Stelle e paesaggio</option>
+      <option value="milkyway">🌌 Via Lattea</option>
+      <option value="deepsky">🔭 Deep sky (nebulose, galassie)</option>
+      <option value="moon">🌙 Luna</option>
+      <option value="planets">� Pianeti</option>
+      <option value="startrail">⭐ Scie stellari (startrail)</option>
+    </select>
+  </div>
   <div class="setup" id="setup"></div>
   <div class="exposure-triangle" id="expTriangle" aria-label="Triangolo dell'esposizione">
     <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -555,7 +566,17 @@
         </div>
       </div>
     </div>
+    <div class="sky-toggle" style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+      <label for="skyViewMode" style="margin:0">🗺️ Vista cielo:</label>
+      <select id="skyViewMode" style="width:auto;flex:0 0 auto">
+        <option value="svg">📐 Semplificata (offline, leggera)</option>
+        <option value="stellarium">🌟 Stellarium Web (dettagliata, richiede connessione)</option>
+      </select>
+    </div>
     <div id="celestialMap" aria-label="Sfera celeste reale"></div>
+    <div id="stellariumContainer" style="display:none;height:480px;border:2px solid var(--gold);border-radius:6px;overflow:hidden;margin-bottom:14px">
+      <iframe id="stellariumFrame" src="" style="width:100%;height:100%;border:0" loading="lazy" allow="fullscreen; xr-spatial-tracking" title="Stellarium Web — sfera celeste dettagliata"></iframe>
+    </div>
     <ul class="places" id="sky" style="margin-top:14px"><li>Calcolo target in corso…</li></ul>
     <h2 style="margin-top:18px">🪐 Pianeti e Luna <span class="card-meta" id="solarSub" style="font-weight:normal">—</span></h2>
     <p class="status">Posizioni reali calcolate con Astronomy Engine per la data/ora scelta. La Luna mostra anche la frazione illuminata.</p>
@@ -622,6 +643,32 @@
         <p>La nostra galassia vista da dentro. In foto si vede come una fascia chiara che attraversa il cielo. In Italia boreale è meglio in estate (ago–set) nelle ore centrali della notte. Serve un cielo buio, un grandangolo luminoso (f/2.8 o meglio), e niente luna.</p>
       </div>
     </div>
+  </section>
+
+  <section class="panel" style="margin-top:18px" id="feedbackSection">
+    <h2>💬 Feedback & suggerimenti</h2>
+    <p class="status">Aiutami a migliorare Astro Scout: segnala bug, proponi funzionalità o racconta la tua esperienza. I feedback vengono salvati anche in locale (li ritrovi se ricarichi la pagina) e puoi inviarli via email con un click.</p>
+    <div class="feedback-form">
+      <label for="fbType">Tipo</label>
+      <select id="fbType">
+        <option value="bug">🐛 Bug / qualcosa non funziona</option>
+        <option value="idea">💡 Idea / funzionalità</option>
+        <option value="praise">⭐ Feedback positivo</option>
+        <option value="other">Altro</option>
+      </select>
+      <label for="fbTitle" style="margin-top:10px">Titolo breve</label>
+      <input type="text" id="fbTitle" placeholder="Es. 'La mappa del cielo non si aggiorna dopo lo zoom'" maxlength="80" style="width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px;font:inherit">
+      <label for="fbBody" style="margin-top:10px">Descrizione</label>
+      <textarea id="fbBody" rows="4" placeholder="Cosa è successo, cosa ti aspettavi, browser e dispositivo..." style="width:100%;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px;font:inherit;resize:vertical"></textarea>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button type="button" id="fbSend" class="primary">📧 Invia via email</button>
+        <button type="button" id="fbSaveLocal">💾 Salva in locale</button>
+        <button type="button" id="fbClear">🗑️ Svuota</button>
+      </div>
+      <p class="status" id="fbStatus" style="margin-top:8px"></p>
+    </div>
+    <h3 style="margin-top:18px;color:var(--blue);font-size:13px;letter-spacing:.5px">📚 Feedback salvati</h3>
+    <ul class="places" id="fbList"><li style="color:var(--muted)">Nessun feedback salvato.</li></ul>
   </section>
 
   </div><!-- /tab-pane today -->
@@ -849,50 +896,74 @@
   populateCameraSelect();
   populateLensSelect();
 
+  // ========= PRESET ESPOSIZIONE PER SOGGETTO =========
+  // Regola NPF più conservativa del 250 per stelle puntiformi al 100%.
+  // NPF: t_max = (35 * aperture + 30 * pixelPitch) / focalLength
+  // Per camere APS-C 24MP (pixel pitch ~3.9µm) e FF 24MP (~5.9µm), approssimiamo:
+  function npfRule(eqMm,ap,pixelPitch){
+    return Math.max(2,Math.min(20,Math.floor((35*ap+30*pixelPitch)/eqMm)));
+  }
+  // Preset per soggetto. Ogni preset restituisce {iso, shutter, aperture, headline, why, checklist}.
+  const PRESETS={
+    stars:{
+      head:'📸 Stelle e paesaggio',
+      getParams:(f,ap,eq)=>{const pp=4;return{iso:1600,shutter:`${npfRule(eq,ap,pp)}s`,aperture:`f/${ap}`};},
+      why:(f,eq,ap,sec)=>`Grandangolo a ${f}mm (${eq.toFixed(0)}mm eq): massima apertura f/${ap}, ${sec}s per stelle puntiformi (regola NPF), ISO ${1600} per segnale pulito sui sensori moderni.`,
+      checklist:['Treppiede stabile obbligatorio','Scatta in RAW per margine in post','Messa a fuoco manuale su stella luminosa con live view 100%','Autoscatto 2s o scatto remoto per evitare vibrazioni']
+    },
+    milkyway:{
+      head:'🌌 Via Lattea',
+      getParams:(f,ap,eq)=>{const pp=4;return{iso:3200,shutter:`${npfRule(eq,ap,pp)}s`,aperture:`f/${ap}`};},
+      why:(f,eq,ap,sec)=>`Per la Via Lattea serve il massimo segnale: ISO 3200 per estrarre il bulge, ${sec}s (NPF), f/${ap} spalancato. Fondamentale cielo buio (Bortle ≤4) e niente luna.`,
+      checklist:['Allontanati dai centri abitati (almeno 30km)','Controlla fase lunare <30% sul calendario','Inquina bluastro del bulge si vede meglio tra giugno e settembre','Stack di 8-16 scatti identici + dark frames per ridurre il rumore']
+    },
+    deepsky:{
+      head:'� Deep sky (nebulose, galassie)',
+      getParams:(f,ap,eq)=>{const pp=4;return{iso:1600,shutter:'120s',aperture:`f/${ap}`};},
+      why:(f,eq,ap)=>`Per deep sky servono pose molto lunghe (120s) per raccogliere fotoni da oggetti deboli. ISO 1600 bilancia segnale e rumore; f/${ap} aperto per massima luce. Richiede montatura equatoriale per inseguimento.`,
+      checklist:['Montatura equatoriale con allineamento polare accurato','Cielo Bortle ≤4 (meglio ≤2 per galassie deboli)','Dark frames, bias frames e flat frames per la calibrazione','Software di stacking (Siril, DeepSkyStacker)']
+    },
+    moon:{
+      head:'🌙 Luna',
+      getParams:(f,ap,eq)=>{return{iso:100,shutter:'1/125s',aperture:'f/8'};},
+      why:(f,eq)=>`La luna è illuminata dal Sole: riflette molta luce. ISO 100 per evitare rumore, f/8 per nitidezza, 1/125s per "fermare" il moto. Con ${f}mm (${eq.toFixed(0)}mm eq) sei nel range giusto per dettagli lunari.`,
+      checklist:['Treppiede consigliato anche con tempi veloci','Esponi sul terminatore (linea ombra/luce) per texture migliori','Evita di inquadrare zone buie: manderebbero la luna in sovraesposizione','Scatta una raffica di 5-10 foto: scegli poi la più nitida']
+    },
+    planets:{
+      head:'🪐 Pianeti',
+      getParams:(f,ap,eq)=>{return{iso:200,shutter:'1/250s',aperture:'f/6.3'};},
+      why:(f,eq)=>`Pianeti = piccoli dischetti luminosissimi. Servono focali lunghe (${f}mm = ${eq.toFixed(0)}mm eq): meglio se hai un tele o una Barlow 2x. ISO 200, f/6.3, 1/250s riducono la turbolenza atmosferica (seeing).`,
+      checklist:['Focale lunga: 300mm minimo, ideale 600mm+','Scatta in video 4K poi estrai i frame migliori (Autostakkert! o PIPP)','Seeing buono: aspetta notti con atmosfera stabile','Usa filtro IR-cut se il pianeta è basso sull\'orizzonte']
+    },
+    startrail:{
+      head:'⭐ Scie stellari (startrail)',
+      getParams:(f,ap,eq)=>{return{iso:400,shutter:'30 min totali',aperture:`f/${ap}`};},
+      why:(f,eq,ap)=>`Per le scie NON si usa la regola NPF: serve esporre a lungo per far "tracciare" le stelle. ${ap} spalancato, ISO 400 per minimizzare il rumore su pose lunghe. Scatta in continuo o usa intervallometro, poi stack con software dedicato.`,
+      checklist:['Intervallometro o scatto continuo per 30+ minuti','Treppiede robusto (non toccare per niente)','Batteria carica o alimentazione di rete','Software: StarStaX, ImageComposite o Photoshop per il merge','Punta a nord (Stella Polare) per circoli concentrici']
+    }
+  };
+
   function setup(){
     const [f,ap]=$('lens').value.split(',').map(Number),
           crop=Number($('camera').value),
           eq=f*crop;
-    const sec=Math.max(2,Math.min(20,Math.floor(250/eq)));
-    const stars=f<35;
     const tip=(term,def)=>`<span class="g" data-tip="${def}">${term}</span>`;
-    let isoVal,shutterVal,apertureVal;
-    if(stars){
-      isoVal=1600;
-      shutterVal=`${sec}s`;
-      apertureVal=`f/${ap}`;
-      $('setup').innerHTML=`
-        <div class="head">📸 Stelle e paesaggio</div>
-        <div class="params">
-          <div class="param"><div class="lbl">${tip('Apertura','Diaframma aperto per raccogliere più luce possibile.')}</div><div class="val">f/${ap}</div></div>
-          <div class="param"><div class="lbl">${tip('Tempo','La regola 250/focale evita stelle a strisciotto.')}</div><div class="val">${sec}s</div></div>
-          <div class="param"><div class="lbl">${tip('ISO','Buon compromesso segnale-rumore sui sensori moderni.')}</div><div class="val">${isoVal}</div></div>
-        </div>
-        <div class="why"><b>Perché questi valori?</b> Con ${f}mm (${eq.toFixed(0)} mm equivalenti) stai inquadrando un'ampia porzione di cielo: serve raccogliere più luce possibile senza far "strisciare" le stelle. f/${ap} è il massimo del tuo obiettivo, ${sec}s è il tempo limite prima del mosso, ISO ${isoVal} bilancia luce e rumore.</div>
-        <ul class="checklist">
-          <li>${tip('Treppiede','Per esposizioni lunghe è obbligatorio.')} ${tip('stabile','Anche solo appoggiato su un muretto: l\'importante è che non vibri.')}</li>
-          <li>${tip('RAW','Formato non compresso: più margine per il ritocco.')}</li>
-          <li>${tip('Messa a fuoco manuale','L\'autofocus di notte non funziona.')} su una stella luminosa, con ingrandimento live view</li>
-          <li>${tip('Autoscatto 2s','Timer per evitare vibrazioni alla pressione del pulsante.')}</li>
-        </ul>`;
-    } else {
-      isoVal=100;
-      shutterVal='1/125s';
-      apertureVal='f/8';
-      $('setup').innerHTML=`
-        <div class="head">🌙 Luna e pianeti</div>
-        <div class="params">
-          <div class="param"><div class="lbl">${tip('ISO','Sensibilità bassa: meno rumore su superfici uniformi.')}</div><div class="val">${isoVal}</div></div>
-          <div class="param"><div class="lbl">${tip('Apertura','Chiusa per non sovraesporre il soggetto luminoso.')}</div><div class="val">${apertureVal}</div></div>
-          <div class="param"><div class="lbl">${tip('Tempo','Velocissimo: la luna è un faro, non serve esporre a lungo.')}</div><div class="val">${shutterVal}</div></div>
-        </div>
-        <div class="why"><b>Perché questi valori?</b> La luna e i pianeti sono oggetti luminosissimi. Con ${f}mm (${eq.toFixed(0)} mm equivalenti) non ti serve catturare più luce: ti serve "fermare" il soggetto e ridurre il rumore. ISO basso, diaframma chiuso per nitidezza, tempo veloce.</div>
-        <ul class="checklist">
-          <li>${tip('Treppiede','Sempre consigliato, anche per tempi veloci.')}</li>
-          <li>${tip('Esponi sul soggetto','Evita di inquadrare zone buie: manderebbero la luna in sovraesposizione.')}</li>
-          <li>Scatta una piccola raffica: scegli poi lo scatto migliore</li>
-        </ul>`;
-    }
+    const subject=$('subject')?.value||'stars';
+    const preset=PRESETS[subject]||PRESETS.stars;
+    const params=preset.getParams(f,ap,eq);
+    const {iso:isoVal,shutter:shutterVal,aperture:apertureVal}=params;
+    const sec=parseInt(shutterVal)||ap;
+    $('setup').innerHTML=`
+      <div class="head">${preset.head}</div>
+      <div class="params">
+        <div class="param"><div class="lbl">${tip('Apertura', preset.head.includes('Luna')||preset.head.includes('Pianeti') ? 'Diaframma chiuso: il soggetto è già luminoso.' : 'Diaframma aperto: raccoglie più luce possibile.')}</div><div class="val">${apertureVal}</div></div>
+        <div class="param"><div class="lbl">${tip('Tempo', preset.head.includes('Scie') ? 'Volutamente lungo per tracciare le stelle.' : preset.head.includes('Luna')||preset.head.includes('Pianeti') ? 'Velocissimo per "fermare" il moto.' : 'Limite prima del mosso stellare.')}</div><div class="val">${shutterVal}</div></div>
+        <div class="param"><div class="lbl">${tip('ISO', isoVal>=1600 ? 'Alto per massimo segnale.' : 'Basso per minimizzare il rumore.')}</div><div class="val">${isoVal}</div></div>
+      </div>
+      <div class="why"><b>Perché questi valori?</b> ${preset.why(f,eq,ap,sec)}</div>
+      <ul class="checklist">
+        ${preset.checklist.map(c=>`<li>${tip(c.split(' (')[0],c)}</li>`).join('')}
+      </ul>`;
     // Aggiorna triangolo dell'esposizione
     if($('triApertureLabel'))$('triApertureLabel').textContent=apertureVal;
     if($('triShutterLabel'))$('triShutterLabel').textContent=shutterVal;
@@ -1190,7 +1261,7 @@
   const mapEl=$('map');
   if(!mapEl.style.height)mapEl.style.height='380px';
 
-  const map=L.map('map',{zoomControl:true,worldCopyJump:true}).setView([42.5,12.5],4);
+  const map=L.map('map',{zoomControl:true,worldCopyJump:true,maxZoom:11}).setView([42.5,12.5],4);
 
   // Tema scuro "spaziale" — CARTO Dark Matter (gratuito, no API key, perfetto per night-mode)
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
@@ -1198,6 +1269,15 @@
     subdomains:'abcd',
     attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> · © <a href="https://carto.com/attributions">CARTO</a>'
   }).addTo(map);
+
+  // Tile out-of-range (zoom estremo, coordinate polari): silenzia il 404 in console
+  // (Leaflet intercetta internamente e lascia uno spazio vuoto, ma il browser
+  // logga ugualmente ogni tile mancante).
+  map.eachLayer(layer=>{
+    if(layer instanceof L.TileLayer){
+      layer.on('tileerror',()=>{ /* no-op: tile fuori range, è normale */ });
+    }
+  });
 
   // Filtro CSS: palette blu con regioni in giallo (più chiaro e leggibile)
   mapEl.style.filter='hue-rotate(180deg) saturate(1.2) brightness(1.15) contrast(1.05) sepia(.08)';
@@ -1222,6 +1302,7 @@
 
   // Layer inquinamento luminoso (tile overlay da lightpollutionmap.info)
   const lpLayer=L.tileLayer('https://djlorenz.github.io/astronomy/lp2022/overlay/tiles/{z}/{x}/{y}.png',{maxZoom:8,opacity:.55,attribution:'Light pollution: D. Lorenz et al. (2022)'});
+  lpLayer.on('tileerror',()=>{ /* no-op: tile out-of-range, normale */ });
 
   // Click sulla mappa per riposizionare
   map.on('click',e=>{lat=e.latlng.lat;lon=e.latlng.lng;ensureUserMarker(lat,lon);if(userMarker)userMarker.bindPopup(`Posizione scelta: ${lat.toFixed(4)}, ${lon.toFixed(4)}`).openPopup();update();renderSkyMap()});
@@ -1241,6 +1322,7 @@
       localStorage.setItem(STORE_KEY,JSON.stringify({
         camera:$('camera').value,
         lens:$('lens').value,
+        subject:$('subject')?.value||'stars',
         lp:$('lpToggle').checked,
         dso:$('layerDSO')?.checked??true,
         lat:(typeof lat==='number')?lat.toFixed(4):null,
@@ -1262,6 +1344,7 @@
       const s=JSON.parse(raw);
       if(s.camera&&$('camera').querySelector(`option[value="${s.camera}"]`))$('camera').value=s.camera;
       if(s.lens&&$('lens').querySelector(`option[value="${s.lens}"]`))$('lens').value=s.lens;
+      if(s.subject&&$('subject')?.querySelector(`option[value="${s.subject}"]`))$('subject').value=s.subject;
       if(typeof s.lp==='boolean'){$('lpToggle').checked=s.lp;if(s.lp){lpLayer.addTo(map);$('lpLegend').classList.add('on')}}
       if(typeof s.dso==='boolean'&&$('layerDSO')){$('layerDSO').checked=s.dso;skyState.dso=s.dso}
       // Non ripristino lat/lon automaticamente — l'utente sceglie se usare la geolocalizzazione
@@ -1280,6 +1363,71 @@
 
   $('lens').addEventListener('change',()=>{setup();savePrefs()});
   $('camera').addEventListener('change',()=>{setup();savePrefs()});
+  $('subject')?.addEventListener('change',()=>{setup();savePrefs()});
+
+  // ========= FEEDBACK: salvataggio locale + invio via email =========
+  const FB_KEY='astroScoutFeedback';
+  function loadFeedback(){
+    try{return JSON.parse(localStorage.getItem(FB_KEY))||[];}catch(e){return[];}
+  }
+  function saveFeedback(arr){
+    try{localStorage.setItem(FB_KEY,JSON.stringify(arr));}
+    catch(e){$('fbStatus').textContent='⚠️ localStorage non disponibile: i feedback non verranno salvati.';}
+  }
+  function renderFeedback(){
+    const list=$('fbList');if(!list)return;
+    const arr=loadFeedback().sort((a,b)=>b.t-a.t);
+    if(!arr.length){list.innerHTML='<li style="color:var(--muted)">Nessun feedback salvato.</li>';return;}
+    list.innerHTML=arr.map(f=>{
+      const date=new Date(f.t).toLocaleString('it-IT',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+      const emoji={bug:'🐛',idea:'💡',praise:'⭐',other:'📝'}[f.type]||'📝';
+      return`<li>
+        <b>${emoji} ${f.title||'(senza titolo)'}</b>
+        <small style="color:var(--muted);display:block;margin-top:2px">${date} · ${f.type}</small>
+        <small style="color:#aeb5c4;display:block;margin-top:2px;font-size:12px">${f.body||''}</small>
+      </li>`;
+    }).join('');
+  }
+  function clearFeedbackForm(){
+    $('fbTitle').value='';$('fbBody').value='';$('fbType').value='bug';
+    $('fbStatus').textContent='';
+  }
+  $('fbSend')?.addEventListener('click',()=>{
+    const title=$('fbTitle').value.trim();
+    const body=$('fbBody').value.trim();
+    const type=$('fbType').value;
+    if(!title&&!body){$('fbStatus').textContent='�️ Scrivi almeno un titolo o una descrizione.';return;}
+    // Salva prima in locale
+    const arr=loadFeedback();
+    arr.push({type,title,body,t:Date.now()});
+    saveFeedback(arr);
+    renderFeedback();
+    // Apri mail client
+    const subject=encodeURIComponent(`[AstroScout ${type}] ${title||'Feedback'}`);
+    const bodyEnc=encodeURIComponent(`${body}\n\n--\nBrowser: ${navigator.userAgent}\nData: ${new Date().toISOString()}`);
+    window.location.href=`mailto:ross1100@example.com?subject=${subject}&body=${bodyEnc}`;
+    $('fbStatus').innerHTML='✅ Salvato in locale e mail client aperto.';
+    $('fbTitle').value='';$('fbBody').value='';
+  });
+  $('fbSaveLocal')?.addEventListener('click',()=>{
+    const title=$('fbTitle').value.trim();
+    const body=$('fbBody').value.trim();
+    if(!title&&!body){$('fbStatus').textContent='⚠️ Scrivi almeno un titolo o una descrizione.';return;}
+    const arr=loadFeedback();
+    arr.push({type:$('fbType').value,title,body,t:Date.now()});
+    saveFeedback(arr);
+    renderFeedback();
+    $('fbStatus').innerHTML='✅ Salvato in locale.';
+    $('fbTitle').value='';$('fbBody').value='';
+  });
+  $('fbClear')?.addEventListener('click',()=>{
+    if(!confirm('Cancellare TUTTI i feedback salvati in locale?'))return;
+    localStorage.removeItem(FB_KEY);
+    renderFeedback();
+    clearFeedbackForm();
+    $('fbStatus').textContent='🗑️ Feedback cancellati.';
+  });
+  renderFeedback();
   $('lpToggle').addEventListener('change',e=>{if(e.target.checked){lpLayer.addTo(map);$('lpLegend').classList.add('on')}else{map.removeLayer(lpLayer);$('lpLegend').classList.remove('on')}savePrefs()});
   $('layerDSO')?.addEventListener('change',savePrefs);
   $('refresh').addEventListener('click',update);
@@ -1844,6 +1992,37 @@
       renderSkyMap();
     });
   });
+
+  // Toggle vista cielo: SVG semplificata (offline) ↔ Stellarium Web (dettagliata)
+  const stellariumFrame=$('stellariumFrame');
+  function updateStellariumUrl(){
+    if(!stellariumFrame)return;
+    const date=skyState.datetime||new Date();
+    // Stellarium Web accetta ISO date e coordinate. Formato URL: /sky?lat=&lon=&date=& constellations=true
+    const iso=date.toISOString().slice(0,16); // yyyy-mm-ddThh:mm
+    const la=(typeof lat==='number')?lat.toFixed(4):41.9028;
+    const lo=(typeof lon==='number')?lon.toFixed(4):12.4964;
+    stellariumFrame.src=`https://stellarium-web.org/sky/?lat=${la}&lon=${lo}&date=${iso}&constellations=true&grid=true&dso=true&fov=90`;
+  }
+  $('skyViewMode')?.addEventListener('change',e=>{
+    const mode=e.target.value;
+    const svg=$('celestialMap');const stell=$('stellariumContainer');
+    if(mode==='stellarium'){
+      svg.style.display='none';
+      stell.style.display='block';
+      updateStellariumUrl();
+    }else{
+      svg.style.display='block';
+      stell.style.display='none';
+      renderSkyMap();
+    }
+  });
+  // Aggiorna Stellarium anche quando cambiano data/posizione
+  const _origRenderSkyMap=renderSkyMap;
+  window.renderSkyMap=function(){
+    _origRenderSkyMap.apply(this,arguments);
+    updateStellariumUrl();
+  };
 
   // Avvia
   initSkyDateTime();
