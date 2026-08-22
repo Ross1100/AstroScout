@@ -1964,8 +1964,13 @@
     $('wikiDesc').innerHTML='<span class="wiki-spinner"></span>Carico da Wikipedia\xe2\x80\xa6';
     $('wikiModal').style.display='flex';
     document.body.style.overflow='hidden';
-    $('wikiWikipedia').style.display='';
-    $('wikiWikipedia').onclick=()=>window.open('https://it.wikipedia.org/wiki/'+encodeURIComponent(title||name),'_blank','noreferrer');
+    // Mostra "Apri su Wikipedia" solo se c'è una voce mappata in WIKI_TITLES
+    if(title){
+      $('wikiWikipedia').style.display='';
+      $('wikiWikipedia').onclick=()=>window.open('https://it.wikipedia.org/wiki/'+encodeURIComponent(title),'_blank','noreferrer');
+    }else{
+      $('wikiWikipedia').style.display='none';
+    }
     $('wikiSimbad').style.display='none';
     let extract=null;
     if(title)extract=await fetchWikiExtract(title);
@@ -1989,54 +1994,7 @@
   $('wikiModal')?.addEventListener('click',e=>{
     if(e.target===e.currentTarget)closeWikiModal();
   });
-  // Scheda completa: listener diretto
-  $('wikiDetail')?.addEventListener('click',e=>{e.stopPropagation();showWikiDetail();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('wikiModal').style.display==='flex')closeWikiModal();});
-
-  async function showWikiDetail(){
-    if(!currentWiki)return;
-    const {name,rec}=currentWiki;
-    closeWikiModal();
-    $('wikiSection').scrollIntoView({behavior:'smooth',block:'start'});
-    $('wikiSection').style.display='';
-    $('wikiDetailName').textContent=rec.name;
-    $('wikiDetailStatus').innerHTML='<span class="wiki-spinner"></span>Carico da Wikipedia…';
-    $('wikiDetailBody').style.display='none';
-    const title=WIKI_TITLES[name];
-    let extract=null;
-    if(title)extract=await fetchWikiExtract(title);
-    if(extract){
-      const clean=extract.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
-      $('wikiDetailDesc').innerHTML='<div style="white-space:pre-wrap">'+clean+'</div><p style="font-size:11px;color:var(--muted);margin-top:10px">Fonte: Wikipedia</p>';
-      $('wikiDetailStatus').textContent='';
-    }else{
-      $('wikiDetailDesc').innerHTML='<div>'+rec.desc+'</div><p style="font-size:11px;color:var(--muted);margin-top:10px">Wikipedia non disponibile per questo oggetto.</p>';
-      $('wikiDetailStatus').textContent='Wikipedia non ha una voce per questo oggetto.';
-    }
-    const meta=[];
-    if(rec.kind==='star')meta.push('Tipo: Stella');
-    if(rec.kind==='planet')meta.push('Tipo: Pianeta/Satellite');
-    if(rec.kind==='dso')meta.push('Tipo: '+rec.type);
-    if(rec.kind==='constellation')meta.push('Tipo: Costellazione');
-    if(rec.mag!=null)meta.push('Magnitudine: '+(typeof rec.mag==='number'?rec.mag.toFixed(2):rec.mag));
-    if(rec.ra!=null)meta.push('RA: '+formatRA(rec.ra));
-    if(rec.dec!=null)meta.push('Dec: '+formatDec(rec.dec));
-    if(rec.size)meta.push('Dimensioni: '+rec.size);
-    $('wikiDetailMeta').innerHTML=meta.map(m=>'<span style="background:rgba(255,255,255,.04);padding:4px 10px;border-radius:3px;font-size:12px;margin-right:6px">'+m+'</span>').join('');
-    const links=[];
-    if(title)links.push('<li><a target="_blank" rel="noreferrer" href="https://it.wikipedia.org/wiki/'+encodeURIComponent(title)+'">🌐 Wikipedia (IT)</a></li>');
-    links.push('<li><a target="_blank" rel="noreferrer" href="https://en.wikipedia.org/wiki/Special:Search?search='+encodeURIComponent(rec.name)+'">Wikipedia in inglese</a></li>');
-    if(rec.kind==='star'||rec.kind==='dso'){
-      const q=rec.kind==='star'?rec.name:rec.name.split(' ')[0];
-      links.push('<li><a target="_blank" rel="noreferrer" href="https://simbad.cds.unistra.fr/simbad/sim-id?Ident='+encodeURIComponent(q)+'&NbIdent=1&Radius=2&Radius.unit=arcmin&submit=submit+id">✈️ SIMBAD (database astronomico)</a></li>');
-    }
-    links.push('<li><a target="_blank" rel="noreferrer" href="https://eyes.nasa.gov/apps/eye/">👀 NASA Eyes (esplora il sistema solare)</a></li>');
-    $('wikiDetailLinks').innerHTML=links.join('');
-    const bestText=bestObservationWindow(rec.dec);
-    $('wikiDetailBest').innerHTML='<p style="font-size:13px;line-height:1.5">'+bestText+'</p>';
-    $('wikiDetailBody').style.display='';
-  }
-  $('wikiDetail')?.addEventListener('click',showWikiDetail);
 
   $('lpToggle').addEventListener('change',e=>{if(e.target.checked){lpLayer.addTo(map);$('lpLegend').classList.add('on')}else{map.removeLayer(lpLayer);$('lpLegend').classList.remove('on')}savePrefs()});
   $('layerDSO')?.addEventListener('change',savePrefs);
@@ -2797,7 +2755,7 @@
 
   // Registrazione Service Worker per PWA offline
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js?v=20260819s').then(reg=>{
+    navigator.serviceWorker.register('sw.js?v=20260819t').then(reg=>{
       console.log('✅ Service Worker registrato:',reg.scope);
 
       // Se c'è un SW in attesa, forza l'update
@@ -3056,25 +3014,11 @@ console.log('🌟 Script fine');
       <div class="wiki-meta" id="wikiMeta"></div>
       <div class="wiki-desc" id="wikiDesc"></div>
       <div class="wiki-actions">
-        <button type="button" class="primary" id="wikiDetail">Scheda completa</button>
         <button type="button" id="wikiWikipedia" style="display:none">Apri su Wikipedia</button>
         <button type="button" id="wikiSimbad" style="display:none">SIMBAD</button>
       </div>
     </div>
   </div>
 
-  <!-- SEZIONE WIKI DEDICATA (dettaglio esteso) -->
-  <section class="panel" id="wikiSection" style="margin-top:18px;display:none">
-    <h2>Dettaglio: <span id="wikiDetailName">--</span></h2>
-    <p class="status" id="wikiDetailStatus">Seleziona un corpo celeste dalla mappa o dalla lista per vederne il dettaglio completo.</p>
-    <div id="wikiDetailBody" style="display:none">
-      <div class="wiki-meta" id="wikiDetailMeta"></div>
-      <div class="wiki-desc" id="wikiDetailDesc" style="font-size:14px;line-height:1.6;margin-top:10px"></div>
-      <h3 style="margin-top:18px;color:var(--blue);font-size:13px;letter-spacing:.5px">Approfondisci</h3>
-      <ul class="places" id="wikiDetailLinks"></ul>
-      <h3 style="margin-top:18px;color:var(--blue);font-size:13px;letter-spacing:.5px">Quando osservarlo</h3>
-      <div id="wikiDetailBest"></div>
-    </div>
-  </section>
 </body>
 </html>
