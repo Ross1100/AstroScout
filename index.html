@@ -1983,13 +1983,12 @@
     }
   }
   function closeWikiModal(){$('wikiModal').style.display='none';document.body.style.overflow='';}
-  // Listener diretti con cattura + delegation come fallback
+  // Click sull'overlay chiude (delegation, no intercettazione su bottoni)
   $('wikiModal')?.addEventListener('click',e=>{
-    const t=e.target;
-    if(t.id==='wikiClose'||t.closest&&t.closest('#wikiClose')){closeWikiModal();e.stopPropagation();return;}
-    if(t.id==='wikiDetail'||t.closest&&t.closest('#wikiDetail')){showWikiDetail();e.stopPropagation();return;}
-    if(t===e.currentTarget)closeWikiModal();
-  },true);
+    if(e.target===e.currentTarget)closeWikiModal();
+  });
+  // Scheda completa: listener diretto
+  $('wikiDetail')?.addEventListener('click',e=>{e.stopPropagation();showWikiDetail();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('wikiModal').style.display==='flex')closeWikiModal();});
 
   async function showWikiDetail(){
@@ -2796,7 +2795,7 @@
 
   // Registrazione Service Worker per PWA offline
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js?v=20260819q').then(reg=>{
+    navigator.serviceWorker.register('sw.js?v=20260819r').then(reg=>{
       console.log('✅ Service Worker registrato:',reg.scope);
 
       // Se c'è un SW in attesa, forza l'update
@@ -3050,7 +3049,7 @@ console.log('🌟 Script fine');
   <!-- WIKI MODAL (popup descrizione corpi celesti) -->
   <div id="wikiModal" class="wiki-modal-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="wikiTitle">
     <div class="wiki-modal">
-      <button type="button" class="wiki-close" id="wikiClose" aria-label="Chiudi">&times;</button>
+      <button type="button" class="wiki-close" id="wikiClose" aria-label="Chiudi" onclick="closeWikiModal()">&times;</button>
       <h3 id="wikiTitle">Caricamento...</h3>
       <div class="wiki-meta" id="wikiMeta"></div>
       <div class="wiki-desc" id="wikiDesc"></div>
