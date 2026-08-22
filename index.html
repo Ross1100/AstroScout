@@ -1962,7 +1962,8 @@
     $('wikiDesc').innerHTML='<span class="wiki-spinner"></span>Carico da Wikipedia\xe2\x80\xa6';
     $('wikiModal').style.display='flex';
     document.body.style.overflow='hidden';
-    $('wikiWikipedia').style.display='none';
+    $('wikiWikipedia').style.display='';
+    $('wikiWikipedia').onclick=()=>window.open('https://it.wikipedia.org/wiki/'+encodeURIComponent(title||name),'_blank','noreferrer');
     $('wikiSimbad').style.display='none';
     let extract=null;
     if(title)extract=await fetchWikiExtract(title);
@@ -1970,10 +1971,8 @@
       const clean=extract.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
       const trunc=clean.length>600?clean.slice(0,600)+'…':clean;
       $('wikiDesc').innerHTML='<div>'+trunc+'</div><p style="font-size:11px;color:var(--muted);margin-top:10px">Fonte: Wikipedia ('+title+')</p>';
-      $('wikiWikipedia').style.display='';
-      $('wikiWikipedia').onclick=()=>window.open('https://it.wikipedia.org/wiki/'+encodeURIComponent(title),'_blank','noreferrer');
     }else{
-      $('wikiDesc').innerHTML='<div>'+rec.desc+'</div><p style="font-size:11px;color:var(--muted);margin-top:10px">Descrizione dal catalogo interno: Wikipedia non risponde.</p>';
+      $('wikiDesc').innerHTML='<div>'+rec.desc+'</div><p style="font-size:11px;color:var(--muted);margin-top:10px">Descrizione dal catalogo interno.</p>';
     }
     if(rec.kind==='star'||rec.kind==='dso'){
       $('wikiSimbad').style.display='';
@@ -1984,15 +1983,13 @@
     }
   }
   function closeWikiModal(){$('wikiModal').style.display='none';document.body.style.overflow='';}
-  // Listener diretto sulla X (più affidabile del delegation)
-  $('wikiClose')?.addEventListener('click',e=>{e.stopPropagation();closeWikiModal();});
-  // Delegation di fallback per click su overlay o figli
+  // Listener diretti con cattura + delegation come fallback
   $('wikiModal')?.addEventListener('click',e=>{
-    if(e.target.id==='wikiClose'||e.target.closest('#wikiClose')){closeWikiModal();return;}
-    if(e.target===e.currentTarget)closeWikiModal();
-  });
-  // Scheda completa: listener diretto + delegation
-  $('wikiDetail')?.addEventListener('click',e=>{e.stopPropagation();showWikiDetail();});
+    const t=e.target;
+    if(t.id==='wikiClose'||t.closest&&t.closest('#wikiClose')){closeWikiModal();e.stopPropagation();return;}
+    if(t.id==='wikiDetail'||t.closest&&t.closest('#wikiDetail')){showWikiDetail();e.stopPropagation();return;}
+    if(t===e.currentTarget)closeWikiModal();
+  },true);
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('wikiModal').style.display==='flex')closeWikiModal();});
 
   async function showWikiDetail(){
@@ -2799,7 +2796,7 @@
 
   // Registrazione Service Worker per PWA offline
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js?v=20260819p').then(reg=>{
+    navigator.serviceWorker.register('sw.js?v=20260819q').then(reg=>{
       console.log('✅ Service Worker registrato:',reg.scope);
 
       // Se c'è un SW in attesa, forza l'update
