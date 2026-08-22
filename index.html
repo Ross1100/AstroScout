@@ -622,7 +622,8 @@
         width:36px;height:4px;
         background:var(--line);
         border-radius:2px;
-        margin:0 auto 14px
+        margin:0 auto 14px;
+        pointer-events:none
       }
     }
     @keyframes slideUp{
@@ -1983,11 +1984,15 @@
     }
   }
   function closeWikiModal(){$('wikiModal').style.display='none';document.body.style.overflow='';}
-  // Chiudi su click della X (event delegation per assorbire click anche su &times; / padding)
+  // Listener diretto sulla X (più affidabile del delegation)
+  $('wikiClose')?.addEventListener('click',e=>{e.stopPropagation();closeWikiModal();});
+  // Delegation di fallback per click su overlay o figli
   $('wikiModal')?.addEventListener('click',e=>{
     if(e.target.id==='wikiClose'||e.target.closest('#wikiClose')){closeWikiModal();return;}
     if(e.target===e.currentTarget)closeWikiModal();
   });
+  // Scheda completa: listener diretto + delegation
+  $('wikiDetail')?.addEventListener('click',e=>{e.stopPropagation();showWikiDetail();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('wikiModal').style.display==='flex')closeWikiModal();});
 
   async function showWikiDetail(){
@@ -2794,7 +2799,7 @@
 
   // Registrazione Service Worker per PWA offline
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js?v=20260819o').then(reg=>{
+    navigator.serviceWorker.register('sw.js?v=20260819p').then(reg=>{
       console.log('✅ Service Worker registrato:',reg.scope);
 
       // Se c'è un SW in attesa, forza l'update
