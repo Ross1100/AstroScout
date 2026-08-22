@@ -1077,6 +1077,8 @@
   let usingFallback=false;
   let lat=null, lon=null;
   const $=id=>document.getElementById(id);
+  // Esponi le funzioni usate dagli onclick inline (la IIFE isola gli scope)
+  window.closeWikiModal=function(){$('wikiModal').style.display='none';document.body.style.overflow='';};
   console.log('🚀 AstroScout init');
 
   // ========= HEADER DINAMICO =========
@@ -2795,7 +2797,7 @@
 
   // Registrazione Service Worker per PWA offline
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js?v=20260819r').then(reg=>{
+    navigator.serviceWorker.register('sw.js?v=20260819s').then(reg=>{
       console.log('✅ Service Worker registrato:',reg.scope);
 
       // Se c'è un SW in attesa, forza l'update
