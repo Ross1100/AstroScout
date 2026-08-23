@@ -1167,13 +1167,49 @@
   });
 
   // Calcolo fase lunare (algoritmo semplificato, no dipendenze)
+  // Ottanti del ciclo lunare, indicizzati sull'angolo di fase (vedi moonPhaseAngle).
+  const MOON_NAMES=['Nuova','Falce crescente','Primo quarto','Gibbosa crescente','Piena','Gibbosa calante','Ultimo quarto','Falce calante'];
+  const MOON_CLASSES=['moon','moon waxing','moon waxing','moon waxing','moon full','moon waning','moon waning','moon waning'];
+  const MOON_EMOJI=['🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘'];
+
+  // Angolo di fase in gradi: 0=nuova, 90=primo quarto, 180=piena, 270=ultimo quarto.
+  // Con Astronomy Engine e' l'elongazione reale; senza, il ciclo sinodico medio.
+  function moonPhaseAngle(date){
+    if(window.Astronomy){
+      try{return Astronomy.MoonPhase(date)}catch(e){console.warn('MoonPhase non disponibile:',e)}
+    }
+    // Fallback: luna nuova di riferimento 7 gen 1970 20:35 UTC. Si usa UTC perche'
+    // i costruttori in ora locale spostavano il calcolo col fuso e con l'ora legale.
+    const SYNODIC=29.5305882, refUTC=Date.UTC(1970,0,7,20,35,0);
+    const days=(date.getTime()-refUTC)/86400000;
+    return ((days/SYNODIC)%1+1)%1*360;
+  }
+
+  // Nome, icona e illuminazione derivano tutti dallo STESSO angolo: non possono
+  // piu' contraddirsi (prima un plenilunio poteva uscire come "Crescente").
   function moonPhase(date){
-    const lp=2551443, now=new Date(date.getFullYear(),date.getMonth(),date.getDate(),20,35,0), newMoon=new Date(1970,0,7,20,35,0);
-    const phase=((now.getTime()-newMoon.getTime())/1000)%lp, days=phase/(24*3600), phaseNum=Math.floor((days/29.5305882)*8+0.5)%8;
-    const illum=Math.round((1-Math.cos(2*Math.PI*days/29.5305882))*50);
-    const names=['Nuova','Crescente','Crescente','Primo quarto','Crescente','Crescente','Piena','Calante'];
-    const classes=['moon','moon waxing','moon waxing','moon waxing','moon waxing','moon waxing','moon full','moon waning'];
-    return{name:names[phaseNum],cls:classes[phaseNum],illum};
+    const angle=moonPhaseAngle(date);
+    const oct=Math.floor(angle/45+0.5)%8;
+    let illum=null;
+    if(window.Astronomy){
+      try{illum=Math.round(Astronomy.Illumination(Astronomy.Body.Moon,date).phase_fraction*100)}catch(e){}
+    }
+    if(illum===null)illum=Math.round((1-Math.cos(angle*Math.PI/180))*50);
+    return{name:MOON_NAMES[oct],cls:MOON_CLASSES[oct],emoji:MOON_EMOJI[oct],illum,angle,waxing:angle<180};
+  }
+
+  // Inizio del buio astronomico (Sole a -18 gradi): Date, oppure null se stanotte
+  // non arriva o Astronomy Engine non e' caricato.
+  // NB: SearchAltitude vuole l'altitudine come SESTO argomento. Ometterlo faceva
+  // lanciare la libreria ("Invalid altitude angle: undefined") e il catch
+  // silenziava tutto, quindi il dato non compariva mai.
+  function astroDarkStart(latitude,longitude,from){
+    if(!window.Astronomy||typeof latitude!=='number'||typeof longitude!=='number')return null;
+    try{
+      const obs=new Astronomy.Observer(latitude,longitude,0);
+      const t=Astronomy.SearchAltitude(Astronomy.Body.Sun,obs,-1,from||new Date(),1,-18);
+      return t?t.date:null;
+    }catch(e){console.warn('astroDarkStart:',e);return null}
   }
 
   // Valuta qualità serata in base a nuvole, vento, luna
@@ -1478,15 +1514,8 @@
       $('verdictMsg').textContent=verdict.msg;
       $('moonInfo').innerHTML=`<span class="${moon.cls}"></span> ${moon.name} (${moon.illum}%)`;
       $('sunInfo').textContent='tramonto '+fmtTime(j.daily?.sunset?.[0]);
-      $('astroInfo').textContent=(window.Astronomy && typeof lat==='number' && typeof lon==='number')?
-        (function(){
-          try{
-            const obs=new Astronomy.Observer(lat,lon,0);
-            const t=Astronomy.SearchAltitude(Astronomy.Body.Sun,obs,-1,new Date(),1);
-            return t?'buio astronomico alle '+fmtTime(t.date):'buio astronomico non raggiunto stanotte';
-          }catch(e){return 'buio astronomico non raggiunto stanotte';}
-        })()
-        :'buio astronomico non raggiunto stanotte';
+      const dark=astroDarkStart(lat,lon,new Date());
+      $('astroInfo').textContent=dark?'buio astronomico alle '+fmtTime(dark):'buio astronomico non raggiunto stanotte';
     }catch(e){
       $('forecast').textContent='Non riesco a raggiungere il servizio meteo. Riprova con connessione attiva.';
       $('verdictTitle').textContent='Dati meteo non disponibili';
@@ -2673,18 +2702,17 @@
       const p=btn.dataset.preset;
       const now=new Date();
       if(p==='now'){skyState.datetime=null;}
-      else if(p==='astro' && window.Astronomy && typeof lat==='number' && typeof lon==='number'){
-        // Calcola alba/tramonto del Sole a -18° (buio astronomico) e prendi il tramonto più vicino.
-        const observer=new Astronomy.Observer(lat,lon,0);
-        const search=window.Astronomy.SearchAltitude(Astronomy.Body.Sun,observer,-1,now,1);
-        skyState.datetime=search?search.date:null;
-      }
       else if(p==='astro'){
-        // Fallback se Astronomy non è caricato o la posizione manca: 22:30 locale.
-        const d=new Date(now);
-        d.setHours(22,30,0,0);
-        if(d<now)d.setDate(d.getDate()+1);
-        skyState.datetime=d;
+        // Sole a -18°. Se non è calcolabile (engine assente, posizione mancante,
+        // o notte senza buio astronomico) si ripiega su 22:30 locale.
+        const dark=astroDarkStart(lat,lon,now);
+        if(dark){skyState.datetime=dark;}
+        else{
+          const d=new Date(now);
+          d.setHours(22,30,0,0);
+          if(d<now)d.setDate(d.getDate()+1);
+          skyState.datetime=d;
+        }
       }
       else{
         const h=Number(p);
@@ -2969,26 +2997,25 @@
     const now=new Date();
     const obs=new Astronomy.Observer(lat,lon,0);
     // Alba/tramonto oggi
-    let sunrise='—',sunset='—',astroDarkStart='—';
+    let sunrise='—',sunset='—',astroDark='—';
     try{
       const srAstro=Astronomy.SearchRiseSet(Astronomy.Body.Sun,obs,+1,now,1);
       const ssAstro=Astronomy.SearchRiseSet(Astronomy.Body.Sun,obs,-1,now,1);
       if(srAstro)sunrise=srAstro.date.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
       if(ssAstro)sunset=ssAstro.date.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
-      // Astro dark = sole -18°: usa SearchAltitude
-      const astroSet=Astronomy.SearchAltitude(Astronomy.Body.Sun,obs,-1,now,1,-18);
-      if(astroSet)astroDarkStart=astroSet.date.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+      // Astro dark = Sole a -18° (stesso helper del verdetto serata)
+      const astroSet=astroDarkStart(lat,lon,now);
+      if(astroSet)astroDark=astroSet.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
     }catch(e){}
-    // Fase lunare
-    const moonPhase=Astronomy.MoonPhase(now);
-    const phaseName=moonPhase<22.5?'🌑 Nuova':moonPhase<67.5?'🌒 Crescente':moonPhase<112.5?'🌓 Primo quarto':moonPhase<157.5?'🌔 Gibbosa':moonPhase<202.5?'🌕 Piena':moonPhase<247.5?'🌖 Gibbosa calante':moonPhase<292.5?'🌗 Ultimo quarto':'🌘 Calante';
-    let illumPct=0;
-    try{illumPct=Math.round(Astronomy.Illumination(Astronomy.Body.Moon,now).phase_fraction*100);}
-    catch(e){illumPct=Math.round((1-Math.cos(moonPhase*Math.PI/180))/2*100);}
+    // Fase lunare: stessa funzione condivisa del verdetto serata, cosi' le due
+    // schermate non possono piu' mostrare fasi diverse per lo stesso istante.
+    const mp=moonPhase(now);
+    const phaseName=mp.emoji+' '+mp.name;
+    const illumPct=mp.illum;
     el.innerHTML=`
       <div class="astro-now-card"><div class="an-icon">🌅</div><div class="an-label">Alba</div><div class="an-value">${sunrise}</div></div>
       <div class="astro-now-card"><div class="an-icon">🌇</div><div class="an-label">Tramonto</div><div class="an-value">${sunset}</div></div>
-      <div class="astro-now-card"><div class="an-icon">🌌</div><div class="an-label">Buio astronomico</div><div class="an-value">${astroDarkStart}</div></div>
+      <div class="astro-now-card"><div class="an-icon">🌌</div><div class="an-label">Buio astronomico</div><div class="an-value">${astroDark}</div></div>
       <div class="astro-now-card"><div class="an-icon">🌙</div><div class="an-label">Fase lunare</div><div class="an-value">${phaseName}</div></div>
       <div class="astro-now-card"><div class="an-icon">💡</div><div class="an-label">Illuminazione</div><div class="an-value">${illumPct}%</div></div>
     `;

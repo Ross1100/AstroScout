@@ -1,5 +1,5 @@
 // Service Worker per Astro Scout — Network-first per HTML, cache per asset statici
-const CACHE='astro-scout-v144-LOGO-CLEAN';
+const CACHE='astro-scout-v145-MOON-DARK-FIX';
 const ASSETS=[
   './',
   './index.html',
@@ -34,7 +34,12 @@ self.addEventListener('install',e=>{
 self.addEventListener('activate',e=>{
   e.waitUntil(
     caches.keys()
-      .then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
+      // Come nell'install: tocca SOLO le cache di questa app. L'API caches e'
+      // per-origine, quindi su github.io un filtro generico cancellerebbe anche
+      // le cache degli altri progetti ospitati sullo stesso dominio.
+      .then(keys=>Promise.all(keys
+        .filter(k=>k.startsWith('astro-scout-')&&k!==CACHE)
+        .map(k=>caches.delete(k))))
       .then(()=>self.clients.claim())
   );
 });
