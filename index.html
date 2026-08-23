@@ -1269,6 +1269,25 @@
     const d=new Date(iso);
     return d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
   }
+  // Offset del fuso della localita' scelta (da Open-Meteo). null = non ancora noto,
+  // e in quel caso si ripiega sull'ora del browser come prima.
+  let placeOffsetMs=null;
+  // Orario Open-Meteo con timezone=auto: stringa SENZA offset, gia' espressa
+  // nell'ora di parete della localita'. Va letta come UTC e formattata come UTC,
+  // altrimenti il browser la reinterpreta nel proprio fuso.
+  const NAIVE_ISO=/^\d{4}-\d\d-\d\dT\d\d:\d\d(:\d\d)?$/;
+  const HHMM={hour:'2-digit',minute:'2-digit'};
+  function fmtTimeLocalStr(t){
+    if(!t)return'—';
+    if(!NAIVE_ISO.test(t))return fmtTime(t);
+    return new Date(Date.parse(t+'Z')).toLocaleTimeString('it-IT',{...HHMM,timeZone:'UTC'});
+  }
+  // Istante reale (es. quello che torna Astronomy Engine) reso nell'ora della localita'.
+  function fmtTimeTz(date){
+    if(!date)return'—';
+    if(placeOffsetMs===null)return fmtTime(date);
+    return new Date(date.getTime()+placeOffsetMs).toLocaleTimeString('it-IT',{...HHMM,timeZone:'UTC'});
+  }
   // ========= POPOLA SELECT FOTOCAMERE + OBIETTIVI DA data/gear.js =========
   // NB: <optgroup> non può contenere altri <optgroup> (specifica HTML).
   // Per raggruppare per tipologia + brand usiamo <option disabled> come header visivo
@@ -1464,15 +1483,33 @@
     try{
       const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=cloud_cover,wind_speed_10m,wind_direction_10m,relative_humidity_2m,precipitation_probability,dew_point_2m&current=temperature_2m&timezone=auto&forecast_days=3&daily=sunrise,sunset`;
       const j=await fetch(url).then(r=>r.json());
-      const now=new Date();
-      let i=j.hourly.time.findIndex(t=>{const d=new Date(t);return d>now&&d.getHours()>=21});
-      if(i<0)i=0;
+      // Con timezone=auto gli orari sono ora di parete della localita', senza offset.
+      // Parsandoli con new Date() venivano letti nel fuso del BROWSER: scegliendo
+      // sulla mappa un punto in un altro fuso l'ora di riferimento era sbagliata
+      // (da Roma su Sydney, di 8 ore). Convenzione: si parsano come UTC, cosi' i
+      // campi getUTC* coincidono con l'ora locale della localita'.
+      placeOffsetMs=(j.utc_offset_seconds??0)*1000;
+      const asPlace=t=>Date.parse(t+'Z');
+      const nowPlace=Date.now()+placeOffsetMs;
+      // Prima ora notturna (dalle 21 in poi) ancora futura, nel fuso della localita'.
+      let i=j.hourly.time.findIndex(t=>asPlace(t)>nowPlace&&new Date(asPlace(t)).getUTCHours()>=21);
+      // Se la finestra notturna e' gia' passata si prende la prima ora futura
+      // disponibile, invece dell'indice 0 che mostrava in silenzio la mezzanotte
+      // appena trascorsa spacciandola per previsione.
+      if(i<0)i=j.hourly.time.findIndex(t=>asPlace(t)>nowPlace);
+      if(i<0)i=j.hourly.time.length-1;
       const c=Math.round(j.hourly.cloud_cover[i]),
             w=Math.round(j.hourly.wind_speed_10m[i]);
+      // Istante reale dell'ora di riferimento: la luna va valutata quando si scatta.
+      const refInstant=new Date(asPlace(j.hourly.time[i])-placeOffsetMs);
+      const moon=moonPhase(refInstant);
+      const verdict=judgeSky(c,w,moon.illum);
       $('cloud').textContent=c+'%';
       $('wind').textContent=w+' km/h';
-      $('rating').textContent=c<20&&w<18?'Buona':c<45&&w<28?'Discreta':'Debole';
-      $('rating').className=c<20&&w<18?'ok':'';
+      // #4: un solo punteggio. La card aveva soglie proprie e poteva dire "Buona"
+      // mentre il verdetto grande diceva "discreta" (nuvole 18%, vento 17, luna 80%).
+      $('rating').textContent=verdict.label;
+      $('rating').className=verdict.good?'ok':'';
       // Nuovi campi meteo
       const humidity=Math.round(j.hourly.relative_humidity_2m[i]??j.current?.relative_humidity_2m??0);
       const wd=Math.round(j.hourly.wind_direction_10m[i]??0);
@@ -1495,30 +1532,30 @@
         $('dew').textContent='—';
         $('dewMeta').textContent='—';
       }
-      $('forecast').textContent=`Riferimento: ${j.hourly.time[i].replace('T',' ')} · condizioni indicative, non un bollettino di sicurezza.`;
-      // Popola night-bar con data/ora di riferimento
-      const refDate=new Date(j.hourly.time[i]);
-      const oggi=new Date();
-      const domani=new Date(oggi.getTime()+86400000);
-      const sameDay=refDate.getDate()===oggi.getDate()&&refDate.getMonth()===oggi.getMonth();
-      const isTomorrow=refDate.getDate()===domani.getDate()&&refDate.getMonth()===domani.getMonth();
-      const giorno=sameDay?'stasera':isTomorrow?'domani notte':'la notte del';
-      const dataStr=refDate.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});
-      const oraStr=refDate.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+      const tzNote=j.timezone_abbreviation?` (${j.timezone_abbreviation})`:'';
+      $('forecast').textContent=`Riferimento: ${j.hourly.time[i].replace('T',' ')}${tzNote} · condizioni indicative, non un bollettino di sicurezza.`;
+      // Night-bar: tutto confrontato e formattato nel fuso della localita'.
+      const refPlace=new Date(asPlace(j.hourly.time[i]));
+      const sameYMD=(a,b)=>a.getUTCFullYear()===b.getUTCFullYear()&&a.getUTCMonth()===b.getUTCMonth()&&a.getUTCDate()===b.getUTCDate();
+      const giorno=sameYMD(refPlace,new Date(nowPlace))?'stasera'
+                  :sameYMD(refPlace,new Date(nowPlace+86400000))?'domani notte':'la notte del';
+      const dataStr=refPlace.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'});
+      const oraStr=refPlace.toLocaleTimeString('it-IT',{...HHMM,timeZone:'UTC'});
       $('nightDate').textContent=`${giorno} ${dataStr}`;
       $('nightTime').textContent=`🕒 Riferimento meteo: ${oraStr}`;
 
-      // Aggiorna verdict "Stasera è buono?"
-      const moon=moonPhase(now);
-      const verdict=judgeSky(c,w,moon.illum);
+      // Aggiorna verdict "Stasera è buono?" (moon e verdict calcolati sopra:
+      // sono gli stessi che alimentano la card, non possono divergere)
       $('verdict').className='verdict '+verdict.cls;
       $('verdictDot').textContent=verdict.emoji;
       $('verdictTitle').textContent=`Stasera è ${verdict.label.toLowerCase()}`;
       $('verdictMsg').textContent=verdict.msg;
       $('moonInfo').innerHTML=`<span class="${moon.cls}"></span> ${moon.name} (${moon.illum}%)`;
-      $('sunInfo').textContent='tramonto '+fmtTime(j.daily?.sunset?.[0]);
-      const dark=astroDarkStart(lat,lon,new Date());
-      $('astroInfo').textContent=dark?'buio astronomico alle '+fmtTime(dark):'buio astronomico non raggiunto stanotte';
+      $('sunInfo').textContent='tramonto '+fmtTimeLocalStr(j.daily?.sunset?.[0]);
+      // Si cerca a partire dal pomeriggio della notte di riferimento, non da adesso:
+      // se il riferimento e' "domani notte" serve il buio di domani.
+      const dark=astroDarkStart(lat,lon,new Date(refInstant.getTime()-6*3600000));
+      $('astroInfo').textContent=dark?'buio astronomico alle '+fmtTimeTz(dark):'buio astronomico non raggiunto stanotte';
     }catch(e){
       $('forecast').textContent='Non riesco a raggiungere il servizio meteo. Riprova con connessione attiva.';
       $('verdictTitle').textContent='Dati meteo non disponibili';
@@ -3004,11 +3041,12 @@
     try{
       const srAstro=Astronomy.SearchRiseSet(Astronomy.Body.Sun,obs,+1,now,1);
       const ssAstro=Astronomy.SearchRiseSet(Astronomy.Body.Sun,obs,-1,now,1);
-      if(srAstro)sunrise=srAstro.date.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
-      if(ssAstro)sunset=ssAstro.date.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+      // Orari resi nel fuso della localita' scelta, come nel verdetto serata.
+      if(srAstro)sunrise=fmtTimeTz(srAstro.date);
+      if(ssAstro)sunset=fmtTimeTz(ssAstro.date);
       // Astro dark = Sole a -18° (stesso helper del verdetto serata)
       const astroSet=astroDarkStart(lat,lon,now);
-      if(astroSet)astroDark=astroSet.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+      if(astroSet)astroDark=fmtTimeTz(astroSet);
     }catch(e){}
     // Fase lunare: stessa funzione condivisa del verdetto serata, cosi' le due
     // schermate non possono piu' mostrare fasi diverse per lo stesso istante.
