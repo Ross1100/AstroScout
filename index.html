@@ -3349,7 +3349,9 @@ console.log('🌟 Script fine');
             '</div>'+
             '<p class="as-w-note">I calcoli restano sul dispositivo. Le coordinate servono solo per meteo, nome del luogo e belvederi.</p>'+
           '</div>';
+        function onEsc(e){ if(e.key==='Escape') close(); }
         function close(){
+          document.removeEventListener('keydown',onEsc);
           ov.remove();
           try{ localStorage.setItem('astroscout.welcome','1'); }catch(e){}
           if(location.hash==='#benvenuto') history.replaceState(null,'','#stanotte');
@@ -3363,7 +3365,7 @@ console.log('🌟 Script fine');
             if(loc) loc.click();
           }
         });
-        document.addEventListener('keydown',function esc(e){ if(e.key==='Escape'){ close(); document.removeEventListener('keydown',esc); } });
+        document.addEventListener('keydown',onEsc);
         document.body.appendChild(ov);
         var f=ov.querySelector('[data-as-go]'); if(f) f.focus();
       }
