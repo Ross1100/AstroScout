@@ -1077,6 +1077,9 @@
   let usingFallback=false;
   let lat=null, lon=null;
   const $=id=>document.getElementById(id);
+  // Escape per tutto cio' che finisce in innerHTML e non e' scritto da noi:
+  // i nomi dei luoghi arrivano dai tag OpenStreetMap, modificabili da chiunque.
+  const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   // Esponi le funzioni usate dagli onclick inline (la IIFE isola gli scope)
   window.closeWikiModal=function(){$('wikiModal').style.display='none';document.body.style.overflow='';};
   console.log('🚀 AstroScout init');
@@ -1639,10 +1642,10 @@
         const alt=p.ele?` · ⛰️ ${p.ele} m`:'';
         const icon=p.type==='peak'?'🗻':'🌄';
         const osm=`https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lon}#map=15/${p.lat}/${p.lon}`;
-        return`<li><a target="_blank" rel="noreferrer" href="${osm}">${icon} ${p.name}</a><small>📏 ${d.toFixed(1)} km · 🧭 ${dir} (${deg.toFixed(0)}°)${alt}</small></li>`;
+        return`<li><a target="_blank" rel="noreferrer" href="${osm}">${icon} ${esc(p.name)}</a><small>📏 ${d.toFixed(1)} km · 🧭 ${dir} (${deg.toFixed(0)}°)${alt}</small></li>`;
       }).join('');
       items.forEach(p=>{
-        const m=L.circleMarker([p.lat,p.lon],{radius:6,color:'#8cc5ff',fillColor:'#8cc5ff',fillOpacity:.7,weight:1.5}).bindPopup(`<b>${p.name}</b><br>${distKm(lat,lon,p.lat,p.lon).toFixed(1)} km ${compass(bearing(lat,lon,p.lat,p.lon))}${p.ele?`<br>${p.ele} m s.l.m.`:''}`);
+        const m=L.circleMarker([p.lat,p.lon],{radius:6,color:'#8cc5ff',fillColor:'#8cc5ff',fillOpacity:.7,weight:1.5}).bindPopup(`<b>${esc(p.name)}</b><br>${distKm(lat,lon,p.lat,p.lon).toFixed(1)} km ${compass(bearing(lat,lon,p.lat,p.lon))}${p.ele?`<br>${p.ele} m s.l.m.`:''}`);
         m.addTo(placeMarkers);
       });
       $('placesStatus').textContent=`${items.length} punti panoramici entro 50 km, segnati in blu sulla mappa.`;
@@ -1656,7 +1659,7 @@
           const d=distKm(lat,lon,p.lat,p.lon);
           const deg=bearing(lat,lon,p.lat,p.lon);
           const dir=compass(deg);
-          return`<li><a target="_blank" rel="noreferrer" href="https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lon}#map=15/${p.lat}/${p.lon}">🌄 ${p.name}</a><small>📏 ${d.toFixed(1)} km · 🧭 ${dir}${p.ele?` · ⛰️ ${p.ele} m`:''} <em>(risultato precedente)</em></small></li>`;
+          return`<li><a target="_blank" rel="noreferrer" href="https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lon}#map=15/${p.lat}/${p.lon}">🌄 ${esc(p.name)}</a><small>📏 ${d.toFixed(1)} km · 🧭 ${dir}${p.ele?` · ⛰️ ${p.ele} m`:''} <em>(risultato precedente)</em></small></li>`;
         }).join('');
         $('placesStatus').innerHTML='Il servizio delle mappe non risponde. <a href="#" id="retryPlaces">Riprova</a>.';
         $('retryPlaces').addEventListener('click',ev=>{ev.preventDefault();places()});
@@ -1842,9 +1845,9 @@
       const date=new Date(f.t).toLocaleString('it-IT',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
       const emoji={bug:'🐛',idea:'💡',praise:'⭐',other:'📝'}[f.type]||'📝';
       return`<li>
-        <b>${emoji} ${f.title||'(senza titolo)'}</b>
-        <small style="color:var(--muted);display:block;margin-top:2px">${date} · ${f.type}</small>
-        <small style="color:#aeb5c4;display:block;margin-top:2px;font-size:12px">${f.body||''}</small>
+        <b>${emoji} ${esc(f.title||'(senza titolo)')}</b>
+        <small style="color:var(--muted);display:block;margin-top:2px">${esc(date)} · ${esc(f.type)}</small>
+        <small style="color:#aeb5c4;display:block;margin-top:2px;font-size:12px">${esc(f.body||'')}</small>
       </li>`;
     }).join('');
   }
@@ -1880,7 +1883,7 @@
         return false;
       }
     }catch(e){
-      $('fbStatus').innerHTML='⚠️ Errore di rete: '+e.message+'. Il feedback resta salvato su questo dispositivo.';
+      $('fbStatus').innerHTML='⚠️ Errore di rete: '+esc(e.message)+'. Il feedback resta salvato su questo dispositivo.';
       return false;
     }
   }
@@ -2006,7 +2009,7 @@
     if(extract){
       const clean=extract.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
       const trunc=clean.length>600?clean.slice(0,600)+'…':clean;
-      $('wikiDesc').innerHTML='<div>'+trunc+'</div><p style="font-size:11px;color:var(--muted);margin-top:10px">Fonte: Wikipedia ('+title+')</p>';
+      $('wikiDesc').innerHTML='<div>'+esc(trunc)+'</div><p style="font-size:11px;color:var(--muted);margin-top:10px">Fonte: Wikipedia ('+title+')</p>';
     }else{
       $('wikiDesc').innerHTML='<div>'+rec.desc+'</div><p style="font-size:11px;color:var(--muted);margin-top:10px">Descrizione dal catalogo interno.</p>';
     }
