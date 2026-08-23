@@ -1030,9 +1030,9 @@
       <div id="historyContent" style="display:none">
         <div class="history-grid">
           <div class="history-card">
-            <div class="hc-label">Probabilità cielo sereno</div>
+            <div class="hc-label">Notti serene</div>
             <div class="hc-value" id="hcClearPct">—</div>
-            <div class="hc-meta" id="hcClearMeta">Media giornaliera · ultimi 5 anni</div>
+            <div class="hc-meta" id="hcClearMeta">Solo ore di buio · ultimi 5 anni</div>
           </div>
           <div class="history-card">
             <div class="hc-label">Miglior mese</div>
@@ -1048,7 +1048,7 @@
 
         <h3 style="margin-top:18px;color:var(--blue);font-size:13px;letter-spacing:.5px">📅 Calendario annuale</h3>
         <div id="historyCalendar" class="history-calendar"></div>
-        <p class="status" style="margin-top:6px;font-size:11px">Quota di giorni con copertura nuvolosa media sotto il 20%, sugli ultimi 5 anni.</p>
+        <p class="status" style="margin-top:6px;font-size:11px" id="historyCalendarNote">Quota di ore di buio astronomico con copertura nuvolosa sotto il 20%, sugli ultimi 5 anni.</p>
 
         <h3 style="margin-top:18px;color:var(--blue);font-size:13px;letter-spacing:.5px">Fattibilità dei target deep sky</h3>
         <p class="status" style="font-size:11px">Combina altezza notturna, fase lunare e probabilità di cielo sereno. Punteggio 0-100.</p>
@@ -2916,8 +2916,10 @@
   // Fetch una sola volta per posizione, cached per 24h in localStorage
   async function loadHistory(){
     const status=$('historyStatus'),content=$('historyContent');
-    if(!lat||!lon){status.textContent='Premi 📍 Posizione per caricare i dati storici.';return}
-    const cacheKey=`astroHistory_${lat.toFixed(2)}_${lon.toFixed(2)}`;
+    if(lat===null||lon===null){status.textContent='Premi 📍 Posizione per caricare i dati storici.';return}
+    // Chiave nuova: invalida la cache dei vecchi dati giornalieri, che misuravano
+    // un'altra cosa e non vanno confrontati con questi.
+    const cacheKey=`astroHistoryNight_${lat.toFixed(2)}_${lon.toFixed(2)}`;
     let cached=null;
     try{const raw=localStorage.getItem(cacheKey);if(raw){const p=JSON.parse(raw);if(Date.now()-p.t<86400000)cached=p.data;}}catch(e){}
     if(cached){
@@ -2927,44 +2929,64 @@
     }
     status.textContent='📡 Scaricamento dati storici da Open-Meteo…';
     try{
-      // ultimi 5 anni di dati giornalieri per ogni mese
+      // Prima si usava daily=cloud_cover_mean, cioe' la nuvolosita' media sulle 24
+      // ore: le nubi di mezzogiorno pesavano quanto quelle di notte, che sono le
+      // uniche che contano per fotografare. Ora si scaricano campioni ogni 3 ore
+      // (temporal_resolution=hourly_3: ~64 KB/anno invece di 191) e si tiene solo
+      // cio' che cade in buio astronomico vero, Sole sotto i -18 gradi, calcolato
+      // per ogni singolo campione con Astronomy Engine (~6 microsecondi l'uno).
       const now=new Date();
       const years=[];
       for(let i=0;i<5;i++)years.push(now.getFullYear()-i);
-      const samples=[];
-      const responses=await Promise.all(years.map(y=>
-        fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${y}-01-01&end_date=${y}-12-31&daily=cloud_cover_mean&timezone=auto`)
-          .then(r=>r.ok?r.json():null).catch(()=>null)
-      ));
+      // L'archivio ha qualche giorno di ritardo: chiedere fino al 31/12 dell'anno
+      // in corso significa chiedere date future.
+      const lastAvail=new Date(now.getTime()-5*86400000);
+      const iso=d=>d.toISOString().slice(0,10);
+      const responses=await Promise.all(years.map(y=>{
+        const end=y===now.getFullYear()?iso(lastAvail):`${y}-12-31`;
+        if(end<`${y}-01-01`)return Promise.resolve(null);
+        return fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${y}-01-01&end_date=${end}&hourly=cloud_cover&timezone=auto&temporal_resolution=hourly_3`)
+          .then(r=>r.ok?r.json():null).catch(()=>null);
+      }));
+
+      const obs=window.Astronomy?new Astronomy.Observer(lat,lon,0):null;
+      // Vero se in quell'istante il Sole e' sotto i -18 gradi. Senza Astronomy
+      // Engine si ripiega sulle ore centrali della notte, dichiarandolo nella UI.
+      const isDark=(instant,placeHour)=>{
+        if(!obs)return placeHour>=22||placeHour<=3;
+        const eq=Astronomy.Equator(Astronomy.Body.Sun,instant,obs,true,true);
+        return Astronomy.Horizon(instant,obs,eq.ra,eq.dec,'normal').altitude<-18;
+      };
+
+      const monthStats=Array(12).fill(0).map(()=>({sum:0,count:0,clear:0}));
+      let total=0,clear=0;
       for(const j of responses){
-        if(!j)continue;
-        if(j.daily&&j.daily.cloud_cover_mean){
-          j.daily.time.forEach((d,k)=>{
-            const cc=j.daily.cloud_cover_mean[k];
-            if(cc===null||cc===undefined)return;
-            const dt=new Date(d);
-            const m=dt.getMonth();
-            samples.push({month:m,cc});
-          });
-        }
+        if(!j||!j.hourly||!j.hourly.cloud_cover)continue;
+        const off=(j.utc_offset_seconds??0)*1000;
+        j.hourly.time.forEach((t,k)=>{
+          const cc=j.hourly.cloud_cover[k];
+          if(cc===null||cc===undefined)return;
+          const placeMs=Date.parse(t+'Z');            // campi UTC = ora locale del posto
+          const placeDate=new Date(placeMs);
+          if(!isDark(new Date(placeMs-off),placeDate.getUTCHours()))return;
+          const m=placeDate.getUTCMonth();
+          monthStats[m].sum+=cc;
+          monthStats[m].count++;
+          total++;
+          if(cc<20){monthStats[m].clear++;clear++}
+        });
       }
-      if(!samples.length)throw new Error('nessun dato');
-      // Aggrega per mese
-      const monthStats=Array(12).fill(0).map(()=>({sum:0,count:0,clearDays:0}));
-      samples.forEach(s=>{
-        monthStats[s.month].sum+=s.cc;
-        monthStats[s.month].count++;
-        if(s.cc<20)monthStats[s.month].clearDays++; // soglia "sereno": copertura <20%
-      });
+      if(!total)throw new Error('nessun dato');
       const data={
         fetchedAt:Date.now(),
-        monthPct:monthStats.map(ms=>ms.count?Math.round((ms.clearDays/ms.count)*100):0),
+        monthPct:monthStats.map(ms=>ms.count?Math.round((ms.clear/ms.count)*100):0),
         monthAvg:monthStats.map(ms=>ms.count?Math.round(ms.sum/ms.count):0),
-        overall:samples.length?Math.round((samples.filter(s=>s.cc<20).length/samples.length)*100):0,
-        sampleCount:samples.length
+        overall:Math.round(clear/total*100),
+        sampleCount:total,
+        exactNight:!!obs
       };
       try{localStorage.setItem(cacheKey,JSON.stringify({t:Date.now(),data}));}catch(e){}
-      status.textContent=`📊 Dati da ${new Date(data.fetchedAt).toLocaleString('it-IT')} · ${data.sampleCount} giorni analizzati`;
+      status.textContent=`📊 Dati da ${new Date(data.fetchedAt).toLocaleString('it-IT')} · ${data.sampleCount} campioni in buio astronomico`;
       renderHistory(data);renderAstroNow();
     }catch(e){
       status.textContent='⚠️ Impossibile scaricare dati storici (offline?). Riprova con connessione attiva.';
@@ -2975,20 +2997,24 @@
     const content=$('historyContent');if(!content)return;
     content.style.display='block';
     $('hcClearPct').textContent=data.overall+'%';
+    // Trasparenza sul metodo: se Astronomy Engine non c'era, la finestra notturna
+    // e' una stima a ore fisse e non il buio astronomico calcolato.
+    const note=$('historyCalendarNote');
+    if(note&&data.exactNight===false)note.textContent='Quota di ore notturne (stima 22-03, libreria astronomica non disponibile) con copertura sotto il 20%, sugli ultimi 5 anni.';
     const monthNames=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
     let bestI=0,worstI=0;
     data.monthPct.forEach((p,i)=>{if(p>data.monthPct[bestI])bestI=i;if(p<data.monthPct[worstI])worstI=i;});
     $('hcBestMonth').textContent=monthNames[bestI];
-    $('hcBestMonthMeta').textContent=`${data.monthPct[bestI]}% sereno (media ${data.monthAvg[bestI]}% nuvole)`;
+    $('hcBestMonthMeta').textContent=`${data.monthPct[bestI]}% di ore serene (media ${data.monthAvg[bestI]}% nuvole)`;
     $('hcWorstMonth').textContent=monthNames[worstI];
-    $('hcWorstMonthMeta').textContent=`${data.monthPct[worstI]}% sereno (media ${data.monthAvg[worstI]}% nuvole)`;
+    $('hcWorstMonthMeta').textContent=`${data.monthPct[worstI]}% di ore serene (media ${data.monthAvg[worstI]}% nuvole)`;
     // Calendario annuale: barre SVG verticali
     const cal=$('historyCalendar');if(!cal)return;
     const maxP=Math.max(...data.monthPct,1);
     cal.innerHTML=data.monthPct.map((p,i)=>{
       const h=Math.max(4,Math.round((p/maxP)*110));
       const color=p>60?'#9ae6b4':p>40?'#ffd77b':'#ff6b6b';
-      return `<div class="cal-month" title="${monthNames[i]}: ${p}% sereno">
+      return `<div class="cal-month" title="${monthNames[i]}: ${p}% di ore di buio serene">
         <div class="cal-bar" style="height:${h}px;background:${color}"><span class="cal-bar-pct">${p}%</span></div>
         <div class="cal-bar-label">${monthNames[i]}</div>
       </div>`;
