@@ -3114,5 +3114,200 @@ console.log('🌟 Script fine');
     </div>
   </div>
 
+
+    <!-- ===== AstroScout · nav a 4 aree (innesto graduale) ===== -->
+    <style id="as-tabs-style">
+      /* --- palette: dal quasi-nero al blu notte del redesign --- */
+      :root{
+        --bg:#0a0d18; --panel:#131c37; --line:#24325e; --ink:#e8edfb; --muted:#8fa3cf;
+        --blue:#8cb6f5; --good:#7ee0a8;
+        --as-accent:#5588e0; --as-dim:#6d7fa8; --as-elev:#182241; --as-tabbar-h:70px;
+      }
+      body{background:var(--bg)}
+      body.as-tabs main{
+        padding:20px 16px calc(var(--as-tabbar-h) + env(safe-area-inset-bottom,0px) + 20px);
+        background:radial-gradient(120% 46% at 50% 0%, #16224a 0%, rgba(10,13,24,0) 62%);
+      }
+      .as-area[hidden]{display:none}
+      .as-area{animation:fadeIn .28s ease}
+
+      /* --- pannelli: raggi ampi, superfici stratificate --- */
+      body.as-tabs section.panel{
+        background:linear-gradient(168deg,#16203c 0%,#111935 72%);
+        border:1px solid var(--line); border-radius:22px; padding:18px 17px;
+        box-shadow:0 18px 40px -28px rgba(0,0,0,.9);
+      }
+      body.as-tabs section.verdict{
+        background:linear-gradient(160deg,#16224a 0%,#101733 70%);
+        border:1px solid #253666; border-radius:26px; padding:20px 18px;
+      }
+      body.as-tabs h2{font-size:19px;letter-spacing:-.01em}
+      body.as-tabs .card,body.as-tabs .feas-item,body.as-tabs .astro-now-card,body.as-tabs .lp-legend{
+        background:rgba(255,255,255,.05); border:1px solid transparent; border-radius:15px;
+      }
+      body.as-tabs .card strong{letter-spacing:-.01em}
+      body.as-tabs .night-bar{border-radius:16px;border-left-width:3px;padding:12px 15px}
+      body.as-tabs #map{border-radius:18px;overflow:hidden}
+      body.as-tabs input,body.as-tabs textarea,body.as-tabs select{border-radius:13px !important}
+      body.as-tabs .btn,body.as-tabs .btn-ghost,body.as-tabs button.tab{border-radius:13px}
+
+      /* --- triangolo dell'esposizione: colonna vera accanto alla ricetta --- */
+      body.as-tabs .setup-wrap{align-items:stretch;gap:14px}
+      body.as-tabs .exposure-triangle{
+        flex:0 0 210px;width:210px;align-self:stretch;display:flex;flex-direction:column;
+        justify-content:center;gap:6px;border-radius:18px;padding:14px 12px 12px;
+        background:linear-gradient(168deg,#16224a 0%,#101733 72%);border-color:#253666;
+        box-shadow:0 14px 32px -24px #000;
+      }
+      body.as-tabs .tri-caption{color:var(--as-dim);letter-spacing:.14em;margin-top:6px}
+      @media(max-width:640px){
+        /* il triangolo apre il blocco: prima la sintesi visiva, poi i numeri */
+        body.as-tabs .setup-wrap{flex-direction:column-reverse}
+        body.as-tabs .exposure-triangle{width:100%;max-width:100%;align-self:auto;padding:16px 12px 12px}
+        body.as-tabs .exposure-triangle svg{max-width:240px;margin:0 auto}
+      }
+
+      /* --- divisori: da linea tratteggiata a etichetta --- */
+      body.as-tabs .section-divider{border-bottom:0;margin:26px 0 12px;padding:0}
+      body.as-tabs .section-divider .label{color:var(--as-accent);letter-spacing:.14em;font-size:11px}
+      body.as-tabs .section-divider .desc{color:var(--as-dim)}
+
+      /* --- sotto-switch Stasera / Storico --- */
+      body.as-tabs nav.tab-bar{width:100%;background:rgba(255,255,255,.03);border-color:var(--line);border-radius:16px;padding:5px;margin-bottom:14px}
+      body.as-tabs .tab{flex:1;border-radius:12px}
+      body.as-tabs .tab.active{background:var(--as-elev);color:var(--ink);border-color:#2c3c70}
+
+      /* --- tab bar principale --- */
+      .as-tabbar{
+        position:fixed;left:0;right:0;bottom:0;z-index:900;display:flex;gap:4px;
+        padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+        background:linear-gradient(180deg,rgba(10,13,24,.72) 0%,rgba(9,12,22,.97) 46%);
+        backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);
+        border-top:1px solid #1a2340;
+      }
+      .as-tab{
+        position:relative;flex:1;min-height:52px;display:flex;flex-direction:column;align-items:center;
+        justify-content:center;gap:5px;padding:7px 0;border:0;border-radius:15px;background:transparent;
+        color:var(--as-dim);font:inherit;font-size:11px;line-height:1;cursor:pointer;
+        transition:color .18s ease,background .18s ease,transform .18s ease;-webkit-tap-highlight-color:transparent;
+      }
+      .as-tab .as-ico{font-size:17px;line-height:1;transition:transform .22s cubic-bezier(.2,.9,.3,1.2)}
+      .as-tab:hover{color:#c3d3f2}
+      .as-tab:active{transform:scale(.96)}
+      .as-tab[aria-selected="true"]{background:var(--as-elev);color:#dce7ff;font-weight:600}
+      .as-tab[aria-selected="true"] .as-ico{color:var(--as-accent);transform:translateY(-1px) scale(1.08)}
+      .as-tab[aria-selected="true"]::after{
+        content:"";position:absolute;top:6px;width:16px;height:2px;border-radius:1px;background:var(--as-accent);
+      }
+      .as-tab:focus-visible{outline:2px solid var(--as-accent);outline-offset:2px}
+      @media(min-width:900px){.as-tabbar{justify-content:center;gap:8px}.as-tab{flex:0 0 150px}}
+      @media print{.as-tabbar{display:none}.as-area[hidden]{display:block !important}}
+    </style>
+    <script id="as-tabs-script">
+    (function(){
+      var main=document.querySelector('main'); if(!main) return;
+
+      var AREAS=[
+        {id:'stanotte',label:'Stanotte',ico:'\u25D0'},
+        {id:'cielo',   label:'Cielo',   ico:'\u2726'},
+        {id:'mappa',   label:'Mappa',   ico:'\u25CE'},
+        {id:'kit',     label:'Kit',     ico:'\u25A3'}
+      ];
+      // A quale area va ogni blocco, dal suo titolo. Nessun markup esistente viene riscritto.
+      var RULES=[
+        [/attrezzatura|triangolo dell/i,'kit'],
+        [/glossario/i,'kit'],
+        [/condizioni meteo/i,'stanotte'],
+        [/probabilit|storico/i,'stanotte'],
+        [/feedback/i,'stanotte'],
+        [/posti da cui scattare|dove andare/i,'mappa'],
+        [/mappa|inquinamento luminoso/i,'mappa'],
+        [/cielo stellato|pianeti e luna|cosa fotografare/i,'cielo'],
+        [/stanotte/i,'stanotte']
+      ];
+      function areaOf(el){
+        var t=(el.querySelector('h2, .section-divider .label')||el).textContent||'';
+        for(var i=0;i<RULES.length;i++) if(RULES[i][0].test(t)) return RULES[i][1];
+        return 'stanotte';
+      }
+
+      // 1. contenitori delle aree
+      var boxes={};
+      AREAS.forEach(function(a){
+        var d=document.createElement('div');
+        d.className='as-area'; d.id='area-'+a.id;
+        d.setAttribute('role','tabpanel'); d.setAttribute('aria-label',a.label);
+        boxes[a.id]=d; main.appendChild(d);
+      });
+
+      // 2. le tab esistenti (Stasera / Storico) restano intatte e diventano un
+      //    sotto-switch dentro Stanotte: sposto i pane interi, non il loro contenuto
+      var oldBar=document.querySelector('nav.tab-bar');
+      var paneToday=document.getElementById('pane-today');
+      var paneHistory=document.getElementById('pane-history');
+      if(oldBar) boxes.stanotte.appendChild(oldBar);
+      if(paneToday) boxes.stanotte.appendChild(paneToday);
+      if(paneHistory) boxes.stanotte.appendChild(paneHistory);
+
+      // 3. sposta nelle altre aree solo i blocchi di "Stasera" che non parlano di stanotte
+      //    (i nodi sono spostati, non ricreati: id, listener e stato restano quelli di prima)
+      var blocks=main.querySelectorAll('section.panel, .section-divider');
+      Array.prototype.forEach.call(blocks,function(el){
+        if(el.closest('#pane-history')) return;
+        var area=areaOf(el);
+        if(area==='stanotte') return;
+        boxes[area].appendChild(el);
+      });
+
+      // 4. blocchi globali: la barra "Notte valutata" apre Stanotte, i crediti chiudono la pagina
+      var nightBar=main.querySelector(':scope > .night-bar');
+      if(nightBar) boxes.stanotte.insertBefore(nightBar,boxes.stanotte.firstChild);
+      Array.prototype.slice.call(main.children).forEach(function(el){
+        if(el.classList.contains('as-area')||el.tagName==='HEADER') return;
+        main.appendChild(el);
+      });
+
+      // 5. via i wrapper svuotati (mai i pane o elementi con id: il codice originale li usa)
+      Array.prototype.forEach.call(paneToday?paneToday.children:[],function(el){
+        if(el.id || el.classList.contains('tab-pane')) return;
+        if(!el.textContent.trim() && !el.querySelector('canvas,img,#map')) el.remove();
+      });
+
+      // 6. tab bar
+      var bar=document.createElement('nav');
+      bar.className='as-tabbar'; bar.setAttribute('role','tablist'); bar.setAttribute('aria-label','Aree');
+      AREAS.forEach(function(a){
+        var b=document.createElement('button');
+        b.type='button'; b.className='as-tab'; b.dataset.area=a.id;
+        b.setAttribute('role','tab'); b.setAttribute('aria-controls','area-'+a.id);
+        b.innerHTML='<span class="as-ico" aria-hidden="true">'+a.ico+'</span><span>'+a.label+'</span>';
+        b.addEventListener('click',function(){ show(a.id,true); });
+        bar.appendChild(b);
+      });
+      document.body.appendChild(bar);
+      document.body.classList.add('as-tabs');
+
+      function show(id,userAction){
+        if(!boxes[id]) id='stanotte';
+        AREAS.forEach(function(a){ boxes[a.id].hidden = a.id!==id; });
+        Array.prototype.forEach.call(bar.children,function(b){
+          b.setAttribute('aria-selected', String(b.dataset.area===id));
+        });
+        try{ localStorage.setItem('astroscout.area',id); }catch(e){}
+        if(userAction){
+          if(location.hash.slice(1)!==id) history.replaceState(null,'','#'+id);
+          window.scrollTo(0,0);
+        }
+        // mappa Leaflet e canvas del cielo si ridisegnano sul resize: basta rilanciarlo
+        requestAnimationFrame(function(){ window.dispatchEvent(new Event('resize')); });
+      }
+
+      var start=location.hash.slice(1);
+      if(!boxes[start]){ try{ start=localStorage.getItem('astroscout.area'); }catch(e){} }
+      show(boxes[start]?start:'stanotte',false);
+      window.addEventListener('hashchange',function(){ var h=location.hash.slice(1); if(boxes[h]) show(h,false); });
+    })();
+    </script>
+
 </body>
 </html>
