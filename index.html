@@ -1303,7 +1303,7 @@
       if(!groups[key])groups[key]=[];
       groups[key].push(c);
     });
-    const order=['Mirrorless','Reflex','Smartphone','Astro CCD'];
+    const order=['Mirrorless','Reflex','Compatta','Smartphone','Astro CCD'];
     let firstReal=null;
     order.forEach(gName=>{
       if(!groups[gName])return;
@@ -1327,6 +1327,8 @@
         byBrand[brand].forEach(c=>{
           const opt=document.createElement('option');
           opt.value=c.c;
+          // Serve a populateLensSelect() per sapere quale innesto proporre
+          opt.dataset.b=c.b;opt.dataset.t=c.t;opt.dataset.m=c.m;opt.dataset.f=c.f;
           opt.textContent=`     ${c.m} · ${c.f}`;
           sel.appendChild(opt);
           if(!firstReal)firstReal=opt;
@@ -1335,44 +1337,136 @@
     });
     if(firstReal)firstReal.selected=true;
   }
+  // ---- Compatibilita' corpo -> obiettivi -------------------------------------
+  // Nel dataset il campo `b` delle lenti codifica gia' l'innesto ('Canon RF',
+  // 'Nikon F', ...), quindi per le ottiche di marca il filtro e' esatto.
+  const MOUNT_NATIVE={
+    'Canon|Mirrorless':['Canon RF'], 'Canon|Reflex':['Canon EF'],
+    'Nikon|Mirrorless':['Nikon Z'],  'Nikon|Reflex':['Nikon F'],
+    'Sony|Mirrorless':['Sony'],      'Fujifilm|Mirrorless':['Fujifilm X'],
+    'Panasonic|Mirrorless':['Panasonic'],
+    'OM System|Mirrorless':['OM System'],
+    'Leica|Mirrorless':['Leica'],    'Pentax|Reflex':['Pentax'],
+    'Konika Minolta|Reflex':['Minolta']
+  };
+  // Ottiche di altri innesti, montabili con adattatore (tipico sui mirrorless)
+  const MOUNT_ADAPTED={
+    'Canon|Mirrorless':['Canon EF','Canon FD'],
+    'Nikon|Mirrorless':['Nikon F'],
+    'Sony|Mirrorless':['Minolta','Contax'],
+    'Leica|Mirrorless':['Voigtlander','Zeiss','Carl Zeiss']
+  };
+  const ASTRO_BRANDS=['SkyWatcher','Celestron','Altair','Orion','Optolong','Baader','Astronomik','Hutech','ZWO','Pegasus','Robofocus','Adapters'];
+  // Terze parti: il dataset non registra l'innesto (un Sigma Art esiste in EF, F,
+  // E e L). Non si possono filtrare con certezza, quindi si mostrano a parte.
+  const THIRD_PARTY=['Sigma','Samyang','Tamron','Viltrox','TTArtisan','Voigtlander','Zeiss','Carl Zeiss','Tokina','Laowa','Irix','Meike','Rokinon','Mitakon','Venus Optics','Metabones'];
+
+  function getSelectedCamera(){
+    const sel=document.getElementById('camera');
+    const opt=sel&&sel.options[sel.selectedIndex];
+    if(!opt||!opt.dataset.b)return null;
+    return {b:opt.dataset.b,t:opt.dataset.t,m:opt.dataset.m,f:opt.dataset.f||'',c:Number(opt.value)||1};
+  }
+
+  // Solo le categorie con focale reale. filter/adapter/reducer/teleconverter e
+  // astro_acc hanno f:0 nel dataset: sono accessori, non obiettivi, e sceglierli
+  // manderebbe il calcolo dell'esposizione a dividere per zero.
+  const KIND_LABEL={wide:'Grandangolari',astro:'Dedicati astro',fisheye:'Fisheye',standard:'Standard',macro:'Macro',tele:'Teleobiettivi',zoom:'Zoom versatili'};
+  const KIND_ORDER=['wide','astro','fisheye','standard','macro','tele','zoom'];
+  function appendLensGroup(sel,label,arr,state){
+    arr=arr.filter(l=>l.f>0);
+    if(!arr.length)return;   // niente intestazioni sospese su gruppi vuoti
+    const header=document.createElement('option');
+    header.disabled=true;header.textContent=label;header.style.fontWeight='700';
+    sel.appendChild(header);
+    KIND_ORDER.forEach(k=>{
+      const sub=arr.filter(l=>l.k===k);
+      if(!sub.length)return;
+      const subHeader=document.createElement('option');
+      subHeader.disabled=true;subHeader.textContent='   '+KIND_LABEL[k];
+      sel.appendChild(subHeader);
+      sub.forEach(l=>{
+        const opt=document.createElement('option');
+        opt.value=`${l.f},${l.a}`;
+        opt.dataset.m=l.m;
+        const fast=(k==='wide'&&l.a<=2.8)||(k!=='wide'&&l.a<=1.8);
+        const apStr=l.a===Math.floor(l.a)?'f/'+l.a:'f/'+l.a.toFixed(2);
+        opt.textContent=`     ${l.m} · ${apStr}${fast?' ⭐':''}`;
+        sel.appendChild(opt);
+        if(!state.first)state.first=opt;
+      });
+    });
+  }
+
   function populateLensSelect(){
     const sel=document.getElementById('lens');
     if(!sel||!window.LENSES)return;
-    const groups={wide:'— Grandangolari (stelle, via lattea) —',standard:'— Standard (stelle + paesaggio) —',tele:'— Teleobiettivi (luna, pianeti) —',zoom:'— Zoom versatili —'};
-    const order=['wide','standard','tele','zoom'];
-    let firstReal=null;
-    order.forEach(k=>{
-      const arr=window.LENSES.filter(l=>l.k===k);
-      if(!arr.length)return;
-      // Header categoria (non selezionabile)
+    const cam=getSelectedCamera();
+    sel.innerHTML='';
+    const state={first:null};
+
+    // Corpi a ottica fissa. setup() calcola eq = f * crop, quindi le focali
+    // equivalenti tipiche vanno divise per il crop del corpo: altrimenti su uno
+    // smartphone (crop ~3.7) l'equivalente risulterebbe triplicato.
+    if(cam&&(cam.t==='Smartphone'||cam.t==='Compatta')){
+      const fissi = cam.t==='Smartphone'
+        ? [{n:'Ultragrandangolo',eq:13,a:2.2},{n:'Principale',eq:24,a:1.8},{n:'Teleobiettivo',eq:77,a:2.8}]
+        : [{n:'Ottica fissa',eq:28,a:2.8}];
       const header=document.createElement('option');
-      header.disabled=true;
-      header.textContent=groups[k];
-      header.style.fontWeight='700';
+      header.disabled=true;header.style.fontWeight='700';
+      header.textContent='— Ottica fissa: scegli quale fotocamera usi —';
       sel.appendChild(header);
-      // Sotto-sezioni per brand
-      const byBrand={};
-      arr.forEach(l=>{
-        if(!byBrand[l.b])byBrand[l.b]=[];
-        byBrand[l.b].push(l);
+      fissi.forEach((e,i)=>{
+        const opt=document.createElement('option');
+        opt.value=`${(e.eq/cam.c).toFixed(2)},${e.a}`;
+        opt.dataset.m=e.n;
+        opt.textContent=`     ${e.n} · ~${e.eq}mm eq. · f/${e.a}`;
+        sel.appendChild(opt);
+        if(i===Math.min(1,fissi.length-1))state.first=opt;
       });
-      Object.keys(byBrand).sort().forEach(brand=>{
-        const subHeader=document.createElement('option');
-        subHeader.disabled=true;
-        subHeader.textContent='   '+brand;
-        sel.appendChild(subHeader);
-        byBrand[brand].forEach(l=>{
-          const opt=document.createElement('option');
-          opt.value=`${l.f},${l.a}`;
-          const fast=(k==='wide'&&l.a<=2.8)||(k!=='wide'&&l.a<=1.8);
-          const apStr=l.a===Math.floor(l.a)?'f/'+l.a:'f/'+l.a.toFixed(2);
-          opt.textContent=`     ${l.m} · ${apStr}${fast?' ⭐':''}`;
-          sel.appendChild(opt);
-          if(!firstReal)firstReal=opt;
-        });
-      });
-    });
-    if(firstReal)firstReal.selected=true;
+      if(state.first)state.first.selected=true;
+      return;
+    }
+
+    // Camere astronomiche. Nel dataset telescopi, filtri e riduttori hanno f:0,
+    // quindi non sono utilizzabili per calcolare l'esposizione: si mostrano gli
+    // obiettivi fotografici, che su queste camere si montano con un adattatore.
+    if(cam&&cam.t==='Astro CCD'){
+      const nota=document.createElement('option');
+      nota.disabled=true;nota.style.fontWeight='700';
+      nota.textContent='— Obiettivi via adattatore · le focali dei telescopi non sono nel dataset —';
+      sel.appendChild(nota);
+      appendLensGroup(sel,'— Tutti gli innesti —',LENSES.slice(),state);
+      if(state.first)state.first.selected=true;
+      return;
+    }
+
+    const key=cam?cam.b+'|'+cam.t:'';
+    let native=(MOUNT_NATIVE[key]||[]).slice();
+    // Il Micro 4/3 e' condiviso tra Panasonic e OM System. Le Lumix S invece sono
+    // full frame L-mount: montarci un M.Zuiko MFT non ha senso.
+    if(/Micro 4\/3/.test(cam&&cam.f||''))
+      ['Panasonic','OM System'].forEach(m=>{if(native.indexOf(m)<0)native.push(m)});
+    const adapted=MOUNT_ADAPTED[key]||[];
+    if(native.length)
+      appendLensGroup(sel,'— Innesto '+native.join(' / ')+' · nativo —',
+        LENSES.filter(l=>native.indexOf(l.b)>=0),state);
+    if(adapted.length)
+      appendLensGroup(sel,'— Con adattatore: '+adapted.join(', ')+' —',
+        LENSES.filter(l=>adapted.indexOf(l.b)>=0),state);
+
+    const gia=native.concat(adapted);
+    appendLensGroup(sel,"— Terze parti · verifica l'innesto —",
+      LENSES.filter(l=>THIRD_PARTY.indexOf(l.b)>=0&&gia.indexOf(l.b)<0),state);
+
+    // Corpo senza ottiche native nel dataset: meglio mostrare tutto il resto
+    // che lasciare la tendina quasi vuota.
+    if(!native.length&&!adapted.length){
+      const esclusi=THIRD_PARTY.concat(ASTRO_BRANDS);
+      appendLensGroup(sel,'— Altri innesti —',
+        LENSES.filter(l=>esclusi.indexOf(l.b)<0),state);
+    }
+    if(state.first)state.first.selected=true;
   }
   populateCameraSelect();
   populateLensSelect();
@@ -1829,7 +1923,9 @@
     try{
       localStorage.setItem(STORE_KEY,JSON.stringify({
         camera:$('camera').value,
+        camM:$('camera').selectedOptions[0]?.dataset.m||'',
         lens:$('lens').value,
+        lensM:$('lens').selectedOptions[0]?.dataset.m||'',
         subject:$('subject')?.value||'stars',
         density:skyState.density||'real',
         lp:$('lpToggle').checked,
@@ -1851,8 +1947,17 @@
       const raw=localStorage.getItem(STORE_KEY);
       if(!raw)return;
       const s=JSON.parse(raw);
-      if(s.camera&&$('camera').querySelector(`option[value="${s.camera}"]`))$('camera').value=s.camera;
-      if(s.lens&&$('lens').querySelector(`option[value="${s.lens}"]`))$('lens').value=s.lens;
+      // Il corpo si ripristina per modello: il value e' il crop, non e' univoco.
+      let camOpt=null;
+      if(s.camM)camOpt=[...$('camera').options].find(o=>o.dataset.m===s.camM);
+      if(camOpt)camOpt.selected=true;
+      else if(s.camera&&$('camera').querySelector(`option[value="${s.camera}"]`))$('camera').value=s.camera;
+      // La lista obiettivi dipende dal corpo, quindi va ricostruita prima di sceglierne uno
+      populateLensSelect();
+      let lensOpt=null;
+      if(s.lensM)lensOpt=[...$('lens').options].find(o=>o.dataset.m===s.lensM&&!o.disabled);
+      if(lensOpt)lensOpt.selected=true;
+      else if(s.lens&&$('lens').querySelector(`option[value="${s.lens}"]`))$('lens').value=s.lens;
       if(s.subject&&$('subject')?.querySelector(`option[value="${s.subject}"]`))$('subject').value=s.subject;
       if(s.density&&$('skyViewMode')?.querySelector(`option[value="${s.density}"]`)){$('skyViewMode').value=s.density;skyState.density=s.density;}
       if(typeof s.lp==='boolean'){$('lpToggle').checked=s.lp;if(s.lp){lpLayer.addTo(map);$('lpLegend').classList.add('on')}}
@@ -1872,7 +1977,7 @@
   }
 
   $('lens').addEventListener('change',()=>{setup();savePrefs()});
-  $('camera').addEventListener('change',()=>{setup();savePrefs()});
+  $('camera').addEventListener('change',()=>{populateLensSelect();setup();savePrefs()});
   $('subject')?.addEventListener('change',()=>{setup();savePrefs()});
 
   // ========= FEEDBACK: salvataggio locale + invio via email =========
