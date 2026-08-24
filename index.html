@@ -1649,9 +1649,7 @@
       console.log('⏭️ places() skippato (debounce)');
       return;
     }
-    places._lastCall=now;places._lastLat=lat;places._lastLon=lon;
     $('placesStatus').textContent='Cerco punti panoramici entro 50 km…';
-    clearPlaceMarkers();
     try{
       const query=buildOverpassQuery(lat,lon);
       const data=await fetchOverpassWithFallback(query);
@@ -1668,8 +1666,11 @@
 
       // Salva in cache per fallback
       lastPlacesCache={items,lat,lon};
+      // Solo ora la richiesta e' andata a buon fine: da qui il debounce puo' scattare
+      places._lastCall=now;places._lastLat=lat;places._lastLon=lon;
 
       if(!items.length){
+        clearPlaceMarkers();
         $('places').innerHTML='<li>Nessun belvedere o altura mappata nelle vicinanze. Prova a spostare la mappa o consulta direttamente OpenStreetMap.</li>';
         $('placesStatus').textContent='Nessun risultato entro 50 km dalla posizione attuale.';
         return;
@@ -1683,17 +1684,17 @@
         const osm=`https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lon}#map=15/${p.lat}/${p.lon}`;
         return`<li><a target="_blank" rel="noreferrer" href="${osm}">${icon} ${esc(p.name)}</a><small>📏 ${d.toFixed(1)} km · 🧭 ${dir} (${deg.toFixed(0)}°)${alt}</small></li>`;
       }).join('');
-      items.forEach(p=>{
-        const m=L.circleMarker([p.lat,p.lon],{radius:6,color:'#8cc5ff',fillColor:'#8cc5ff',fillOpacity:.7,weight:1.5}).bindPopup(`<b>${esc(p.name)}</b><br>${distKm(lat,lon,p.lat,p.lon).toFixed(1)} km ${compass(bearing(lat,lon,p.lat,p.lon))}${p.ele?`<br>${p.ele} m s.l.m.`:''}`);
-        m.addTo(placeMarkers);
-      });
+      drawPlaceMarkers(items);
       $('placesStatus').textContent=`${items.length} punti panoramici entro 50 km, segnati in blu sulla mappa.`;
     }catch(e){
       console.error('❌ places() fallito:',e);
+      // Tentativo fallito: azzera il debounce, altrimenti "Riprova" resta muto per 30s
+      places._lastCall=0;
       // Mostra l'ultimo risultato valido come fallback (se vicino alla posizione attuale)
       if(lastPlacesCache&&distKm(lat,lon,lastPlacesCache.lat,lastPlacesCache.lon)<10){
         console.log('♻️ Mostro cache ultimo risultato valido');
         const items=lastPlacesCache.items;
+        drawPlaceMarkers(items);
         $('places').innerHTML=items.map(p=>{
           const d=distKm(lat,lon,p.lat,p.lon);
           const deg=bearing(lat,lon,p.lat,p.lon);
@@ -1703,6 +1704,7 @@
         $('placesStatus').innerHTML='Il servizio delle mappe non risponde. <a href="#" id="retryPlaces">Riprova</a>.';
         $('retryPlaces').addEventListener('click',ev=>{ev.preventDefault();places()});
       }else{
+        clearPlaceMarkers();
         $('places').innerHTML='<li>Il servizio delle mappe non risponde. <a href="#" id="retryPlaces">Riprova</a> tra qualche secondo.</li>';
         $('placesStatus').textContent='Il servizio delle mappe non risponde. Riprova tra qualche secondo.';
         $('retryPlaces')?.addEventListener('click',ev=>{ev.preventDefault();places()});
@@ -1796,6 +1798,15 @@
   // Layer marker belvederi (resettato a ogni ricerca) — creato DOPO l'init della mappa
   let placeMarkers=L.layerGroup().addTo(map);
   function clearPlaceMarkers(){placeMarkers.clearLayers()}
+  // Disegna i belvederi sulla mappa. Serve sia all'esito riuscito sia al fallback
+  // da cache: li' mancava, e la mappa restava senza marker mentre la lista si popolava.
+  function drawPlaceMarkers(items){
+    clearPlaceMarkers();
+    items.forEach(p=>{
+      const m=L.circleMarker([p.lat,p.lon],{radius:6,color:'#8cc5ff',fillColor:'#8cc5ff',fillOpacity:.7,weight:1.5}).bindPopup(`<b>${esc(p.name)}</b><br>${distKm(lat,lon,p.lat,p.lon).toFixed(1)} km ${compass(bearing(lat,lon,p.lat,p.lon))}${p.ele?`<br>${p.ele} m s.l.m.`:''}`);
+      m.addTo(placeMarkers);
+    });
+  }
 
   // Layer inquinamento luminoso (tile overlay da lightpollutionmap.info)
   const lpLayer=L.tileLayer('https://djlorenz.github.io/astronomy/lp2022/overlay/tiles/{z}/{x}/{y}.png',{maxZoom:8,opacity:.55,attribution:'Light pollution: D. Lorenz et al. (2022)'});
