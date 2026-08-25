@@ -1428,15 +1428,27 @@
       return;
     }
 
-    // Camere astronomiche. Nel dataset telescopi, filtri e riduttori hanno f:0,
-    // quindi non sono utilizzabili per calcolare l'esposizione: si mostrano gli
-    // obiettivi fotografici, che su queste camere si montano con un adattatore.
+    // Camere astronomiche. Nel dataset non ci sono telescopi: le voci delle marche
+    // astro sono accessori (riduttori, barlow, spianatori) e hanno f:0. Invece di
+    // inventare un catalogo di modelli, si sceglie direttamente la focale: sono
+    // combinazioni tipiche di astrografo, non specifiche di un prodotto, quindi
+    // non possono essere sbagliate. Chi conosce il proprio tubo sa la sua focale.
     if(cam&&cam.t==='Astro CCD'){
-      const nota=document.createElement('option');
-      nota.disabled=true;nota.style.fontWeight='700';
-      nota.textContent='— Obiettivi via adattatore · le focali dei telescopi non sono nel dataset —';
-      sel.appendChild(nota);
-      appendLensGroup(sel,'— Tutti gli innesti —',LENSES.slice(),state);
+      const SCOPES=[[200,4],[250,4.9],[300,4],[400,5.6],[480,6],[530,5],[550,5.5],
+                    [600,6],[750,5],[800,4],[1000,7],[1200,6],[1500,7.5],[2000,10]];
+      const header=document.createElement('option');
+      header.disabled=true;header.style.fontWeight='700';
+      header.textContent='— Telescopio · scegli la focale del tuo tubo —';
+      sel.appendChild(header);
+      SCOPES.forEach(([mm,ratio])=>{
+        const opt=document.createElement('option');
+        opt.value=`${mm},${ratio}`;
+        opt.dataset.m=`scope-${mm}`;
+        opt.textContent=`     ${mm}mm · f/${ratio}`;
+        sel.appendChild(opt);
+        if(mm===530)state.first=opt;
+      });
+      appendLensGroup(sel,'— Oppure un obiettivo fotografico, via adattatore —',LENSES.slice(),state);
       if(state.first)state.first.selected=true;
       return;
     }
@@ -1478,23 +1490,34 @@
   function npfRule(eqMm,ap,pixelPitch){
     return Math.max(2,Math.min(20,Math.floor((35*ap+30*pixelPitch)/eqMm)));
   }
+  // Passo dei pixel in micron, stimato per categoria di sensore: il dataset non
+  // registra i megapixel, quindi non e' ricavabile per singolo modello.
+  // 4µm e' un compromesso ragionevole tra APS-C 24MP (~3.9) e full frame 24MP
+  // (~5.9), ma sugli smartphone e' fuori scala: i loro pixel stanno intorno a
+  // 1.2µm nativi e 2.4µm con il binning, che e' la modalita' predefinita.
+  // Con 4µm l'app suggeriva ~7s dove ne servono ~5: piu' mosso stellare del previsto.
+  function pixelPitchUm(){
+    const cam=(typeof getSelectedCamera==='function')?getSelectedCamera():null;
+    if(cam&&cam.t==='Smartphone')return 2.4;
+    return 4;
+  }
   // Preset per soggetto. Ogni preset restituisce {iso, shutter, aperture, headline, why, checklist}.
   const PRESETS={
     stars:{
       head:'📸 Stelle e paesaggio',
-      getParams:(f,ap,eq)=>{const pp=4;return{iso:1600,shutter:`${npfRule(eq,ap,pp)}s`,aperture:`f/${ap}`};},
+      getParams:(f,ap,eq)=>{const pp=pixelPitchUm();return{iso:1600,shutter:`${npfRule(eq,ap,pp)}s`,aperture:`f/${ap}`};},
       why:(f,eq,ap,sec)=>`Grandangolo a ${f}mm (${eq.toFixed(0)}mm eq): massima apertura f/${ap}, ${sec}s per stelle puntiformi (regola NPF), ISO ${1600} per segnale pulito sui sensori moderni.`,
       checklist:['Treppiede stabile obbligatorio','Scatta in RAW per margine in post','Messa a fuoco manuale su stella luminosa con live view 100%','Autoscatto 2s o scatto remoto per evitare vibrazioni']
     },
     milkyway:{
       head:'🌌 Via Lattea',
-      getParams:(f,ap,eq)=>{const pp=4;return{iso:3200,shutter:`${npfRule(eq,ap,pp)}s`,aperture:`f/${ap}`};},
+      getParams:(f,ap,eq)=>{const pp=pixelPitchUm();return{iso:3200,shutter:`${npfRule(eq,ap,pp)}s`,aperture:`f/${ap}`};},
       why:(f,eq,ap,sec)=>`Per la Via Lattea serve il massimo segnale: ISO 3200 per estrarre il bulge, ${sec}s (NPF), f/${ap} spalancato. Fondamentale cielo buio (Bortle ≤4) e niente luna.`,
       checklist:['Allontanati dai centri abitati (almeno 30km)','Controlla fase lunare <30% sul calendario','Inquina bluastro del bulge si vede meglio tra giugno e settembre','Stack di 8-16 scatti identici + dark frames per ridurre il rumore']
     },
     deepsky:{
       head:'Deep sky (nebulose, galassie)',
-      getParams:(f,ap,eq)=>{const pp=4;return{iso:1600,shutter:'120s',aperture:`f/${ap}`};},
+      getParams:(f,ap,eq)=>{const pp=pixelPitchUm();return{iso:1600,shutter:'120s',aperture:`f/${ap}`};},
       why:(f,eq,ap)=>`Per deep sky servono pose molto lunghe (120s) per raccogliere fotoni da oggetti deboli. ISO 1600 bilancia segnale e rumore; f/${ap} aperto per massima luce. Richiede montatura equatoriale per inseguimento.`,
       checklist:['Montatura equatoriale con allineamento polare accurato','Cielo Bortle ≤4 (meglio ≤2 per galassie deboli)','Dark frames, bias frames e flat frames per la calibrazione','Software di stacking (Siril, DeepSkyStacker)']
     },
@@ -1678,14 +1701,16 @@
     return dirs[Math.round(deg/45)%8];
   }
 
-  // Server Overpass alternativi per fallback (kumi.systems è spesso il più reattivo).
+  // Server Overpass, ordinati per affidabilita' misurata (agosto 2026, 3 giri).
+  // Rimossi: overpass.privatepaste.net (dominio inesistente, DNS SERVFAIL) e
+  // overpass.osm.ch (risponde 200 ma con database vuoto: elements sempre []).
+  // kumi.systems resta per ultimo: non ha mai risposto dalle nostre prove, ma
+  // puo' funzionare da altre reti e in coda non costa nulla.
   const OVERPASS_SERVERS=[
-    'https://overpass.kumi.systems/api/interpreter',
-    'https://overpass-api.de/api/interpreter',
     'https://overpass.openstreetmap.fr/api/interpreter',
-    'https://overpass.osm.ch/api/interpreter',
-    'https://overpass.privatepaste.net/api/interpreter',
-    'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+    'https://overpass-api.de/api/interpreter',
+    'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter'
   ];
 
   // Cache ultimo risultato valido (per mostrare qualcosa anche in caso di errore)
@@ -1697,6 +1722,10 @@
   }
 
   async function fetchOverpassWithFallback(query){
+    // Un server con database vuoto risponde 200 con elements:[], indistinguibile
+    // da "qui non ci sono belvederi". Teniamo da parte la risposta vuota e
+    // proviamo il prossimo: la diamo per buona solo se lo sono tutti.
+    let rispostaVuota=null;
     for(let i=0;i<OVERPASS_SERVERS.length;i++){
       const server=OVERPASS_SERVERS[i];
       // Feedback utente: solo dalla seconda richiesta in poi (prima è "caricamento..." già mostrato)
@@ -1717,14 +1746,25 @@
         }
         const data=await resp.json();
         if(data&&data.elements){
-          console.log(`✅ Server ${server} OK (${data.elements.length} elementi)`);
-          return data;
+          if(data.elements.length){
+            console.log(`✅ Server ${server} OK (${data.elements.length} elementi)`);
+            return data;
+          }
+          console.warn(`⚠️ Server ${server} ha risposto senza risultati, provo il prossimo`);
+          rispostaVuota=data;
+          continue;
         }
       }catch(err){
         console.warn(`⚠️ Server ${server} fallito: ${err.message}`);
         // piccolo backoff prima del prossimo
         await new Promise(r=>setTimeout(r,500));
       }
+    }
+    // Nessun server ha dato risultati, ma almeno uno ha risposto correttamente:
+    // allora la zona e' davvero priva di belvederi mappati.
+    if(rispostaVuota){
+      console.log('ℹ️ Tutti i server raggiunti hanno risposto senza risultati');
+      return rispostaVuota;
     }
     throw new Error('Tutti i server Overpass hanno fallito');
   }
