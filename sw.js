@@ -1,5 +1,5 @@
 // Service Worker per Astro Scout — Network-first per HTML, cache per asset statici
-const CACHE='astro-scout-v154-GEAR-MATCH';
+const CACHE='astro-scout-v155-STATS';
 const ASSETS=[
   './',
   './index.html',
@@ -61,6 +61,11 @@ self.addEventListener('fetch',e=>{
               ||(e.request.destination==='document')
               ||url.pathname.endsWith('/')
               ||url.pathname.endsWith('/index.html');
+
+  // Statistiche: mai in cache. Ogni beacon ha un parametro casuale diverso,
+  // quindi la cache-first sotto li archivierebbe tutti senza mai riusarne uno.
+  // Uscendo senza respondWith la richiesta la gestisce il browser.
+  if(url.hostname.endsWith('goatcounter.com')||url.hostname==='gc.zgo.at')return;
 
   // API meteo/Overpass: network-first
   if(url.hostname.includes('open-meteo.com')||url.hostname.includes('overpass')){

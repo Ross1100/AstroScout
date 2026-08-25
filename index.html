@@ -3496,5 +3496,24 @@ console.log('🌟 Script fine');
     })();
     </script>
 
+    <!-- Statistiche di visita: GoatCounter. Senza cookie, senza dati personali,
+         nessun banner di consenso necessario.
+         Inserisci sotto il codice del sito che ottieni registrandolo su
+         goatcounter.com: se il tuo pannello e' astroscout.goatcounter.com,
+         il codice e' 'astroscout'.
+         Finche' resta vuoto non viene caricato niente e non parte alcuna
+         richiesta: il sito continua a funzionare esattamente come prima. -->
+    <script>
+    (function(){
+      var GC_SITE='';   // <-- il tuo codice GoatCounter
+      if(!GC_SITE)return;
+      window.goatcounter={endpoint:'https://'+GC_SITE+'.goatcounter.com/count'};
+      var s=document.createElement('script');
+      s.async=true; s.src='https://gc.zgo.at/count.js';
+      s.setAttribute('data-goatcounter','https://'+GC_SITE+'.goatcounter.com/count');
+      document.head.appendChild(s);
+    })();
+    </script>
+
 </body>
 </html>
